@@ -1,9 +1,12 @@
 import { Text, View } from 'react-native';
+import './global.css';
 
 export default function App() {
   return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-      <Text>8FSDT Tech Challenge — Fase 4</Text>
+    <View className="flex-1 items-center justify-center bg-background">
+      <Text className="text-foreground text-lg font-semibold">
+        8FSDT Tech Challenge — Fase 4
+      </Text>
     </View>
   );
 }
