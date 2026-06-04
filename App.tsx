@@ -1,12 +1,22 @@
-import { Text, View } from 'react-native';
+import React from 'react';
+import { StatusBar } from 'expo-status-bar';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import Toast from 'react-native-toast-message';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { AppRoutes } from '@/navigation';
 import './global.css';
 
 export default function App() {
   return (
-    <View className="flex-1 items-center justify-center bg-background">
-      <Text className="text-foreground text-lg font-semibold">
-        8FSDT Tech Challenge — Fase 4
-      </Text>
-    </View>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <AuthProvider>
+          <StatusBar style="dark" />
+          <AppRoutes />
+        </AuthProvider>
+      </SafeAreaProvider>
+      <Toast />
+    </GestureHandlerRootView>
   );
 }
