@@ -12,7 +12,7 @@ jest.mock('@/api/client', () => ({
 jest.mock('@/services/secure-storage.service', () => ({
   setSecureItem: jest.fn(),
   deleteSecureItem: jest.fn(),
-  SECURE_KEYS: { AUTH_TOKEN: '@8fsdt/auth-token', AUTH_USER: '@8fsdt/auth-user' },
+  SECURE_KEYS: { AUTH_TOKEN: '8fsdt.auth-token', AUTH_USER: '8fsdt.auth-user' },
 }));
 
 const mockPost = apiClient.post as jest.Mock;

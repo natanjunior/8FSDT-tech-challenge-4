@@ -18,20 +18,20 @@ describe('secure-storage.service', () => {
   });
 
   it('exposes well-known keys', () => {
-    expect(SECURE_KEYS.AUTH_TOKEN).toBe('@8fsdt/auth-token');
-    expect(SECURE_KEYS.AUTH_USER).toBe('@8fsdt/auth-user');
+    expect(SECURE_KEYS.AUTH_TOKEN).toBe('8fsdt.auth-token');
+    expect(SECURE_KEYS.AUTH_USER).toBe('8fsdt.auth-user');
   });
 
   it('setSecureItem persists value via SecureStore', async () => {
     mockSet.mockResolvedValueOnce(undefined);
     await setSecureItem(SECURE_KEYS.AUTH_TOKEN, 'abc123');
-    expect(mockSet).toHaveBeenCalledWith('@8fsdt/auth-token', 'abc123');
+    expect(mockSet).toHaveBeenCalledWith('8fsdt.auth-token', 'abc123');
   });
 
   it('getSecureItem returns stored value', async () => {
     mockGet.mockResolvedValueOnce('abc123');
     await expect(getSecureItem(SECURE_KEYS.AUTH_TOKEN)).resolves.toBe('abc123');
-    expect(mockGet).toHaveBeenCalledWith('@8fsdt/auth-token');
+    expect(mockGet).toHaveBeenCalledWith('8fsdt.auth-token');
   });
 
   it('getSecureItem returns null when not found', async () => {
@@ -42,6 +42,6 @@ describe('secure-storage.service', () => {
   it('deleteSecureItem removes value via SecureStore', async () => {
     mockDelete.mockResolvedValueOnce(undefined);
     await deleteSecureItem(SECURE_KEYS.AUTH_TOKEN);
-    expect(mockDelete).toHaveBeenCalledWith('@8fsdt/auth-token');
+    expect(mockDelete).toHaveBeenCalledWith('8fsdt.auth-token');
   });
 });

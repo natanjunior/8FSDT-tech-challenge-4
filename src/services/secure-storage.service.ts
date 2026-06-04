@@ -1,8 +1,8 @@
 import * as SecureStore from 'expo-secure-store';
 
 export const SECURE_KEYS = {
-  AUTH_TOKEN: '@8fsdt/auth-token',
-  AUTH_USER: '@8fsdt/auth-user',
+  AUTH_TOKEN: '8fsdt.auth-token',
+  AUTH_USER: '8fsdt.auth-user',
 } as const;
 
 export type SecureKey = (typeof SECURE_KEYS)[keyof typeof SECURE_KEYS];
