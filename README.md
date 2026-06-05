@@ -65,24 +65,38 @@ npm run test:watch # Watch mode
 npm run lint       # ESLint (via expo lint)
 ```
 
-## Autenticação
+## Topologia de navegação
 
-A API da Fase 2 utiliza **login passwordless por e-mail**: o usuário informa o e-mail, o backend retorna um JWT se o e-mail estiver cadastrado.
+O app abre **direto na lista de posts pública** (rota `Home`). Não há "login wall" — qualquer pessoa (anônimo, STUDENT ou TEACHER) pode abrir o app e navegar pelo conteúdo público.
 
-O JWT é armazenado em [expo-secure-store](https://docs.expo.dev/versions/latest/sdk/securestore/) e injetado automaticamente como `Authorization: Bearer <token>` por um interceptor do Axios.
+Login é uma rota acessada via botão "Entrar" no header. Ele existe principalmente para desbloquear o painel administrativo (TEACHER).
 
 ```
-LoginScreen
-   ↓ submit (RHF + Zod)
+RootStack (Native Stack único)
+│
+├── Home          (pública — entry point)
+├── Login         (pública — acessada via "Entrar")
+└── AdminStub     (TEACHER-only — auto-redirect para Home se não-TEACHER)
+```
+
+Rotas TEACHER-only não são "escondidas" do navigator — a tela faz auto-gate no `useEffect`: se `user.role !== 'TEACHER'`, dispara Toast informativo + `navigation.replace('Home')`.
+
+## Autenticação
+
+A API da Fase 2 utiliza **login passwordless por e-mail**: o usuário informa o e-mail, o backend retorna um JWT se o e-mail estiver cadastrado. O JWT é armazenado em [`expo-secure-store`](https://docs.expo.dev/versions/latest/sdk/securestore/) e injetado automaticamente como `Authorization: Bearer <token>` por um interceptor do Axios.
+
+```
+HeaderRight "Entrar"
+   ↓
+LoginScreen → submit (RHF + Zod)
+   ↓
 AuthContext.login(payload)
    ↓
-auth.service.login()
-   ↓
-POST /auth/login → { token, user }
+auth.service.login() → POST /auth/login → { token, user }
    ↓
 SecureStore.setItem (AUTH_TOKEN, AUTH_USER)
    ↓
-AuthContext.user atualizado → guard troca AuthStack → AppStack
+AuthContext.user atualizado → HeaderRight troca "Entrar" por "Sair" (+ "Painel" se TEACHER)
 ```
 
 Na inicialização do app, o `AuthContext` faz **hydration**: lê `AUTH_TOKEN` e `AUTH_USER` do SecureStore e, se presentes, restaura a sessão sem exigir novo login.
@@ -98,6 +112,7 @@ Algumas escolhas divergem do conteúdo padrão das aulas — registradas aqui pa
 | 03 | **react-hook-form + Zod** em vez de inputs controlados manuais | Mesmo pattern adotado na Fase 3; menos re-renders e inferência TS automática. |
 | 04 | **Context API (`AuthContext`)** em vez de Redux Toolkit (aula RN Medium 6) | Um único reducer (auth) não justifica boilerplate de Redux. Spec da Fase 4 permite Context. |
 | 05 | **expo-secure-store** para o JWT, em vez de AsyncStorage | SecureStore criptografa nativamente (Keychain no iOS, Keystore no Android). |
+| 06 | **Single Native Stack com entrada pública**, não login wall | Espelha o modelo da Fase 3 web (lista de posts é pública; login é opcional). Rotas TEACHER-only fazem auto-gate via `useEffect + navigation.replace`. |
 
 ## Próximas fases
 
