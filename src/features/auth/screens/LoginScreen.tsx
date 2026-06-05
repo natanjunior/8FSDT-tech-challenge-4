@@ -6,6 +6,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -15,10 +16,12 @@ import {
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { useAuth } from '@/contexts/AuthContext';
+import type { RootStackNavigationProp } from '@/navigation/types';
 
 export function LoginScreen() {
   const { login, isAuthenticating } = useAuth();
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const navigation = useNavigation<RootStackNavigationProp>();
 
   const {
     control,
@@ -33,6 +36,7 @@ export function LoginScreen() {
     setSubmitError(null);
     try {
       await login(data);
+      navigation.replace('Home');
     } catch (err) {
       setSubmitError(
         err instanceof Error ? err.message : 'Não foi possível entrar.'

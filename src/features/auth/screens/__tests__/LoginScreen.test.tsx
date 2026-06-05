@@ -1,13 +1,25 @@
 import React from 'react';
 import { fireEvent, render, waitFor, act } from '@testing-library/react-native';
+import { useNavigation } from '@react-navigation/native';
 import { LoginScreen } from '@/features/auth/screens/LoginScreen';
 import * as AuthContextModule from '@/contexts/AuthContext';
+
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: jest.fn(),
+}));
+
+const mockReplace = jest.fn();
 
 describe('LoginScreen', () => {
   const useAuthSpy = jest.spyOn(AuthContextModule, 'useAuth');
 
+  beforeEach(() => {
+    (useNavigation as jest.Mock).mockReturnValue({ replace: mockReplace });
+  });
+
   afterEach(() => {
     jest.clearAllMocks();
+    mockReplace.mockClear();
   });
 
   it('renders email field and submit button', () => {
@@ -69,5 +81,7 @@ describe('LoginScreen', () => {
     await waitFor(() =>
       expect(loginMock).toHaveBeenCalledWith({ email: 'prof@escola.edu' })
     );
+
+    expect(mockReplace).toHaveBeenCalledWith('Home');
   });
 });
