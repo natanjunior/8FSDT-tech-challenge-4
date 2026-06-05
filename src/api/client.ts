@@ -5,7 +5,9 @@ const baseURL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3030';
 
 export const apiClient: AxiosInstance = axios.create({
   baseURL,
-  timeout: 15000,
+  // Render free tier hiberna após ~15min e cold start leva 20-40s.
+  // 30s cobre o pior caso sem ficar "esperando para sempre" em rede ruim.
+  timeout: 30000,
   headers: { 'Content-Type': 'application/json' },
 });
 
