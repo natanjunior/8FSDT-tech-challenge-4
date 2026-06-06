@@ -15,6 +15,7 @@ const useAuthSpy = jest.spyOn(AuthContextModule, 'useAuth');
 
 const guest = {
   user: null,
+  profile: null,
   isAuthenticated: false,
   isHydrating: false,
   isAuthenticating: false,
@@ -23,7 +24,8 @@ const guest = {
 };
 
 const student = {
-  user: { id: 's1', name: 'Aluna Ana', email: 'ana@aluno.com', role: 'STUDENT' as const },
+  user: { id: 's1', login: 'pedro.costa', role: 'STUDENT' as const },
+  profile: null,
   isAuthenticated: true,
   isHydrating: false,
   isAuthenticating: false,
@@ -32,7 +34,8 @@ const student = {
 };
 
 const teacher = {
-  user: { id: 't1', name: 'Prof. João', email: 'joao@escola.com', role: 'TEACHER' as const },
+  user: { id: 't1', login: 'joao.silva', role: 'TEACHER' as const },
+  profile: null,
   isAuthenticated: true,
   isHydrating: false,
   isAuthenticating: false,

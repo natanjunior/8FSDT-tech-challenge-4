@@ -15,7 +15,7 @@ import {
   getSecureItem,
   SECURE_KEYS,
 } from '@/services/secure-storage.service';
-import type { LoginRequest, User } from '@/types/api';
+import type { LoginRequest, Profile, User } from '@/types/api';
 
 function parseStoredUser(raw: string | null): User | null {
   if (!raw) return null;
@@ -26,8 +26,18 @@ function parseStoredUser(raw: string | null): User | null {
   }
 }
 
+function parseStoredProfile(raw: string | null): Profile {
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as Profile;
+  } catch {
+    return null;
+  }
+}
+
 interface AuthContextValue {
   user: User | null;
+  profile: Profile;
   isAuthenticated: boolean;
   isHydrating: boolean;
   isAuthenticating: boolean;
@@ -43,6 +53,7 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Profile>(null);
   const [isHydrating, setIsHydrating] = useState(true);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
@@ -51,10 +62,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
     (async () => {
       const token = await getSecureItem(SECURE_KEYS.AUTH_TOKEN);
       const rawUser = await getSecureItem(SECURE_KEYS.AUTH_USER);
-      const parsed = parseStoredUser(rawUser);
+      const rawProfile = await getSecureItem(SECURE_KEYS.AUTH_PROFILE);
+      const parsedUser = parseStoredUser(rawUser);
+      const parsedProfile = parseStoredProfile(rawProfile);
       if (!cancelled) {
-        if (token && parsed) {
-          setUser(parsed);
+        if (token && parsedUser) {
+          setUser(parsedUser);
+          setProfile(parsedProfile);
         }
         setIsHydrating(false);
       }
@@ -67,8 +81,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const login = useCallback(async (payload: LoginRequest) => {
     setIsAuthenticating(true);
     try {
-      const { user: nextUser } = await loginService(payload);
+      const { user: nextUser, profile: nextProfile } = await loginService(payload);
       setUser(nextUser);
+      setProfile(nextProfile);
     } finally {
       setIsAuthenticating(false);
     }
@@ -77,18 +92,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const logout = useCallback(async () => {
     await logoutService();
     setUser(null);
+    setProfile(null);
   }, []);
 
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
+      profile,
       isAuthenticated: !!user,
       isHydrating,
       isAuthenticating,
       login,
       logout,
     }),
-    [user, isHydrating, isAuthenticating, login, logout]
+    [user, profile, isHydrating, isAuthenticating, login, logout]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
