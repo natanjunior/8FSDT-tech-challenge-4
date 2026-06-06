@@ -2,6 +2,7 @@ import { apiClient } from '@/api/client';
 import {
   login,
   logout,
+  changePassword,
   parseStoredUser,
   parseStoredProfile,
 } from '@/services/auth.service';
@@ -12,7 +13,7 @@ import {
 } from '@/services/secure-storage.service';
 
 jest.mock('@/api/client', () => ({
-  apiClient: { post: jest.fn() },
+  apiClient: { post: jest.fn(), patch: jest.fn() },
 }));
 jest.mock('@/services/secure-storage.service', () => ({
   setSecureItem: jest.fn(),
@@ -25,6 +26,7 @@ jest.mock('@/services/secure-storage.service', () => ({
 }));
 
 const mockPost = apiClient.post as jest.Mock;
+const mockPatch = apiClient.patch as jest.Mock;
 const mockSet = setSecureItem as jest.Mock;
 const mockDelete = deleteSecureItem as jest.Mock;
 
@@ -161,6 +163,48 @@ describe('auth.service', () => {
 
     it('returns null on malformed JSON', () => {
       expect(parseStoredProfile('not-json')).toBeNull();
+    });
+  });
+
+  describe('changePassword', () => {
+    it('sends PATCH /auth/password with current_password + new_password', async () => {
+      mockPatch.mockResolvedValueOnce({ status: 204 });
+      await changePassword({
+        current_password: 'senha123',
+        new_password: 'novaSenh4',
+      });
+      expect(mockPatch).toHaveBeenCalledWith('/auth/password', {
+        current_password: 'senha123',
+        new_password: 'novaSenh4',
+      });
+    });
+
+    it('propagates backend error message from validation errors[]', async () => {
+      mockPatch.mockRejectedValueOnce({
+        response: {
+          status: 400,
+          data: { errors: [{ field: 'current_password', message: 'Senha atual incorreta' }] },
+        },
+      });
+      await expect(
+        changePassword({ current_password: 'x', new_password: 'novaSenh4' })
+      ).rejects.toThrow('Senha atual incorreta');
+    });
+
+    it('propagates business error message from { error }', async () => {
+      mockPatch.mockRejectedValueOnce({
+        response: { status: 400, data: { error: 'Algo deu errado' } },
+      });
+      await expect(
+        changePassword({ current_password: 'a', new_password: 'novaSenh4' })
+      ).rejects.toThrow('Algo deu errado');
+    });
+
+    it('throws generic message when no api message available', async () => {
+      mockPatch.mockRejectedValueOnce(new Error('network'));
+      await expect(
+        changePassword({ current_password: 'a', new_password: 'novaSenh4' })
+      ).rejects.toThrow('Não foi possível alterar a senha.');
     });
   });
 });

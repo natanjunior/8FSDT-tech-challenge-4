@@ -5,6 +5,7 @@ import {
   SECURE_KEYS,
 } from '@/services/secure-storage.service';
 import type {
+  ChangePasswordRequest,
   LoginRequest,
   LoginResponse,
   Profile,
@@ -58,5 +59,19 @@ export function parseStoredProfile(raw: string | null): Profile {
     return JSON.parse(raw) as Profile;
   } catch {
     return null;
+  }
+}
+
+export async function changePassword(
+  payload: ChangePasswordRequest
+): Promise<void> {
+  try {
+    await apiClient.patch('/auth/password', payload);
+  } catch (err: any) {
+    const apiMessage =
+      err?.response?.data?.errors?.[0]?.message ??
+      err?.response?.data?.error;
+    const message = apiMessage ?? 'Não foi possível alterar a senha.';
+    throw new Error(message);
   }
 }
