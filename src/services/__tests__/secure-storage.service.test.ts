@@ -20,6 +20,7 @@ describe('secure-storage.service', () => {
   it('exposes well-known keys', () => {
     expect(SECURE_KEYS.AUTH_TOKEN).toBe('8fsdt.auth-token');
     expect(SECURE_KEYS.AUTH_USER).toBe('8fsdt.auth-user');
+    expect(SECURE_KEYS.AUTH_PROFILE).toBe('8fsdt.auth-profile');
   });
 
   it('setSecureItem persists value via SecureStore', async () => {
