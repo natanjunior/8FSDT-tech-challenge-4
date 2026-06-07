@@ -12,7 +12,7 @@ describe('loginSchema', () => {
     const result = loginSchema.safeParse({ ...valid, login: '' });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.issues[0].message).toBe('Informe seu login.');
+      expect(result.error.issues[0]?.message).toBe('Informe seu login.');
     }
   });
 
@@ -28,7 +28,7 @@ describe('loginSchema', () => {
     const result = loginSchema.safeParse({ ...valid, password: '1234567' });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.issues[0].message).toBe(
+      expect(result.error.issues[0]?.message).toBe(
         'Senha deve ter no mínimo 8 caracteres.'
       );
     }
