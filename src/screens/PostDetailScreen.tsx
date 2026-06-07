@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Loader } from '@/components/ui/Loader';
 import { MarkAsReadButton } from '@/components/posts/MarkAsReadButton';
+import { CommentSection } from '@/features/comments/components/CommentSection';
 import { getPostById } from '@/services/posts.service';
 import { hasReadPost } from '@/services/reads.service';
 import type { Post } from '@/types/api';
@@ -103,6 +104,8 @@ export function PostDetailScreen() {
         <View className="mt-2">
           <MarkAsReadButton postId={post.id} initialHasRead={hasRead} />
         </View>
+
+        <CommentSection postId={post.id} />
       </View>
     </ScrollView>
   );

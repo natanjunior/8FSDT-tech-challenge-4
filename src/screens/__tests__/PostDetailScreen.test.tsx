@@ -13,6 +13,14 @@ jest.mock('@/services/reads.service', () => ({
   markAsRead: jest.fn(),
 }));
 jest.mock('react-native-toast-message', () => ({ show: jest.fn() }));
+jest.mock('@/services/comments.service', () => ({
+  listComments: jest.fn().mockResolvedValue({
+    data: [],
+    pagination: { page: 1, limit: 10, total: 0, totalPages: 0 },
+  }),
+  createComment: jest.fn(),
+  deleteComment: jest.fn(),
+}));
 
 const mockReplace = jest.fn();
 const mockNavigate = jest.fn();
