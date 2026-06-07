@@ -2,7 +2,7 @@
 
 Frontend mobile do sistema de blogging educacional, consumindo a API da Fase 2.
 
-> **Status do projeto:** Em desenvolvimento — Fase 1 (Fundação + Login) concluída.
+> **Status do projeto:** Em desenvolvimento — Fase 3 (Criação e Edição de Posts) concluída.
 
 ---
 
@@ -76,10 +76,13 @@ RootStack (Native Stack único)
 │
 ├── Home          (pública — entry point)
 ├── Login         (pública — acessada via "Entrar")
-└── AdminStub     (TEACHER-only — auto-redirect para Home se não-TEACHER)
+├── AdminStub     (TEACHER-only — auto-redirect para Home se não-TEACHER)
+├── PostDetail    (pública — redireciona Home se DRAFT/ARCHIVED e não-TEACHER)
+├── PostCreate    (TEACHER-only — gated via useRequireRole)
+└── PostEdit      (TEACHER-only — gated via useRequireRole, carrega post por id)
 ```
 
-Rotas TEACHER-only não são "escondidas" do navigator — a tela faz auto-gate no `useEffect`: se `user.role !== 'TEACHER'`, dispara Toast informativo + `navigation.replace('Home')`.
+Rotas TEACHER-only não são "escondidas" do navigator — o hook `useRequireRole` faz auto-gate no `useEffect`: se `user.role !== 'TEACHER'`, dispara Toast informativo + `navigation.replace('Home')`. A tela retorna `null` enquanto o redirect acontece.
 
 ## Autenticação
 
@@ -116,6 +119,8 @@ Em qualquer 401 (token expirado, sessão invalidada server-side, credencial remo
 | Excluir qualquer comentário | ❌ | ❌ | ✅ |
 | **Marcar post como lido** | ❌ (botão não renderiza) | ✅ | ✅ |
 | Acessar painel admin | ❌ | ❌ | ✅ |
+| **Criar post** (`POST /posts`) | ❌ | ❌ | ✅ |
+| **Editar post** (`PATCH /posts/:id`) | ❌ | ❌ | ✅ |
 | Ver página do grupo | ✅ | ✅ | ✅ |
 
 ### Troca de senha
@@ -173,6 +178,59 @@ sequenceDiagram
     API-->>Detail: comentário criado → recarrega lista
 ```
 
+### Req 3 — Criar post (TEACHER)
+
+```mermaid
+sequenceDiagram
+    participant T as TEACHER
+    participant Admin as AdminStub
+    participant Create as PostCreate
+    participant API
+
+    T->>Admin: toca "Painel" no header
+    Admin->>T: renderiza placeholder
+    T->>Admin: toca "+ Novo post"
+    Admin->>Create: navigate('PostCreate')
+    Create->>Create: useRequireRole('TEACHER') ok
+    T->>Create: preenche form e submete
+    Create->>API: POST /posts { title, content, status, discipline_id? }
+    alt 201 Created
+        API-->>Create: Post criado
+        Create->>Create: toast "Post criado"
+        Create->>T: navigate('PostDetail', { postId, title })
+    else 401
+        API-->>Create: Sessão expirada
+        Create->>Create: logout() + replace('Login')
+    else 403
+        API-->>Create: Acesso negado
+        Create->>Create: replace('Home') + toast
+    end
+```
+
+### Req 4 — Editar post (TEACHER)
+
+```mermaid
+sequenceDiagram
+    participant T as TEACHER
+    participant Detail as PostDetail
+    participant Edit as PostEdit
+    participant API
+
+    T->>Detail: lê o post
+    Detail->>Detail: detecta isTeacher → renderiza "Editar post"
+    T->>Detail: toca "Editar post"
+    Detail->>Edit: navigate('PostEdit', { postId })
+    Edit->>Edit: useRequireRole('TEACHER') ok
+    Edit->>API: GET /posts/:id
+    API-->>Edit: Post atual
+    Edit->>Edit: PostForm com defaultValues
+    T->>Edit: ajusta campos e submete
+    Edit->>API: PATCH /posts/:id { ...fields }
+    API-->>Edit: Post atualizado
+    Edit->>Edit: toast "Post atualizado"
+    Edit->>T: goBack() (volta pro Detail)
+```
+
 ## Decisões arquiteturais (ADRs)
 
 Algumas escolhas divergem do conteúdo padrão das aulas — registradas aqui para transparência.
@@ -192,11 +250,14 @@ Algumas escolhas divergem do conteúdo padrão das aulas — registradas aqui pa
 | 09 | **Comentário criação só autenticada** (regra do backend) | A Fase 2 removeu o fluxo anônimo de comentários: `POST /comments` agora exige Bearer (401 sem token). Mobile mostra CTA "Faça login para comentar" para anônimos. |
 | 14 | **Display de autor com pronouns** | `Post.author` carrega `pronouns` do perfil do TEACHER. Exibimos como `Nome (pronome)` no PostDetail quando presente, omitimos quando `null`. |
 | 15 | **`CommentAuthor.type` para distinguir Teacher/Student** | Backend entrega `type` resolvido. Exibimos "Professor" / "Aluno" no `CommentItem` em vez de parsear o prefixo do FhirRef. |
+| 10 | **`useRequireRole` hook** em vez de lógica inline por tela | Mesmo gate é usado em AdminStub, PostCreate, PostEdit (e Fases 4 e 5 vão reusar). Centralizar evita drift de comportamento entre telas. |
+| 11 | **Sem ownership check no client** (qualquer TEACHER pode editar qualquer post) | Espelhamento exato do backend (Fase 2 §2.1). Botão "Editar post" renderiza pra qualquer TEACHER, independente de quem é o autor. |
 
 ## Próximas fases
 
-- Fase 2 — Posts: leitura para aluno (lista, busca, detalhe, comentários)
-- Fase 3 — Posts: escrita para professor (criar/editar)
+- ✅ Fase 1 — Fundação + Login
+- ✅ Fase 2 — Posts: leitura (lista, busca, detalhe, comentários, reads)
+- ✅ Fase 3 — Posts: escrita para professor (criar/editar)
 - Fase 4 — Posts: administração (lista admin + delete)
 - Fase 5 — Usuários: CRUD de professores e alunos
 
