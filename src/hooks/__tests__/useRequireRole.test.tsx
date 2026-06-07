@@ -75,6 +75,8 @@ describe('useRequireRole', () => {
     useAuthSpy.mockReturnValue(guest);
     render(<Probe role="TEACHER" />);
     await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('Home'));
-    expect(Toast.show).toHaveBeenCalled();
+    expect(Toast.show).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'info', text1: 'Acesso restrito' }),
+    );
   });
 });
