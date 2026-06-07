@@ -1,5 +1,6 @@
 import { apiClient } from '@/api/client';
 import type { PaginatedResponse, Post } from '@/types/api';
+import type { PostFormData } from '@/features/posts/validators/post.schema';
 
 const DEFAULT_LIMIT = 10;
 const DEFAULT_SORT = '-published_at';
@@ -49,5 +50,31 @@ export async function searchPosts(
 
 export async function getPostById(id: string): Promise<Post> {
   const { data } = await apiClient.get<Post>(`/posts/${id}`);
+  return data;
+}
+
+export async function createPost(payload: PostFormData): Promise<Post> {
+  const body: Record<string, string> = {
+    title: payload.title,
+    content: payload.content,
+    status: payload.status,
+  };
+  if (payload.discipline_id) body.discipline_id = payload.discipline_id;
+
+  const { data } = await apiClient.post<Post>('/posts', body);
+  return data;
+}
+
+export async function updatePost(
+  id: string,
+  payload: Partial<PostFormData>
+): Promise<Post> {
+  const body: Record<string, string> = {};
+  if (payload.title !== undefined) body.title = payload.title;
+  if (payload.content !== undefined) body.content = payload.content;
+  if (payload.status !== undefined) body.status = payload.status;
+  if (payload.discipline_id !== undefined) body.discipline_id = payload.discipline_id;
+
+  const { data } = await apiClient.patch<Post>(`/posts/${id}`, body);
   return data;
 }

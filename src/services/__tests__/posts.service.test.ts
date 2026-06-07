@@ -3,13 +3,17 @@ import {
   listPosts,
   searchPosts,
   getPostById,
+  createPost,
+  updatePost,
 } from '@/services/posts.service';
 
 jest.mock('@/api/client', () => ({
-  apiClient: { get: jest.fn() },
+  apiClient: { get: jest.fn(), post: jest.fn(), patch: jest.fn() },
 }));
 
 const mockGet = apiClient.get as jest.Mock;
+const mockPost = apiClient.post as jest.Mock;
+const mockPatch = apiClient.patch as jest.Mock;
 
 const fakePost = {
   id: 'p1',
@@ -90,6 +94,45 @@ describe('posts.service', () => {
       const post = await getPostById('p1');
       expect(mockGet).toHaveBeenCalledWith('/posts/p1');
       expect(post.id).toBe('p1');
+    });
+  });
+
+  describe('createPost', () => {
+    const payload = {
+      title: 'Novo post',
+      content: 'Conteúdo com mais de dez caracteres.',
+      status: 'DRAFT' as const,
+    };
+
+    it('calls POST /posts with the payload', async () => {
+      mockPost.mockResolvedValueOnce({
+        data: { ...fakePost, id: 'new1' },
+      });
+      const created = await createPost(payload);
+      expect(mockPost).toHaveBeenCalledWith('/posts', payload);
+      expect(created.id).toBe('new1');
+    });
+
+    it('includes discipline_id when provided', async () => {
+      mockPost.mockResolvedValueOnce({ data: fakePost });
+      await createPost({ ...payload, discipline_id: 'd1' });
+      expect(mockPost).toHaveBeenCalledWith('/posts', {
+        ...payload,
+        discipline_id: 'd1',
+      });
+    });
+  });
+
+  describe('updatePost', () => {
+    it('calls PATCH /posts/:id with the partial payload', async () => {
+      mockPatch.mockResolvedValueOnce({
+        data: { ...fakePost, status: 'PUBLISHED' },
+      });
+      const updated = await updatePost('p1', { status: 'PUBLISHED' });
+      expect(mockPatch).toHaveBeenCalledWith('/posts/p1', {
+        status: 'PUBLISHED',
+      });
+      expect(updated.status).toBe('PUBLISHED');
     });
   });
 });
