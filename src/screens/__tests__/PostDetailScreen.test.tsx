@@ -105,4 +105,21 @@ describe('PostDetailScreen', () => {
     expect(await findByText('Post Teste')).toBeTruthy();
     expect(mockReplace).not.toHaveBeenCalled();
   });
+
+  it('renders "Editar post" button when TEACHER views the post', async () => {
+    useAuthSpy.mockReturnValue(teacher);
+    mockGetById.mockResolvedValueOnce(publishedPost);
+
+    const { findByText } = render(<PostDetailScreen />);
+    expect(await findByText('Editar post')).toBeTruthy();
+  });
+
+  it('does NOT render "Editar post" for guest', async () => {
+    useAuthSpy.mockReturnValue(guest);
+    mockGetById.mockResolvedValueOnce(publishedPost);
+
+    const { findByText, queryByText } = render(<PostDetailScreen />);
+    await findByText('Post Teste');
+    expect(queryByText('Editar post')).toBeNull();
+  });
 });

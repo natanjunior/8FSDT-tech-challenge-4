@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, waitFor } from '@testing-library/react-native';
+import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import { useNavigation } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
 import { AdminStub } from '@/screens/AdminStub';
@@ -13,7 +13,7 @@ jest.mock('react-native-toast-message', () => ({
 }));
 
 const mockReplace = jest.fn();
-(useNavigation as jest.Mock).mockReturnValue({ replace: mockReplace });
+(useNavigation as jest.Mock).mockReturnValue({ replace: mockReplace, navigate: jest.fn() });
 
 const useAuthSpy = jest.spyOn(AuthContextModule, 'useAuth');
 
@@ -81,5 +81,17 @@ describe('AdminStub', () => {
       expect(mockReplace).toHaveBeenCalledWith('Home');
     });
     expect(Toast.show).toHaveBeenCalled();
+  });
+
+  it('navigates to PostCreate when "+ Novo post" is pressed (TEACHER)', () => {
+    const mockNavigate = jest.fn();
+    (useNavigation as jest.Mock).mockReturnValue({
+      replace: mockReplace,
+      navigate: mockNavigate,
+    });
+    useAuthSpy.mockReturnValue(teacher);
+    const { getByText } = render(<AdminStub />);
+    fireEvent.press(getByText('+ Novo post'));
+    expect(mockNavigate).toHaveBeenCalledWith('PostCreate');
   });
 });

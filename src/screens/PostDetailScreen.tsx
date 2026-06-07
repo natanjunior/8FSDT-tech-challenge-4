@@ -3,6 +3,7 @@ import { ScrollView, Text, View } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useAuth } from '@/contexts/AuthContext';
 import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Loader } from '@/components/ui/Loader';
 import { MarkAsReadButton } from '@/components/posts/MarkAsReadButton';
@@ -101,8 +102,15 @@ export function PostDetailScreen() {
           {post.content}
         </Text>
 
-        <View className="mt-2">
+        <View className="mt-2 gap-3">
           <MarkAsReadButton postId={post.id} initialHasRead={hasRead} />
+          {isTeacher ? (
+            <Button
+              title="Editar post"
+              variant="outline"
+              onPress={() => navigation.navigate('PostEdit', { postId: post.id })}
+            />
+          ) : null}
         </View>
 
         <CommentSection postId={post.id} />
