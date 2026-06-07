@@ -70,3 +70,66 @@ export interface ApiError {
 export interface ValidationError {
   errors: Array<{ field: string; message: string }>;
 }
+
+// ============================================================
+// Posts, Comments, Reads, Discipline e paginação (Fase 2)
+// ============================================================
+
+export interface PostAuthor {
+  id: FhirRef;
+  name: string;
+  pronouns: Pronouns | null;
+}
+
+export interface Discipline {
+  id: string;
+  label: string;
+  created_at?: string;
+}
+
+export interface Post {
+  id: string;
+  title: string;
+  content: string;
+  status: PostStatus;
+  published_at: string | null;
+  created_at: string;
+  updated_at: string;
+  author: PostAuthor | null;
+  discipline: Discipline | null;
+  comments_count: number;
+  reads_count: number;
+}
+
+export interface CommentAuthor {
+  id: FhirRef;
+  type: 'Teacher' | 'Student';
+  name: string;
+}
+
+export interface Comment {
+  id: string;
+  content: string;
+  author: CommentAuthor | null;
+  can_delete: boolean;
+  created_at: string;
+}
+
+export interface Read {
+  id: string;
+  post_id: string;
+  reader: FhirRef;
+  read_at: string;
+}
+
+export interface Pagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: Pagination;
+}
