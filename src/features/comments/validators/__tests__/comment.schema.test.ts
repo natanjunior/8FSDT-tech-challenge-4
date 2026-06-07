@@ -10,7 +10,7 @@ describe('commentSchema', () => {
     const result = commentSchema.safeParse({ content: '' });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.issues[0].message).toBe('Escreva algo antes de enviar.');
+      expect(result.error.issues[0]?.message).toBe('Escreva algo antes de enviar.');
     }
   });
 
@@ -18,7 +18,7 @@ describe('commentSchema', () => {
     const result = commentSchema.safeParse({ content: '   ' });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.issues[0].message).toBe('Escreva algo antes de enviar.');
+      expect(result.error.issues[0]?.message).toBe('Escreva algo antes de enviar.');
     }
   });
 
@@ -27,7 +27,7 @@ describe('commentSchema', () => {
     const result = commentSchema.safeParse({ content: long });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.issues[0].message).toBe('Comentário deve ter no máximo 1000 caracteres.');
+      expect(result.error.issues[0]?.message).toBe('Comentário deve ter no máximo 1000 caracteres.');
     }
   });
 
