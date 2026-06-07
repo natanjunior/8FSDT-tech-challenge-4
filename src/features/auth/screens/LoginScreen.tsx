@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -22,6 +23,7 @@ export function LoginScreen() {
   const { login, isAuthenticating } = useAuth();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const navigation = useNavigation<RootStackNavigationProp>();
+  const passwordRef = useRef<TextInput>(null);
 
   const {
     control,
@@ -29,7 +31,7 @@ export function LoginScreen() {
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: '' },
+    defaultValues: { login: '', password: '' },
   });
 
   const onSubmit = async (data: LoginFormData) => {
@@ -57,23 +59,43 @@ export function LoginScreen() {
           <View className="gap-2">
             <Text className="text-3xl font-bold text-foreground">Blog FIAP</Text>
             <Text className="text-base text-muted">
-              Login passwordless por e-mail.
+              Entre com seu login e senha.
             </Text>
           </View>
 
           <View className="gap-4">
             <Controller
               control={control}
-              name="email"
+              name="login"
               render={({ field: { onChange, onBlur, value } }) => (
                 <Input
-                  label="E-mail"
-                  placeholder="seu@email.com"
+                  label="Login"
+                  placeholder="ex: joao.silva"
                   value={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
-                  error={errors.email?.message}
-                  keyboardType="email-address"
+                  error={errors.login?.message}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  returnKeyType="next"
+                  onSubmitEditing={() => passwordRef.current?.focus()}
+                />
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="password"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <Input
+                  ref={passwordRef}
+                  label="Senha"
+                  placeholder="••••••••"
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  error={errors.password?.message}
+                  secureTextEntry
                   autoCapitalize="none"
                   autoCorrect={false}
                   returnKeyType="send"
