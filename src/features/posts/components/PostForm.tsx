@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import {
   postSchema,
   PostFormData,
+  PostFormInput,
 } from '@/features/posts/validators/post.schema';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -36,7 +37,7 @@ export function PostForm({
     control,
     handleSubmit,
     formState: { errors },
-  } = useForm<PostFormData>({
+  } = useForm<PostFormInput, unknown, PostFormData>({
     resolver: zodResolver(postSchema),
     defaultValues: {
       title: '',

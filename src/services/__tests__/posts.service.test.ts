@@ -102,6 +102,7 @@ describe('posts.service', () => {
       title: 'Novo post',
       content: 'Conteúdo com mais de dez caracteres.',
       status: 'DRAFT' as const,
+      discipline_id: undefined,
     };
 
     it('calls POST /posts with the payload', async () => {

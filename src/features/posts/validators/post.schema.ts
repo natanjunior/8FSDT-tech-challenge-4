@@ -16,11 +16,14 @@ export const postSchema = z.object({
   discipline_id: z
     .string()
     .optional()
-    .transform((v) => (v === '' || v === undefined ? undefined : v))
     .refine(
-      (v) => v === undefined || UUID_REGEX.test(v),
+      (v) => v === undefined || v === '' || UUID_REGEX.test(v),
       'Disciplina inválida.'
-    ),
+    )
+    .transform((v) => (v === '' ? undefined : v)),
 });
 
-export type PostFormData = z.infer<typeof postSchema>;
+// Input type — what the form fields hold (discipline_id may be '' or UUID or undefined)
+export type PostFormInput = z.input<typeof postSchema>;
+// Output type — what submit handlers receive after transform
+export type PostFormData = z.output<typeof postSchema>;

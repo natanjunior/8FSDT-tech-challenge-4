@@ -9,15 +9,15 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Loader } from '@/components/ui/Loader';
 import { getPostById, updatePost } from '@/services/posts.service';
 import type { PostFormData } from '@/features/posts/validators/post.schema';
-import type { RootStackNavigationProp } from '@/navigation/types';
+import type { RootStackNavigationProp, PostEditRouteProp } from '@/navigation/types';
 import type { Post } from '@/types/api';
 
 export function PostEditScreen() {
   const allowed = useRequireRole('TEACHER');
   const navigation = useNavigation<RootStackNavigationProp>();
-  const route = useRoute<{ key: string; name: string; params: { postId: string } }>();
+  const route = useRoute<PostEditRouteProp>();
   const { logout } = useAuth();
-  const { postId } = route.params as { postId: string };
+  const { postId } = route.params;
 
   const [post, setPost] = useState<Post | null>(null);
   const [isLoading, setIsLoading] = useState(true);

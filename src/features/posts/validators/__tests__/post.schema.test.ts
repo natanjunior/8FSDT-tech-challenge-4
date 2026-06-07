@@ -32,7 +32,7 @@ describe('postSchema', () => {
     const result = postSchema.safeParse({ ...validBase, title: 'oi' });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.issues[0].message).toBe(
+      expect(result.error.issues[0]?.message).toBe(
         'Título deve ter entre 5 e 255 caracteres.'
       );
     }
@@ -53,7 +53,7 @@ describe('postSchema', () => {
     });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.issues[0].message).toBe(
+      expect(result.error.issues[0]?.message).toBe(
         'Título deve ter entre 5 e 255 caracteres.'
       );
     }
@@ -63,7 +63,7 @@ describe('postSchema', () => {
     const result = postSchema.safeParse({ ...validBase, content: 'curto' });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.issues[0].message).toBe(
+      expect(result.error.issues[0]?.message).toBe(
         'Conteúdo deve ter no mínimo 10 caracteres.'
       );
     }

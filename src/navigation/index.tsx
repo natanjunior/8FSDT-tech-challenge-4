@@ -8,6 +8,8 @@ import { LoginScreen } from '@/features/auth/screens/LoginScreen';
 import { AdminStub } from '@/screens/AdminStub';
 import { PostDetailScreen } from '@/screens/PostDetailScreen';
 import { GrupoScreen } from '@/features/grupo/GrupoScreen';
+import { PostCreateScreen } from '@/screens/PostCreateScreen';
+import { PostEditScreen } from '@/screens/PostEditScreen';
 import { Loader } from '@/components/ui/Loader';
 import { colors } from '@/theme/colors';
 import type { RootStackParamList } from './types';
@@ -67,6 +69,16 @@ export function AppRoutes() {
           name="Grupo"
           component={GrupoScreen}
           options={{ title: 'Grupo 28' }}
+        />
+        <RootStack.Screen
+          name="PostCreate"
+          component={PostCreateScreen}
+          options={{ title: 'Novo post' }}
+        />
+        <RootStack.Screen
+          name="PostEdit"
+          component={PostEditScreen}
+          options={{ title: 'Editar post' }}
         />
       </RootStack.Navigator>
     </NavigationContainer>

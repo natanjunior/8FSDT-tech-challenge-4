@@ -7,7 +7,10 @@ export type RootStackParamList = {
   AdminStub: undefined;
   PostDetail: { postId: string; title?: string };
   Grupo: undefined;
+  PostCreate: undefined;
+  PostEdit: { postId: string };
 };
 
 export type RootStackNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 export type PostDetailRouteProp = RouteProp<RootStackParamList, 'PostDetail'>;
+export type PostEditRouteProp = RouteProp<RootStackParamList, 'PostEdit'>;
