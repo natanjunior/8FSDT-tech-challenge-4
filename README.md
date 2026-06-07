@@ -83,23 +83,29 @@ Rotas TEACHER-only não são "escondidas" do navigator — a tela faz auto-gate 
 
 ## Autenticação
 
-A API da Fase 2 utiliza **login passwordless por e-mail**: o usuário informa o e-mail, o backend retorna um JWT se o e-mail estiver cadastrado. O JWT é armazenado em [`expo-secure-store`](https://docs.expo.dev/versions/latest/sdk/securestore/) e injetado automaticamente como `Authorization: Bearer <token>` por um interceptor do Axios.
+A API da Fase 2 (branch `ajustes-fase-4`) utiliza **autenticação com `login` + senha (bcrypt)** e responde com **credencial separada do perfil**:
 
 ```
-HeaderRight "Entrar"
+POST /auth/login { login, password }
    ↓
-LoginScreen → submit (RHF + Zod)
+200 { user, profile, token }
    ↓
-AuthContext.login(payload)
+SecureStore.setItem (AUTH_TOKEN, AUTH_USER, AUTH_PROFILE)
    ↓
-auth.service.login() → POST /auth/login → { token, user }
-   ↓
-SecureStore.setItem (AUTH_TOKEN, AUTH_USER)
-   ↓
-AuthContext.user atualizado → HeaderRight troca "Entrar" por "Sair" (+ "Painel" se TEACHER)
+AuthContext atualiza estado → HeaderRight troca "Entrar" por "Sair" (+ "Painel" se TEACHER)
 ```
 
-Na inicialização do app, o `AuthContext` faz **hydration**: lê `AUTH_TOKEN` e `AUTH_USER` do SecureStore e, se presentes, restaura a sessão sem exigir novo login.
+- **`user`** é a credencial: `{ id, login, role }`. Sem `name`, sem `email`.
+- **`profile`** é `Teacher | Student | null` — onde estão os campos de exibição (`name`, `email`, `pronouns`, `disciplines`, `course`, etc.).
+- **`token`** é o JWT (24h, sem refresh).
+
+Na inicialização do app, o `AuthContext` faz **hydration** lendo as 3 chaves do SecureStore. Logout limpa as 3 chaves.
+
+Em qualquer 401 (token expirado, sessão invalidada server-side, credencial removida), o interceptor do Axios e o handler do AuthContext limpam o estado local e redirecionam para a tela de login.
+
+### Troca de senha
+
+`PATCH /auth/password { current_password, new_password }` está disponível e exposto pelo método `changePassword` do `auth.service`. UI é entregue na Fase 6.
 
 ## Decisões arquiteturais (ADRs)
 
@@ -113,6 +119,8 @@ Algumas escolhas divergem do conteúdo padrão das aulas — registradas aqui pa
 | 04 | **Context API (`AuthContext`)** em vez de Redux Toolkit (aula RN Medium 6) | Um único reducer (auth) não justifica boilerplate de Redux. Spec da Fase 4 permite Context. |
 | 05 | **expo-secure-store** para o JWT, em vez de AsyncStorage | SecureStore criptografa nativamente (Keychain no iOS, Keystore no Android). |
 | 06 | **Single Native Stack com entrada pública**, não login wall | Espelha o modelo da Fase 3 web (lista de posts é pública; login é opcional). Rotas TEACHER-only fazem auto-gate via `useEffect + navigation.replace`. |
+| 12 | **Credencial separada do perfil (`User` ≠ `Profile`)** | Espelhamento do backend Fase 2 (branch `ajustes-fase-4`). Mobile guarda 3 chaves SecureStore (`AUTH_TOKEN`, `AUTH_USER`, `AUTH_PROFILE`). `AuthContext` expõe ambos; UI usa `user.role` para gating e `profile.name` para exibição. |
+| 13 | **Referências FHIR (`Teacher/<uuid>`, `Student/<uuid>`)** | IDs de perfil incluem o tipo no formato FHIR. Concatenar direto nas URLs (`/teachers/${teacher.id}`) — backend resolve. **Não** usar `encodeURIComponent` no id inteiro (quebraria a barra). |
 
 ## Próximas fases
 
