@@ -8,17 +8,32 @@ export function HeaderRight() {
   const navigation = useNavigation<RootStackNavigationProp>();
   const { isAuthenticated, user, logout } = useAuth();
 
+  const grupoButton = (
+    <TouchableOpacity
+      accessibilityRole="button"
+      onPress={() => navigation.navigate('Grupo')}
+      className="px-3 py-1"
+    >
+      <Text className="text-sm font-semibold text-primary-foreground">
+        Grupo
+      </Text>
+    </TouchableOpacity>
+  );
+
   if (!isAuthenticated) {
     return (
-      <TouchableOpacity
-        accessibilityRole="button"
-        onPress={() => navigation.navigate('Login')}
-        className="px-3 py-1"
-      >
-        <Text className="text-sm font-semibold text-primary-foreground">
-          Entrar
-        </Text>
-      </TouchableOpacity>
+      <View className="flex-row items-center gap-2">
+        {grupoButton}
+        <TouchableOpacity
+          accessibilityRole="button"
+          onPress={() => navigation.navigate('Login')}
+          className="px-3 py-1"
+        >
+          <Text className="text-sm font-semibold text-primary-foreground">
+            Entrar
+          </Text>
+        </TouchableOpacity>
+      </View>
     );
   }
 
@@ -26,6 +41,7 @@ export function HeaderRight() {
 
   return (
     <View className="flex-row items-center gap-2">
+      {grupoButton}
       {isTeacher ? (
         <TouchableOpacity
           accessibilityRole="button"

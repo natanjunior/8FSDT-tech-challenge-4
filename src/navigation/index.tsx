@@ -6,6 +6,8 @@ import { HeaderRight } from '@/components/layout/Header';
 import { HomeScreen } from '@/screens/HomeScreen';
 import { LoginScreen } from '@/features/auth/screens/LoginScreen';
 import { AdminStub } from '@/screens/AdminStub';
+import { PostDetailScreen } from '@/screens/PostDetailScreen';
+import { GrupoScreen } from '@/features/grupo/GrupoScreen';
 import { Loader } from '@/components/ui/Loader';
 import { colors } from '@/theme/colors';
 import type { RootStackParamList } from './types';
@@ -53,6 +55,18 @@ export function AppRoutes() {
           name="AdminStub"
           component={AdminStub}
           options={{ title: 'Painel admin' }}
+        />
+        <RootStack.Screen
+          name="PostDetail"
+          component={PostDetailScreen}
+          options={({ route }) => ({
+            title: route.params.title ? route.params.title.slice(0, 30) : 'Post',
+          })}
+        />
+        <RootStack.Screen
+          name="Grupo"
+          component={GrupoScreen}
+          options={{ title: 'Grupo 28' }}
         />
       </RootStack.Navigator>
     </NavigationContainer>

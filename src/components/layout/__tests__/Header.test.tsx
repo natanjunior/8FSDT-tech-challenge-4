@@ -92,4 +92,25 @@ describe('HeaderRight', () => {
     fireEvent.press(getByText('Sair'));
     expect(logoutMock).toHaveBeenCalledTimes(1);
   });
+
+  it('renders "Grupo" for all auth states', () => {
+    useAuthSpy.mockReturnValue(guest);
+    const { getByText, rerender } = render(<HeaderRight />);
+    expect(getByText('Grupo')).toBeTruthy();
+
+    useAuthSpy.mockReturnValue(student);
+    rerender(<HeaderRight />);
+    expect(getByText('Grupo')).toBeTruthy();
+
+    useAuthSpy.mockReturnValue(teacher);
+    rerender(<HeaderRight />);
+    expect(getByText('Grupo')).toBeTruthy();
+  });
+
+  it('navigates to Grupo when "Grupo" is pressed', () => {
+    useAuthSpy.mockReturnValue(guest);
+    const { getByText } = render(<HeaderRight />);
+    fireEvent.press(getByText('Grupo'));
+    expect(mockNavigate).toHaveBeenCalledWith('Grupo');
+  });
 });
