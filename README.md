@@ -20,50 +20,89 @@ Frontend mobile do sistema de blogging educacional, consumindo a API da Fase 2.
 | Armazenamento seguro | expo-secure-store |
 | Testes | Jest + @testing-library/react-native |
 
-## Setup
+## 🚀 Setup e Instalação
 
 ### Pré-requisitos
 
-- Node.js 20+ (recomendado: 20.19.x ou 22.x)
-- npm 9+
-- Backend da Fase 2 rodando e acessível
+- **Node.js 20+** ([Download](https://nodejs.org/)) — recomendado: 20.19.x ou 22.x
+- **npm 9+** (incluído com Node.js 20)
+- **Expo Go** instalado no dispositivo móvel ([Android](https://play.google.com/store/apps/details?id=host.exp.exponent) · [iOS](https://apps.apple.com/app/expo-go/id982107779)) **ou** Android Studio com um AVD configurado
+- **API da Fase 2** rodando e acessível ([Repositório](https://github.com/natanjunior/8FSDT-tech-challenge-2))
 
-### Passos
+### 1. Clonar o Repositório
 
 ```bash
-# 1. Instalar dependências
+git clone https://github.com/natanjunior/8FSDT-tech-challenge-4.git
+cd 8FSDT-tech-challenge-4
+```
+
+### 2. Instalar Dependências
+
+```bash
 npm install
-
-# 2. Configurar variáveis de ambiente
-cp .env.example .env
-# Edite .env e ajuste EXPO_PUBLIC_API_URL conforme o ambiente:
-#   - iOS simulator / web: http://localhost:3030
-#   - Android emulator:    http://10.0.2.2:3030
-#   - Dispositivo físico:  http://<IP-DO-HOST>:3030
-
-# 3. Subir o backend da Fase 2 (em outro terminal)
-
-# 4. Iniciar o app
-npm start
-# Pressione 'i' (iOS), 'a' (Android) ou 'w' (web)
 ```
 
-### Variáveis de ambiente
-
-| Variável | Descrição | Obrigatória |
-|----------|-----------|-------------|
-| `EXPO_PUBLIC_API_URL` | URL base da API da Fase 2 | Sim |
-
-## Scripts
+### 3. Configurar Variáveis de Ambiente
 
 ```bash
-npm start          # Inicia o Metro bundler
-npm run android    # Inicia no Android emulator
-npm run ios        # Inicia no iOS simulator
-npm test           # Roda testes com Jest
-npm run test:watch # Watch mode
-npm run lint       # ESLint (via expo lint)
+cp .env.example .env
 ```
+
+Edite `.env` ajustando `EXPO_PUBLIC_API_URL` para o endereço onde a API da Fase 2 está rodando. O valor correto **depende de como você está executando o app**:
+
+| Cenário | Valor de `EXPO_PUBLIC_API_URL` |
+|---------|-------------------------------|
+| **Expo Go no dispositivo físico** (Android ou iOS) na mesma rede Wi-Fi | `http://<IP-LAN-DO-SEU-COMPUTADOR>:3030` |
+| **Android Emulator** (Android Studio AVD) | `http://10.0.2.2:3030` |
+| **iOS Simulator** (macOS) | `http://localhost:3030` |
+
+> **Como descobrir o IP LAN do seu computador:**
+> - **Windows:** abra o terminal e rode `ipconfig`. Procure "Endereço IPv4" na rede ativa (Wi-Fi). Exemplo: `192.168.0.173`
+> - **macOS/Linux:** `ifconfig | grep "inet "` ou `ip addr`. Procure o IP da interface `en0` / `wlan0`.
+>
+> O IP deve ser o da mesma rede Wi-Fi em que o celular está conectado. Exemplo de `.env` final:
+> ```env
+> EXPO_PUBLIC_API_URL=http://192.168.0.173:3030
+> ```
+
+> **Importante — variáveis `EXPO_PUBLIC_*`:** essas variáveis são embutidas no bundle JavaScript pelo Metro bundler no momento da inicialização. Sempre que alterar o `.env`, reinicie o servidor com `npm start -- --clear` (ou `npx expo start --clear`) para o novo valor ser aplicado.
+
+### 4. Subir o Backend da Fase 2
+
+Em outro terminal, siga o [README da Fase 2](https://github.com/natanjunior/8FSDT-tech-challenge-2) para subir a API localmente. Ela precisa estar acessível na porta `3030` (ou na porta que você configurou em `EXPO_PUBLIC_API_URL`).
+
+> **Nota — cold start da Render (free tier):** se o backend estiver hospedado na Render.com, o serviço hiberna após ~15 min de inatividade e leva 20–40s para acordar no primeiro request. O cliente Axios está configurado com `timeout: 30000ms` para cobrir esse cenário. Se o primeiro login demorar, aguarde e tente novamente — é o backend acordando.
+
+### 5. Iniciar o App
+
+```bash
+npm start
+```
+
+O terminal exibe um QR Code. Escolha como rodar:
+
+| Método | O que fazer |
+|--------|------------|
+| **Expo Go no celular** | Abra o app Expo Go, toque em "Scan QR code" e aponte para o QR do terminal |
+| **Android Emulator** | Com o AVD aberto no Android Studio, pressione `a` no terminal |
+| **iOS Simulator** (macOS) | Pressione `i` no terminal |
+
+### Variáveis de Ambiente
+
+| Variável | Descrição | Padrão | Obrigatória |
+|----------|-----------|--------|-------------|
+| `EXPO_PUBLIC_API_URL` | URL base da API da Fase 2 (sem barra final) | `http://localhost:3030` | Sim |
+
+### Scripts Disponíveis
+
+| Script | Descrição |
+|--------|-----------|
+| `npm start` | Inicia o Metro bundler (Expo Dev Server) |
+| `npm run android` | Inicia diretamente no Android Emulator |
+| `npm run ios` | Inicia diretamente no iOS Simulator |
+| `npm test` | Roda testes com Jest (execução única) |
+| `npm run test:watch` | Testes em watch mode |
+| `npm run lint` | ESLint via Expo |
 
 ## Topologia de navegação
 
@@ -252,6 +291,93 @@ Algumas escolhas divergem do conteúdo padrão das aulas — registradas aqui pa
 | 15 | **`CommentAuthor.type` para distinguir Teacher/Student** | Backend entrega `type` resolvido. Exibimos "Professor" / "Aluno" no `CommentItem` em vez de parsear o prefixo do FhirRef. |
 | 10 | **`useRequireRole` hook** em vez de lógica inline por tela | Mesmo gate é usado em AdminStub, PostCreate, PostEdit (e Fases 4 e 5 vão reusar). Centralizar evita drift de comportamento entre telas. |
 | 11 | **Sem ownership check no client** (qualquer TEACHER pode editar qualquer post) | Espelhamento exato do backend (Fase 2 §2.1). Botão "Editar post" renderiza pra qualquer TEACHER, independente de quem é o autor. |
+| 16 | **Inter (6 pesos) + JetBrains Mono via `@expo-google-fonts`** + SplashScreen gate | Paridade visual direta com a Fase 3 web. Inter 900 é necessário para títulos editoriais do PostDetail; JetBrains Mono é o sistema de metadata (timestamps, contadores, IDs) que o web usa sistematicamente. SplashScreen gate evita FOUT (flash of unstyled text). |
+| 17 | **`@expo/vector-icons / MaterialCommunityIcons`** em vez de Material Symbols (que o web usa) | Material Symbols não é fonte instalável em RN sem hacks. MaterialCommunityIcons (6k+ ícones) já vem com Expo SDK 56, tem cobertura comparável e visual Material Design. Wrapper `<Icon>` com enum `IconName` força mapeamento tipado e centraliza os ≈25 ícones usados no app — typos pegam em compile time. |
+| 18 | **`expo-linear-gradient`** para CTAs (`Button primary` e `Button nav`) | Espelhamento dos `cta-gradient` (teal) e `primary-gradient` (navy) do web. NativeWind não suporta gradientes nativamente; expo-linear-gradient é a API canônica do Expo e tem custo de bundle desprezível (~30KB). |
+| 19 | **Comment avatar usa ícone `account`**, NÃO iniciais — divergência intencional do PostCard's AuthorId | Espelhamento exato do web (CommentItem.tsx usa Material Symbol `person`, não iniciais; PostCard.tsx usa iniciais). A diferença semântica: no PostCard, o autor é a identidade editorial (nome + iniciais reforçam isso); no comentário, o autor é um ator transitivo dentro de uma discussão (ícone neutro pesa menos). |
+
+## Design System
+
+### Tipografia
+
+Inter (sans) + JetBrains Mono (monospace para metadata) via [`@expo-google-fonts`](https://github.com/expo/google-fonts), carregadas no boot (SplashScreen gate em `App.tsx`).
+
+| Classe Tailwind | Family | Peso |
+|-----------------|--------|------|
+| `font-sans` | Inter | 400 |
+| `font-sans-medium` | Inter | 500 |
+| `font-sans-semibold` | Inter | 600 |
+| `font-sans-bold` | Inter | 700 |
+| `font-sans-extrabold` | Inter | 800 |
+| `font-sans-black` | Inter | 900 |
+| `font-jetbrains` | JetBrains Mono | 400 |
+
+Inter Black (900) é usado em títulos editoriais (PostDetail, headlines); ExtraBold (800) em títulos de PostCard; JetBrains Mono em **toda metadata** (timestamps, contadores, IDs).
+
+### Iconografia
+
+[`@expo/vector-icons` / `MaterialCommunityIcons`](https://icons.expo.fyi/Index) — wrapper em [src/components/ui/Icon.tsx](src/components/ui/Icon.tsx) restringe nomes a uma enum tipada (`IconName`).
+
+**Mapeamento aproximado Material Symbols (web) → MaterialCommunityIcons (mobile):** aproximação visual, não 1:1 — ver ADR 17.
+
+### Paleta M3 (alinhada à Fase 3 web)
+
+(Mesma tabela das fases anteriores, mantida.)
+
+**Status colors** (divergem dos M3 success/warning/neutral — são específicos do DS web):
+| Token | Hex | Uso |
+|-------|-----|-----|
+| `status-published` | `#22C55E` | PUBLISHED badge + dot |
+| `status-draft` | `#EAB308` | DRAFT badge + dot |
+| `status-archived` | `#94A3B8` | ARCHIVED badge + dot |
+
+**Paleta `AuthorAvatar`:** 6 cores pastel (blue/emerald/teal/amber/rose/violet) — escolha determinística por hash do nome. Fallback slate para nomes nulos.
+
+### Disciplinas — referência única
+
+Mapping `label → { icon, color }` em [src/lib/disciplines.ts](src/lib/disciplines.ts):
+
+| Disciplina | Icon | Cor |
+|-----------|------|-----|
+| Matemática | `function-variant` | `#2563EB` (blue-600) |
+| Português | `book-open-page-variant-outline` | `#D97706` (amber-600) |
+| Ciências | `flask-outline` | `#059669` (emerald-600) |
+| História | `book-clock` | `#E11D48` (rose-600) |
+| Geografia | `earth` | `#0D9488` (teal-600) |
+
+### Componentes (props notáveis)
+
+| Componente | Props |
+|-----------|-------|
+| `Button` | `variant: 'primary' \| 'nav' \| 'secondary' \| 'danger' \| 'danger-outline'`, `size: 'sm' \| 'md' \| 'lg'`, `leadingIcon`, `trailingIcon`, `loading`. `primary`/`nav` usam `expo-linear-gradient` (cta-gradient teal e primary-gradient navy). |
+| `Input` | `label`, `error`, `hint`, `leadingIcon`, `trailingIcon`, `onTrailingIconPress`. Erro **sem borda vermelha**, só background shift. |
+| `Card` | `elevation: 'none' \| 'soft' \| 'editorial'` (default `editorial`). |
+| `Spinner` | `size: 'sm' \| 'md'` (Animated.loop com rotate). |
+| `Loader` | `message`, `fullScreen`. Usa Spinner internamente. |
+| `EmptyState` | `title`, `subtitle`, `icon` (default `inbox-outline`, 64px), `action`. |
+| `Skeleton` | `className` (Animated.pulse 0.4↔0.7). |
+| `StatusBadge` | `status: 'PUBLISHED' \| 'DRAFT' \| 'ARCHIVED'`. Renderiza dot + label uppercase. |
+| `DisciplineBadge` | `label`. Cor + label de `DISCIPLINE_META`. Fallback "Sem disciplina". |
+| `AuthorAvatar` | `name`, `size: 'sm' \| 'md' \| 'lg'`, `variant: 'initials' \| 'icon'`. 6 cores pastel determinísticas. |
+| `AuthorId` | `name`, `subtitle`, `date` (só `lg`), `size`, `avatarVariant`. Composite avatar + texto. |
+| `IconCount` | `type: 'comment' \| 'bookmark' \| 'views'`, `count`, `size`. Ícone + número em JetBrains Mono. |
+| `ConfirmModal` | `isOpen`, `title`, `description`, `confirmLabel`, `cancelLabel`, `variant: 'destructive' \| 'neutral'`, `onConfirm`, `onCancel`, `isLoading`. |
+| `Icon` | `name: IconName`, `size`, `color`. Wrapper de MaterialCommunityIcons. |
+
+### Regras visuais críticas (espelham o web)
+
+1. **Botões primary usam gradient teal**, nunca `bg-primary` sólido.
+2. **Inputs com erro NÃO têm borda vermelha** — só background `error-container/20` + texto de erro abaixo.
+3. **"No 1px solid borders rule"** — separação de seções por tonal layering (`surface-container-low` vs `surface-container-lowest`). Quando 1px é necessário, usar hairlineWidth + `outline-variant/40` (ghost border).
+4. **Cards usam `editorial-shadow`** (sombra navy 5% opacidade, blur 20px, offset 12px) — sem sombras pesadas.
+5. **Metadata sempre em monospace** (`font-jetbrains`) — timestamps, contadores, IDs.
+6. **Comment avatar usa ícone `account`**, NUNCA iniciais (divergência intencional do PostCard's AuthorId — espelha o web, ADR 19).
+
+### Como adicionar um novo ícone
+
+1. Conferir o nome em https://icons.expo.fyi/Index (`MaterialCommunityIcons`).
+2. Adicionar ao tipo `IconName` em [src/components/ui/Icon.tsx](src/components/ui/Icon.tsx).
+3. Usar: `<Icon name="novo-icone" size={20} color={colors.primary} />`.
 
 ## Próximas fases
 
