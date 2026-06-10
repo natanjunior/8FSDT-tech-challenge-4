@@ -1,68 +1,92 @@
 import React from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
-import { Badge } from '@/components/ui/Badge';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Card } from '@/components/ui/Card';
-import type { Post, PostStatus } from '@/types/api';
+import { StatusBadge } from '@/components/ui/StatusBadge';
+import { DisciplineBadge } from '@/components/ui/DisciplineBadge';
+import { AuthorId } from '@/components/ui/AuthorId';
+import { IconCount } from '@/components/ui/IconCount';
+import type { Post } from '@/types/api';
 
 interface PostCardProps {
   post: Post;
   onPress: (post: Post) => void;
+  testID?: string;
 }
 
-const STATUS_VARIANT: Record<PostStatus, 'success' | 'warning' | 'neutral'> = {
-  PUBLISHED: 'success',
-  DRAFT: 'warning',
-  ARCHIVED: 'neutral',
-};
+function formatDate(iso: string | null | undefined): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d
+    .toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
+    .toUpperCase();
+}
 
-export function PostCard({ post, onPress }: PostCardProps) {
+function getExcerpt(content: string, maxLength = 140): string {
+  return content.length > maxLength ? content.slice(0, maxLength) + '…' : content;
+}
+
+export function PostCard({ post, onPress, testID }: PostCardProps) {
   return (
     <TouchableOpacity
-      activeOpacity={0.7}
+      activeOpacity={0.85}
       onPress={() => onPress(post)}
       accessibilityRole="button"
+      testID={testID}
     >
-      <Card>
-        <View className="gap-3">
-          <View className="flex-row items-start justify-between gap-2">
+      <View className="relative pt-3">
+        {/* Discipline badge — flutuante */}
+        <View className="absolute left-6 top-0 z-10">
+          <DisciplineBadge label={post.discipline?.label ?? null} />
+        </View>
+
+        <Card>
+          <View className="gap-4 pt-3">
+            {/* Top — status + data */}
+            <View className="flex-row items-center justify-between">
+              <StatusBadge status={post.status} />
+              <Text className="font-jetbrains text-[10px] uppercase tracking-tighter text-outline">
+                {formatDate(post.published_at ?? post.created_at)}
+              </Text>
+            </View>
+
+            {/* Título */}
             <Text
-              className="flex-1 text-lg font-semibold text-foreground"
-              numberOfLines={2}
+              className="font-sans-extrabold text-xl text-primary leading-tight"
+              numberOfLines={3}
             >
               {post.title}
             </Text>
-            <Badge
-              label={post.status}
-              variant={STATUS_VARIANT[post.status]}
-            />
-          </View>
 
-          <Text className="text-sm text-muted" numberOfLines={3}>
-            {post.content}
-          </Text>
+            {/* Excerpt */}
+            <Text className="font-sans text-sm text-muted leading-relaxed" numberOfLines={3}>
+              {getExcerpt(post.content)}
+            </Text>
 
-          <View className="flex-row items-center justify-between">
-            <Text className="text-sm text-muted">
-              {post.author?.name ?? 'Autor removido'}
-            </Text>
-            <Badge
-              label={post.discipline?.label ?? 'Sem disciplina'}
-              variant="info"
-            />
+            {/* Footer com ghost border */}
+            <View
+              className="flex-row items-center justify-between pt-4"
+              style={styles.ghostBorder}
+            >
+              <AuthorId
+                name={post.author?.name}
+                subtitle={post.discipline?.label ?? 'Sem disciplina'}
+                size="md"
+              />
+              <View className="flex-row items-center gap-3">
+                <IconCount type="comment" count={post.comments_count} />
+                <IconCount type="bookmark" count={post.reads_count} />
+              </View>
+            </View>
           </View>
-
-          <View className="flex-row gap-4">
-            <Text className="text-xs text-muted">
-              {post.comments_count}{' '}
-              {post.comments_count === 1 ? 'comentário' : 'comentários'}
-            </Text>
-            <Text className="text-xs text-muted">
-              {post.reads_count}{' '}
-              {post.reads_count === 1 ? 'leitura' : 'leituras'}
-            </Text>
-          </View>
-        </View>
-      </Card>
+        </Card>
+      </View>
     </TouchableOpacity>
   );
 }
+
+const styles = StyleSheet.create({
+  ghostBorder: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(196, 198, 207, 0.4)', // outline-variant @ 40%
+  },
+});
