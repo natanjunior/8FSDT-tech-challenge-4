@@ -65,7 +65,9 @@ describe('HeaderRight', () => {
 
   it('renders "Sair" but no "Painel" when STUDENT', () => {
     useAuthSpy.mockReturnValue(student);
-    const { getByText, queryByText } = render(<HeaderRight />);
+    const { getByTestId, getByText, queryByText } = render(<HeaderRight />);
+    // open the dropdown
+    fireEvent.press(getByTestId('header-user-trigger'));
     expect(getByText('Sair')).toBeTruthy();
     expect(queryByText('Painel')).toBeNull();
     expect(queryByText('Entrar')).toBeNull();
@@ -73,14 +75,17 @@ describe('HeaderRight', () => {
 
   it('renders both "Painel" and "Sair" when TEACHER', () => {
     useAuthSpy.mockReturnValue(teacher);
-    const { getByText } = render(<HeaderRight />);
+    const { getByTestId, getByText } = render(<HeaderRight />);
+    // open the dropdown
+    fireEvent.press(getByTestId('header-user-trigger'));
     expect(getByText('Painel')).toBeTruthy();
     expect(getByText('Sair')).toBeTruthy();
   });
 
   it('navigates to AdminStub when TEACHER presses "Painel"', () => {
     useAuthSpy.mockReturnValue(teacher);
-    const { getByText } = render(<HeaderRight />);
+    const { getByTestId, getByText } = render(<HeaderRight />);
+    fireEvent.press(getByTestId('header-user-trigger'));
     fireEvent.press(getByText('Painel'));
     expect(mockNavigate).toHaveBeenCalledWith('AdminStub');
   });
@@ -88,7 +93,8 @@ describe('HeaderRight', () => {
   it('calls logout when "Sair" is pressed', () => {
     const logoutMock = jest.fn();
     useAuthSpy.mockReturnValue({ ...teacher, logout: logoutMock });
-    const { getByText } = render(<HeaderRight />);
+    const { getByTestId, getByText } = render(<HeaderRight />);
+    fireEvent.press(getByTestId('header-user-trigger'));
     fireEvent.press(getByText('Sair'));
     expect(logoutMock).toHaveBeenCalledTimes(1);
   });
@@ -112,5 +118,23 @@ describe('HeaderRight', () => {
     const { getByText } = render(<HeaderRight />);
     fireEvent.press(getByText('Grupo'));
     expect(mockNavigate).toHaveBeenCalledWith('Grupo');
+  });
+
+  // --- New behaviors (Task 19) ---
+
+  it('guest: header-login-icon and header-grupo-icon are present', () => {
+    useAuthSpy.mockReturnValue(guest);
+    const { getByTestId } = render(<HeaderRight />);
+    expect(getByTestId('header-login-icon')).toBeTruthy();
+    expect(getByTestId('header-grupo-icon')).toBeTruthy();
+  });
+
+  it('authenticated (teacher): header-user-trigger is visible; pressing it shows "Painel" and "Sair"', () => {
+    useAuthSpy.mockReturnValue(teacher);
+    const { getByTestId, getByText } = render(<HeaderRight />);
+    expect(getByTestId('header-user-trigger')).toBeTruthy();
+    fireEvent.press(getByTestId('header-user-trigger'));
+    expect(getByText('Painel')).toBeTruthy();
+    expect(getByText('Sair')).toBeTruthy();
   });
 });

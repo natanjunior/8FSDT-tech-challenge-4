@@ -1,6 +1,8 @@
 import React from 'react';
+import { StyleSheet } from 'react-native';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { BlurView } from 'expo-blur';
 import { useAuth } from '@/contexts/AuthContext';
 import { HeaderRight } from '@/components/layout/Header';
 import { HomeScreen } from '@/screens/HomeScreen';
@@ -37,7 +39,14 @@ export function AppRoutes() {
       <RootStack.Navigator
         initialRouteName="Home"
         screenOptions={{
-          headerStyle: { backgroundColor: colors.primary },
+          headerStyle: { backgroundColor: 'transparent' },
+          headerBackground: () => (
+            <BlurView
+              intensity={60}
+              tint="dark"
+              style={[StyleSheet.absoluteFill, { backgroundColor: colors.primary + 'E6' }]}
+            />
+          ),
           headerTintColor: colors.primaryForeground,
           headerTitleStyle: { fontWeight: '600' },
           headerRight: () => <HeaderRight />,
