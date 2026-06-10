@@ -1,6 +1,6 @@
 import React from 'react';
-import { ActivityIndicator, Text, View } from 'react-native';
-import { colors } from '@/theme/colors';
+import { Text, View } from 'react-native';
+import { Spinner } from '@/components/ui/Spinner';
 
 interface LoaderProps {
   message?: string;
@@ -10,11 +10,13 @@ interface LoaderProps {
 export function Loader({ message, fullScreen = false }: LoaderProps) {
   return (
     <View
-      className={`items-center justify-center gap-2 ${fullScreen ? 'flex-1 bg-background' : 'py-4'}`}
+      className={`items-center justify-center gap-3 ${
+        fullScreen ? 'flex-1 bg-background' : 'py-6'
+      }`}
     >
-      <ActivityIndicator color={colors.primary} />
+      <Spinner size="md" />
       {message ? (
-        <Text className="text-sm text-muted">{message}</Text>
+        <Text className="font-sans-medium text-sm text-muted">{message}</Text>
       ) : null}
     </View>
   );

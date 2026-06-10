@@ -45,6 +45,11 @@ describe('UI components — smoke', () => {
     expect(getByText('Carregando...')).toBeTruthy();
   });
 
+  it('Loader fullScreen renders without crashing', () => {
+    const { getByText } = render(<Loader fullScreen message="Boot..." />);
+    expect(getByText('Boot...')).toBeTruthy();
+  });
+
   it('EmptyState renders title and optional action', () => {
     const { getByText } = render(
       <EmptyState
@@ -55,6 +60,20 @@ describe('UI components — smoke', () => {
     );
     expect(getByText('Sem resultados')).toBeTruthy();
     expect(getByText('Limpar')).toBeTruthy();
+  });
+
+  it('EmptyState renders default icon when no icon prop', () => {
+    const { getByTestId } = render(
+      <EmptyState testID="empty" title="Nada aqui" />
+    );
+    expect(getByTestId('empty-icon')).toBeTruthy();
+  });
+
+  it('EmptyState accepts custom icon', () => {
+    const { getByTestId } = render(
+      <EmptyState testID="empty" title="Erro" icon="alert-circle-outline" />
+    );
+    expect(getByTestId('empty-icon')).toBeTruthy();
   });
 
   it('Skeleton renders a View', () => {
