@@ -5,15 +5,17 @@ import {
   getPostById,
   createPost,
   updatePost,
+  deletePost,
 } from '@/services/posts.service';
 
 jest.mock('@/api/client', () => ({
-  apiClient: { get: jest.fn(), post: jest.fn(), patch: jest.fn() },
+  apiClient: { get: jest.fn(), post: jest.fn(), patch: jest.fn(), delete: jest.fn() },
 }));
 
 const mockGet = apiClient.get as jest.Mock;
 const mockPost = apiClient.post as jest.Mock;
 const mockPatch = apiClient.patch as jest.Mock;
+const mockDelete = apiClient.delete as jest.Mock;
 
 const fakePost = {
   id: 'p1',
@@ -134,6 +136,19 @@ describe('posts.service', () => {
         status: 'PUBLISHED',
       });
       expect(updated.status).toBe('PUBLISHED');
+    });
+  });
+
+  describe('deletePost', () => {
+    it('calls DELETE /posts/:id and resolves void', async () => {
+      mockDelete.mockResolvedValueOnce({ status: 204 });
+      await expect(deletePost('p1')).resolves.toBeUndefined();
+      expect(mockDelete).toHaveBeenCalledWith('/posts/p1');
+    });
+
+    it('propagates errors from the API', async () => {
+      mockDelete.mockRejectedValueOnce(new Error('forbidden'));
+      await expect(deletePost('p1')).rejects.toThrow('forbidden');
     });
   });
 });

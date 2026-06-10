@@ -78,3 +78,7 @@ export async function updatePost(
   const { data } = await apiClient.patch<Post>(`/posts/${id}`, body);
   return data;
 }
+
+export async function deletePost(id: string): Promise<void> {
+  await apiClient.delete(`/posts/${id}`);
+}
