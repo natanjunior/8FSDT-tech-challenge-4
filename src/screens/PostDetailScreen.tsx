@@ -2,10 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useAuth } from '@/contexts/AuthContext';
-import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Loader } from '@/components/ui/Loader';
+import { DisciplineBadge } from '@/components/ui/DisciplineBadge';
+import { StatusBadge } from '@/components/ui/StatusBadge';
+import { IconCount } from '@/components/ui/IconCount';
+import { AuthorId } from '@/components/ui/AuthorId';
 import { MarkAsReadButton } from '@/components/posts/MarkAsReadButton';
 import { CommentSection } from '@/features/comments/components/CommentSection';
 import { getPostById } from '@/services/posts.service';
@@ -15,6 +18,13 @@ import type {
   RootStackNavigationProp,
   PostDetailRouteProp,
 } from '@/navigation/types';
+
+function formatLongDate(iso: string | null | undefined): string {
+  if (!iso) return '';
+  return new Date(iso)
+    .toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
+    .toUpperCase();
+}
 
 export function PostDetailScreen() {
   const route = useRoute<PostDetailRouteProp>();
@@ -67,38 +77,30 @@ export function PostDetailScreen() {
 
   return (
     <ScrollView className="flex-1 bg-background">
-      <View className="p-4 gap-4">
-        <View className="flex-row items-center gap-2">
-          {post.discipline ? (
-            <Badge label={post.discipline.label} variant="info" />
-          ) : null}
-          <Badge
-            label={post.status}
-            variant={
-              post.status === 'PUBLISHED'
-                ? 'success'
-                : post.status === 'DRAFT'
-                ? 'warning'
-                : 'neutral'
-            }
-          />
+      <View className="p-4 gap-5">
+        <View className="flex-row flex-wrap items-center gap-3">
+          <DisciplineBadge label={post.discipline?.label ?? null} />
+          <StatusBadge status={post.status} />
+          <IconCount type="comment" count={post.comments_count} size="md" />
+          <IconCount type="bookmark" count={post.reads_count} size="md" />
         </View>
 
-        <Text className="text-3xl font-bold text-foreground">
+        <Text className="font-jetbrains text-[11px] uppercase tracking-tighter text-outline">
+          {formatLongDate(post.published_at ?? post.created_at)}
+        </Text>
+
+        <Text className="font-sans-black text-3xl text-primary leading-tight">
           {post.title}
         </Text>
 
-        <View className="flex-row items-center justify-between">
-          <Text className="text-sm text-muted">
-            {post.author?.name ?? 'Autor removido'}
-            {post.author?.pronouns ? ` (${post.author.pronouns})` : ''}
-          </Text>
-          <Text className="text-xs text-muted">
-            {post.comments_count} comentários · {post.reads_count} leituras
-          </Text>
-        </View>
+        <AuthorId
+          name={post.author?.name}
+          subtitle={post.author?.pronouns ?? post.discipline?.label ?? undefined}
+          date={formatLongDate(post.published_at ?? post.created_at)}
+          size="lg"
+        />
 
-        <Text className="text-base text-foreground leading-6">
+        <Text className="font-sans text-base text-foreground leading-7 mt-3">
           {post.content}
         </Text>
 
@@ -108,6 +110,7 @@ export function PostDetailScreen() {
             <Button
               title="Editar post"
               variant="secondary"
+              leadingIcon="pencil-outline"
               onPress={() => navigation.navigate('PostEdit', { postId: post.id })}
             />
           ) : null}

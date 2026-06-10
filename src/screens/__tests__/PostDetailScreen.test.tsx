@@ -79,14 +79,13 @@ describe('PostDetailScreen', () => {
     mockHasRead.mockResolvedValue(false);
   });
 
-  it('renders published post with author + pronouns for guest', async () => {
+  it('renders published post title and content for guest', async () => {
     useAuthSpy.mockReturnValue(guest);
     mockGetById.mockResolvedValueOnce(publishedPost);
 
     const { findByText } = render(<PostDetailScreen />);
     expect(await findByText('Post Teste')).toBeTruthy();
     expect(await findByText('Conteúdo do post')).toBeTruthy();
-    expect(await findByText('Prof João (ele/dele)')).toBeTruthy();
   });
 
   it('redirects to Home when post is DRAFT and viewer is not TEACHER', async () => {
@@ -121,5 +120,35 @@ describe('PostDetailScreen', () => {
     const { findByText, queryByText } = render(<PostDetailScreen />);
     await findByText('Post Teste');
     expect(queryByText('Editar post')).toBeNull();
+  });
+
+  it('renders DisciplineBadge in detail header', async () => {
+    useAuthSpy.mockReturnValue(guest);
+    mockGetById.mockResolvedValueOnce(publishedPost);
+    const { findByText } = render(<PostDetailScreen />);
+    expect(await findByText(publishedPost.discipline!.label)).toBeTruthy();
+  });
+
+  it('renders AuthorId-lg with author name', async () => {
+    useAuthSpy.mockReturnValue(guest);
+    mockGetById.mockResolvedValueOnce(publishedPost);
+    const { findByText } = render(<PostDetailScreen />);
+    expect(await findByText(publishedPost.author!.name)).toBeTruthy();
+  });
+
+  it('renders IconCount for comments and reads (no old textual counter in header)', async () => {
+    useAuthSpy.mockReturnValue(guest);
+    mockGetById.mockResolvedValueOnce({
+      ...publishedPost,
+      comments_count: 4,
+      reads_count: 7,
+    });
+    const { findByText, queryByText } = render(<PostDetailScreen />);
+    // IconCount renders the raw numbers
+    expect(await findByText('4')).toBeTruthy();
+    expect(await findByText('7')).toBeTruthy();
+    // The OLD header used a combined "X comentários · X leituras" Text node — assert it is gone
+    expect(queryByText(/comentários · \d+ leituras/i)).toBeNull();
+    expect(queryByText(/\d+ leituras/i)).toBeNull();
   });
 });
