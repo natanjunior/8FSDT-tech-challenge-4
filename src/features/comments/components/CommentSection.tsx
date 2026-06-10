@@ -3,7 +3,8 @@ import { Text, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/Button';
-import { Loader } from '@/components/ui/Loader';
+import { Spinner } from '@/components/ui/Spinner';
+import { Icon } from '@/components/ui/Icon';
 import { CommentItem } from './CommentItem';
 import { CommentForm } from './CommentForm';
 import {
@@ -11,6 +12,8 @@ import {
   createComment,
   deleteComment,
 } from '@/services/comments.service';
+import { softShadow } from '@/theme/elevation';
+import { colors } from '@/theme/colors';
 import type { Comment, Pagination } from '@/types/api';
 
 interface CommentSectionProps {
@@ -77,42 +80,61 @@ export function CommentSection({ postId }: CommentSectionProps) {
     }
   };
 
-  return (
-    <View className="gap-4 mt-6">
-      <Text className="text-lg font-semibold text-foreground">
-        Comentários
-      </Text>
+  const total = pagination?.total ?? 0;
 
-      {isAuthenticated ? (
-        <CommentForm onSubmit={handleSubmit} isSubmitting={isSubmitting} />
-      ) : (
-        <View className="rounded-xl border border-border bg-surface-container p-4">
-          <Text className="text-sm text-muted">
-            Faça login para comentar.
+  return (
+    <View className="mt-8">
+      <View
+        className="overflow-hidden rounded-xl bg-surface-container-lowest"
+        style={softShadow}
+      >
+        {/* Header bar */}
+        <View className="flex-row items-center justify-between bg-surface-container px-6 py-4 border-b border-surface-container-high">
+          <View className="flex-row items-center gap-2">
+            <Icon name="forum" size={18} color={colors.primary} />
+            <Text className="font-sans-bold text-sm text-primary">Comentários</Text>
+          </View>
+          <Text className="font-jetbrains text-xs text-muted">
+            {total} {total === 1 ? 'comentário' : 'comentários'}
           </Text>
         </View>
-      )}
 
-      {isLoading ? (
-        <Loader />
-      ) : comments.length === 0 ? (
-        <Text className="text-sm text-muted">
-          Nenhum comentário ainda. Seja o primeiro!
-        </Text>
-      ) : (
-        <View className="gap-3">
-          {comments.map((c) => (
-            <CommentItem key={c.id} comment={c} onDelete={handleDelete} />
-          ))}
-          {pagination && pagination.page < pagination.totalPages ? (
-            <Button
-              title="Carregar mais"
-              onPress={handleLoadMore}
-              variant="secondary"
-            />
-          ) : null}
+        {/* Body */}
+        <View className="p-6 gap-6">
+          {isAuthenticated ? (
+            <CommentForm onSubmit={handleSubmit} isSubmitting={isSubmitting} />
+          ) : (
+            <View className="rounded-xl border border-border bg-surface-container p-4">
+              <Text className="text-sm text-muted">
+                Faça login para comentar.
+              </Text>
+            </View>
+          )}
+
+          {isLoading ? (
+            <View className="items-center py-4">
+              <Spinner size="md" />
+            </View>
+          ) : comments.length === 0 ? (
+            <Text className="text-sm text-muted">
+              Nenhum comentário ainda. Seja o primeiro!
+            </Text>
+          ) : (
+            <View className="gap-3">
+              {comments.map((c) => (
+                <CommentItem key={c.id} comment={c} onDelete={handleDelete} />
+              ))}
+              {pagination && pagination.page < pagination.totalPages ? (
+                <Button
+                  title="Carregar mais"
+                  onPress={handleLoadMore}
+                  variant="secondary"
+                />
+              ) : null}
+            </View>
+          )}
         </View>
-      )}
+      </View>
     </View>
   );
 }
