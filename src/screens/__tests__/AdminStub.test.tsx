@@ -55,7 +55,7 @@ describe('AdminStub', () => {
   it('renders placeholder content for TEACHER', () => {
     useAuthSpy.mockReturnValue(teacher);
     const { getByText } = render(<AdminStub />);
-    expect(getByText('Painel admin — em construção')).toBeTruthy();
+    expect(getByText('Painel admin')).toBeTruthy();
     expect(mockReplace).not.toHaveBeenCalled();
     expect(Toast.show).not.toHaveBeenCalled();
   });
@@ -83,7 +83,7 @@ describe('AdminStub', () => {
     expect(Toast.show).toHaveBeenCalled();
   });
 
-  it('navigates to PostCreate when "+ Novo post" is pressed (TEACHER)', () => {
+  it('navigates to PostCreate when "Novo post" is pressed (TEACHER)', () => {
     const mockNavigate = jest.fn();
     (useNavigation as jest.Mock).mockReturnValue({
       replace: mockReplace,
@@ -91,7 +91,7 @@ describe('AdminStub', () => {
     });
     useAuthSpy.mockReturnValue(teacher);
     const { getByText } = render(<AdminStub />);
-    fireEvent.press(getByText('+ Novo post'));
+    fireEvent.press(getByText('Novo post'));
     expect(mockNavigate).toHaveBeenCalledWith('PostCreate');
   });
 });

@@ -3,6 +3,8 @@ import { SafeAreaView, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useRequireRole } from '@/hooks/useRequireRole';
 import { Button } from '@/components/ui/Button';
+import { Icon } from '@/components/ui/Icon';
+import { colors } from '@/theme/colors';
 import type { RootStackNavigationProp } from '@/navigation/types';
 
 export function AdminStub() {
@@ -13,15 +15,19 @@ export function AdminStub() {
   return (
     <SafeAreaView className="flex-1 bg-background">
       <View className="flex-1 gap-6 p-6">
-        <Text className="text-2xl font-bold text-foreground">
-          Painel admin — em construção
-        </Text>
-        <Text className="text-base text-muted leading-6">
-          Esta é uma tela placeholder para validar o role gate. A Fase 4 vai substituir esta tela pela lista administrativa de posts.
+        <View className="flex-row items-center gap-3">
+          <Icon name="view-dashboard-outline" size={28} color={colors.primary} />
+          <Text className="font-sans-black text-2xl text-primary">
+            Painel admin
+          </Text>
+        </View>
+        <Text className="font-sans text-base text-muted leading-6">
+          Em construção — a Fase 4 vai substituir esta tela pela lista administrativa de posts.
         </Text>
 
         <Button
-          title="+ Novo post"
+          title="Novo post"
+          leadingIcon="plus"
           onPress={() => navigation.navigate('PostCreate')}
         />
       </View>
