@@ -4,49 +4,158 @@ import {
   Text,
   TouchableOpacity,
   TouchableOpacityProps,
+  View,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Icon, IconName } from '@/components/ui/Icon';
+import { colors } from '@/theme/colors';
+import { primaryShadow } from '@/theme/elevation';
 
-type ButtonVariant = 'primary' | 'secondary' | 'outline';
+export type ButtonVariant =
+  | 'primary'        // cta-gradient teal — CTAs de formulário (Criar post, Salvar, Entrar no login)
+  | 'nav'            // primary-gradient navy — botão "Entrar" do header visitante
+  | 'secondary'      // ghost outline — Cancelar, ações secundárias
+  | 'danger'         // sólido vermelho — Confirmar exclusão (no modal)
+  | 'danger-outline';// outline vermelho — botão "Excluir post" na sidebar de edição
+
+type ButtonSize = 'sm' | 'md' | 'lg';
 
 export interface ButtonProps extends Omit<TouchableOpacityProps, 'children'> {
   title: string;
   variant?: ButtonVariant;
+  size?: ButtonSize;
   loading?: boolean;
+  leadingIcon?: IconName;
+  trailingIcon?: IconName;
 }
 
-const VARIANT_CONTAINER: Record<ButtonVariant, string> = {
-  primary: 'bg-primary',
-  secondary: 'bg-secondary',
-  outline: 'bg-transparent border border-primary',
+const SIZE_CONTAINER: Record<ButtonSize, string> = {
+  sm: 'px-4 py-2',
+  md: 'px-6 py-3',
+  lg: 'px-8 py-3.5',
 };
 
-const VARIANT_TEXT: Record<ButtonVariant, string> = {
-  primary: 'text-primary-foreground',
-  secondary: 'text-foreground',
-  outline: 'text-primary',
+const SIZE_TEXT: Record<ButtonSize, string> = {
+  sm: 'text-sm',
+  md: 'text-base',
+  lg: 'text-base',
+};
+
+const SIZE_ICON: Record<ButtonSize, number> = {
+  sm: 16,
+  md: 18,
+  lg: 20,
+};
+
+// typed as readonly tuples so LinearGradient's `colors` prop is satisfied
+const GRADIENT_COLORS: Partial<Record<ButtonVariant, readonly [string, string]>> = {
+  primary: ['#006A61', '#005049'], // cta-gradient teal (90deg)
+  nav: ['#022448', '#1E3A5F'],     // primary-gradient navy (135deg)
+};
+
+const TEXT_CLASS: Record<ButtonVariant, string> = {
+  primary: 'text-white font-sans-bold',
+  nav: 'text-white font-sans-bold',
+  secondary: 'text-foreground font-sans-bold',
+  danger: 'text-white font-sans-bold',
+  'danger-outline': 'text-error font-sans-bold',
 };
 
 export function Button({
   title,
   variant = 'primary',
+  size = 'md',
   loading = false,
   disabled,
+  leadingIcon,
+  trailingIcon,
+  testID,
   ...rest
 }: ButtonProps) {
   const isDisabled = disabled || loading;
+  const gradient = GRADIENT_COLORS[variant];
+  const iconColor =
+    variant === 'secondary' ? colors.foreground :
+    variant === 'danger-outline' ? colors.error :
+    colors.primaryForeground;
+
+  const sizeClass = SIZE_CONTAINER[size];
+
+  // Estilo do container externo
+  const containerClass = (() => {
+    if (variant === 'secondary') {
+      return `flex-row items-center justify-center gap-2 rounded-xl ${sizeClass} bg-surface-container-lowest border border-outline-variant`;
+    }
+    if (variant === 'danger') {
+      return `flex-row items-center justify-center gap-2 rounded-xl ${sizeClass} bg-error`;
+    }
+    if (variant === 'danger-outline') {
+      return `flex-row items-center justify-center gap-2 rounded-xl ${sizeClass} bg-surface-container-lowest border border-error`;
+    }
+    // primary / nav (gradient — borda já vem do gradient)
+    return `flex-row items-center justify-center gap-2 rounded-xl ${sizeClass} overflow-hidden`;
+  })();
+
+  const containerStyle = variant === 'primary' || variant === 'nav' ? primaryShadow : undefined;
+
+  const innerContent = (
+    <>
+      {leadingIcon ? (
+        <View testID={testID ? `${testID}-leading-icon` : undefined}>
+          <Icon name={leadingIcon} size={SIZE_ICON[size]} color={iconColor} />
+        </View>
+      ) : null}
+      <Text className={`${SIZE_TEXT[size]} ${TEXT_CLASS[variant]}`}>
+        {title}
+      </Text>
+      {trailingIcon ? (
+        <View testID={testID ? `${testID}-trailing-icon` : undefined}>
+          <Icon name={trailingIcon} size={SIZE_ICON[size]} color={iconColor} />
+        </View>
+      ) : null}
+    </>
+  );
+
+  if (gradient) {
+    return (
+      <TouchableOpacity
+        activeOpacity={0.85}
+        disabled={isDisabled}
+        testID={testID}
+        className={`rounded-xl ${isDisabled ? 'opacity-50' : ''}`}
+        style={containerStyle}
+        {...rest}
+      >
+        <LinearGradient
+          colors={gradient}
+          start={variant === 'nav' ? { x: 0, y: 0 } : { x: 0, y: 0.5 }}
+          end={variant === 'nav' ? { x: 1, y: 1 } : { x: 1, y: 0.5 }}
+          testID={testID ? `${testID}-gradient` : undefined}
+          className={`flex-row items-center justify-center gap-2 rounded-xl ${sizeClass}`}
+        >
+          {loading ? (
+            <ActivityIndicator color={colors.primaryForeground} />
+          ) : (
+            innerContent
+          )}
+        </LinearGradient>
+      </TouchableOpacity>
+    );
+  }
+
   return (
     <TouchableOpacity
       activeOpacity={0.7}
       disabled={isDisabled}
-      className={`flex-row items-center justify-center rounded-lg px-4 py-3 ${VARIANT_CONTAINER[variant]} ${isDisabled ? 'opacity-50' : ''}`}
+      testID={testID}
+      className={`${containerClass} ${isDisabled ? 'opacity-50' : ''}`}
+      style={containerStyle}
       {...rest}
     >
       {loading ? (
-        <ActivityIndicator color={variant === 'primary' ? '#FFFFFF' : '#2563EB'} />
+        <ActivityIndicator color={iconColor} />
       ) : (
-        <Text className={`text-base font-semibold ${VARIANT_TEXT[variant]}`}>
-          {title}
-        </Text>
+        innerContent
       )}
     </TouchableOpacity>
   );
