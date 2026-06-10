@@ -17,7 +17,7 @@ const base: Comment = {
 
 describe('CommentItem', () => {
   it('renders content, author name and author type label', () => {
-    const { getByText } = render(<CommentItem comment={base} />);
+    const { getByText } = render(<CommentItem comment={base} testID="ci" />);
     expect(getByText('Prof. João')).toBeTruthy();
     expect(getByText('· Professor')).toBeTruthy();
     expect(getByText('Ótimo post!')).toBeTruthy();
@@ -28,33 +28,47 @@ describe('CommentItem', () => {
       ...base,
       author: { id: 'Student/abc', type: 'Student', name: 'Pedro' },
     };
-    const { getByText } = render(<CommentItem comment={studentComment} />);
+    const { getByText } = render(
+      <CommentItem comment={studentComment} testID="ci" />
+    );
     expect(getByText('· Aluno')).toBeTruthy();
   });
 
   it('renders "Autor removido" when author is null', () => {
     const { getByText } = render(
-      <CommentItem comment={{ ...base, author: null }} />
+      <CommentItem comment={{ ...base, author: null }} testID="ci" />
     );
     expect(getByText('Autor removido')).toBeTruthy();
   });
 
-  it('shows delete button when can_delete and onDelete provided', () => {
+  it('renders avatar with person icon (not initials)', () => {
+    const { getByTestId, queryByText } = render(
+      <CommentItem comment={base} testID="ci" />
+    );
+    expect(getByTestId('ci-avatar-icon')).toBeTruthy();
+    expect(queryByText(/^[A-Z]{1,2}$/)).toBeNull();
+  });
+
+  it('renders delete as icon (trash-can) when can_delete=true', () => {
     const onDelete = jest.fn();
-    const { getByText } = render(
+    const { getByTestId, queryByText } = render(
       <CommentItem
         comment={{ ...base, can_delete: true }}
         onDelete={onDelete}
+        testID="ci"
       />
     );
-    fireEvent.press(getByText('Excluir'));
-    expect(onDelete).toHaveBeenCalledWith('c1');
+    expect(getByTestId('ci-delete-icon')).toBeTruthy();
+    expect(queryByText('Excluir')).toBeNull();
+    fireEvent.press(getByTestId('ci-delete-icon'));
+    expect(onDelete).toHaveBeenCalledWith(base.id);
   });
 
   it('hides delete button when can_delete is false', () => {
-    const { queryByText } = render(
-      <CommentItem comment={base} onDelete={jest.fn()} />
+    const { queryByText, queryByTestId } = render(
+      <CommentItem comment={base} onDelete={jest.fn()} testID="ci" />
     );
     expect(queryByText('Excluir')).toBeNull();
+    expect(queryByTestId('ci-delete-icon')).toBeNull();
   });
 });
