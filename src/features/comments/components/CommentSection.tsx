@@ -108,7 +108,7 @@ export function CommentSection({ postId }: CommentSectionProps) {
             <Button
               title="Carregar mais"
               onPress={handleLoadMore}
-              variant="outline"
+              variant="secondary"
             />
           ) : null}
         </View>

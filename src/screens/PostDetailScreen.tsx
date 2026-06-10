@@ -107,7 +107,7 @@ export function PostDetailScreen() {
           {isTeacher ? (
             <Button
               title="Editar post"
-              variant="outline"
+              variant="secondary"
               onPress={() => navigation.navigate('PostEdit', { postId: post.id })}
             />
           ) : null}

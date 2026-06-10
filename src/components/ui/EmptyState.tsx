@@ -19,7 +19,7 @@ export function EmptyState({ title, subtitle, action }: EmptyStateProps) {
       ) : null}
       {action ? (
         <View className="mt-2 w-full max-w-xs">
-          <Button title={action.label} onPress={action.onPress} variant="outline" />
+          <Button title={action.label} onPress={action.onPress} variant="secondary" />
         </View>
       ) : null}
     </View>
