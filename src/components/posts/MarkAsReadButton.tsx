@@ -34,9 +34,12 @@ export function MarkAsReadButton({
   return (
     <Button
       title={hasRead ? 'Marcado como lido' : 'Marcar como lido'}
-      onPress={handlePress}
       variant={hasRead ? 'secondary' : 'primary'}
-      disabled={hasRead}
+      size="md"
+      leadingIcon={hasRead ? 'bookmark-check' : 'bookmark-outline'}
+      onPress={handlePress}
+      disabled={isPending || hasRead}
+      loading={isPending}
     />
   );
 }
