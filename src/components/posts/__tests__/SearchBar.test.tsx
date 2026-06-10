@@ -61,4 +61,11 @@ describe('SearchBar', () => {
     });
     expect(onDebouncedChange).toHaveBeenCalledWith('');
   });
+
+  it('renders magnify icon (search affordance)', () => {
+    const { getByTestId } = render(
+      <SearchBar value="" onDebouncedChange={() => {}} testID="sb" />
+    );
+    expect(getByTestId('sb-leading-icon')).toBeTruthy();
+  });
 });

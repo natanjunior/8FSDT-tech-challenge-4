@@ -6,6 +6,7 @@ interface SearchBarProps {
   onDebouncedChange: (value: string) => void;
   delayMs?: number;
   minChars?: number;
+  testID?: string;
 }
 
 export function SearchBar({
@@ -13,6 +14,7 @@ export function SearchBar({
   onDebouncedChange,
   delayMs = 400,
   minChars = 2,
+  testID,
 }: SearchBarProps) {
   const [local, setLocal] = useState(value);
 
@@ -40,6 +42,10 @@ export function SearchBar({
       autoCapitalize="none"
       autoCorrect={false}
       returnKeyType="search"
+      leadingIcon="magnify"
+      trailingIcon={local.length > 0 ? 'close' : undefined}
+      onTrailingIconPress={local.length > 0 ? () => setLocal('') : undefined}
+      testID={testID}
     />
   );
 }
