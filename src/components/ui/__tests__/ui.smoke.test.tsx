@@ -8,13 +8,31 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { Text } from 'react-native';
 
 describe('UI components — smoke', () => {
-  it('Card renders children', () => {
+  it('Card renders children with default editorial elevation', () => {
     const { getByText } = render(
       <Card>
         <Text>Inner</Text>
       </Card>
     );
     expect(getByText('Inner')).toBeTruthy();
+  });
+
+  it('Card accepts elevation="soft" without crashing', () => {
+    const { getByText } = render(
+      <Card elevation="soft">
+        <Text>Soft</Text>
+      </Card>
+    );
+    expect(getByText('Soft')).toBeTruthy();
+  });
+
+  it('Card with elevation="none" renders flat', () => {
+    const { getByText } = render(
+      <Card elevation="none">
+        <Text>Flat</Text>
+      </Card>
+    );
+    expect(getByText('Flat')).toBeTruthy();
   });
 
   it('Badge renders label', () => {
