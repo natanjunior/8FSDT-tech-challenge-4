@@ -7,9 +7,9 @@ describe('StatusPicker', () => {
     const { getByText } = render(
       <StatusPicker value="DRAFT" onChange={() => {}} />
     );
-    expect(getByText('Rascunho')).toBeTruthy();
-    expect(getByText('Publicado')).toBeTruthy();
-    expect(getByText('Arquivado')).toBeTruthy();
+    expect(getByText('RASCUNHO')).toBeTruthy();
+    expect(getByText('PUBLICADO')).toBeTruthy();
+    expect(getByText('ARQUIVADO')).toBeTruthy();
   });
 
   it('calls onChange when a different status is pressed', () => {
@@ -17,7 +17,7 @@ describe('StatusPicker', () => {
     const { getByText } = render(
       <StatusPicker value="DRAFT" onChange={onChange} />
     );
-    fireEvent.press(getByText('Publicado'));
+    fireEvent.press(getByText('PUBLICADO'));
     expect(onChange).toHaveBeenCalledWith('PUBLISHED');
   });
 
@@ -26,7 +26,16 @@ describe('StatusPicker', () => {
     const { getByText } = render(
       <StatusPicker value="DRAFT" onChange={onChange} />
     );
-    fireEvent.press(getByText('Arquivado'));
+    fireEvent.press(getByText('ARQUIVADO'));
     expect(onChange).toHaveBeenCalledWith('ARCHIVED');
+  });
+
+  it('renders a dot for each status option', () => {
+    const { getByTestId } = render(
+      <StatusPicker value="DRAFT" onChange={() => {}} />
+    );
+    expect(getByTestId('status-DRAFT-dot')).toBeTruthy();
+    expect(getByTestId('status-PUBLISHED-dot')).toBeTruthy();
+    expect(getByTestId('status-ARCHIVED-dot')).toBeTruthy();
   });
 });
