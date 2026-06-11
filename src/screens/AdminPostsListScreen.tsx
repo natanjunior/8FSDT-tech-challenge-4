@@ -17,6 +17,7 @@ import { Icon } from '@/components/ui/Icon';
 import { Loader } from '@/components/ui/Loader';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
+import { StatsCard } from '@/components/ui/StatsCard';
 import { AdminPostListItem } from '@/components/admin/AdminPostListItem';
 import { SearchBar } from '@/components/posts/SearchBar';
 import { DisciplineChips } from '@/components/posts/DisciplineChips';
@@ -91,6 +92,11 @@ export function AdminPostsListScreen() {
   const [disciplineFilter, setDisciplineFilter] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [disciplines, setDisciplines] = useState<Discipline[]>([]);
+  const [stats, setStats] = useState<{ published: number; draft: number; archived: number }>({
+    published: 0,
+    draft: 0,
+    archived: 0,
+  });
 
   const fetchPosts = useCallback(
     (nextPage: number) =>
@@ -134,10 +140,32 @@ export function AdminPostsListScreen() {
     [fetchPosts, logout, navigation]
   );
 
+  const fetchStats = useCallback(async () => {
+    try {
+      const [pub, dft, arc] = await Promise.all([
+        searchPosts({ status: 'PUBLISHED', limit: 1, page: 1 }),
+        searchPosts({ status: 'DRAFT', limit: 1, page: 1 }),
+        searchPosts({ status: 'ARCHIVED', limit: 1, page: 1 }),
+      ]);
+      setStats({
+        published: pub.pagination.total,
+        draft: dft.pagination.total,
+        archived: arc.pagination.total,
+      });
+    } catch {
+      /* falha silenciosa — stats não bloqueiam a lista principal */
+    }
+  }, []);
+
   useEffect(() => {
     if (!allowed) return;
     loadPage(1, 'replace');
   }, [allowed, loadPage]);
+
+  useEffect(() => {
+    if (!allowed) return;
+    fetchStats();
+  }, [allowed, fetchStats]);
 
   useEffect(() => {
     if (!allowed) return;
@@ -161,6 +189,7 @@ export function AdminPostsListScreen() {
       Toast.show({ type: 'success', text1: 'Post excluído.' });
       setPendingDelete(null);
       await loadPage(1, 'replace');
+      await fetchStats();
     } catch (err: any) {
       const status = err?.response?.status;
       if (status === 401) {
@@ -184,7 +213,7 @@ export function AdminPostsListScreen() {
     } finally {
       setIsDeleting(false);
     }
-  }, [pendingDelete, loadPage, logout, navigation]);
+  }, [pendingDelete, loadPage, fetchStats, logout, navigation]);
 
   if (!allowed) return null;
 
@@ -203,6 +232,17 @@ export function AdminPostsListScreen() {
           size="sm"
           onPress={() => navigation.navigate('PostCreate')}
         />
+      </View>
+
+      <View className="flex-row gap-2 px-4 pb-3">
+        <StatsCard
+          icon="check-circle"
+          value={stats.published}
+          label="Publicados"
+          variant="primary"
+        />
+        <StatsCard icon="note-edit-outline" value={stats.draft} label="Rascunhos" />
+        <StatsCard icon="inbox-outline" value={stats.archived} label="Arquivados" />
       </View>
 
       <View className="gap-3 pb-3">

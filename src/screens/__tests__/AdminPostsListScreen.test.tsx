@@ -128,6 +128,29 @@ describe('AdminPostsListScreen — base', () => {
     fireEvent.press(await findByText('Novo post'));
     expect(mockNavigate).toHaveBeenCalledWith('PostCreate');
   });
+
+  it('renders stats row with totals from searchPosts(status=X, limit=1)', async () => {
+    useAuthSpy.mockReturnValue(teacher);
+    // searchPosts is called 4 times: 3 stats (limit=1) + 1 main list.
+    mockSearch.mockImplementation((params: any) => {
+      if (params?.limit === 1) {
+        const total =
+          params.status === 'PUBLISHED' ? 10 :
+          params.status === 'DRAFT' ? 4 :
+          params.status === 'ARCHIVED' ? 2 : 0;
+        return Promise.resolve({
+          data: [],
+          pagination: { page: 1, limit: 1, total, totalPages: total },
+        });
+      }
+      return Promise.resolve(fakePage([fakePost()]));
+    });
+
+    const { findByText } = render(<AdminPostsListScreen />);
+    expect(await findByText('10')).toBeTruthy();
+    expect(await findByText('4')).toBeTruthy();
+    expect(await findByText('2')).toBeTruthy();
+  });
 });
 
 describe('AdminPostsListScreen — filters', () => {
