@@ -160,6 +160,8 @@ Em qualquer 401 (token expirado, sessão invalidada server-side, credencial remo
 | Acessar painel admin | ❌ | ❌ | ✅ |
 | **Criar post** (`POST /posts`) | ❌ | ❌ | ✅ |
 | **Editar post** (`PATCH /posts/:id`) | ❌ | ❌ | ✅ |
+| **Excluir post** (`DELETE /posts/:id`) | ❌ | ❌ | ✅ |
+| **Listar todos os posts (admin)** (`GET /posts/search`) | ❌ | ❌ | ✅ (vê todos os status) |
 | Ver página do grupo | ✅ | ✅ | ✅ |
 
 ### Troca de senha
@@ -270,6 +272,42 @@ sequenceDiagram
     Edit->>T: goBack() (volta pro Detail)
 ```
 
+### Req 9 — Painel administrativo de posts (TEACHER)
+
+```mermaid
+sequenceDiagram
+    participant T as TEACHER
+    participant Hdr as Header
+    participant Admin as AdminPostsListScreen
+    participant API
+
+    T->>Hdr: toca avatar → dropdown
+    Hdr->>Admin: navigate('AdminPosts')
+    Admin->>Admin: useRequireRole('TEACHER') ok
+    par stats
+        Admin->>API: GET /posts/search?status=PUBLISHED&limit=1
+        Admin->>API: GET /posts/search?status=DRAFT&limit=1
+        Admin->>API: GET /posts/search?status=ARCHIVED&limit=1
+    and lista
+        Admin->>API: GET /posts/search?page=1&limit=10
+    end
+    API-->>Admin: totals + página 1
+    Admin->>T: renderiza StatsCards + lista
+
+    T->>Admin: toca ícone de lixeira em um item
+    Admin->>Admin: ConfirmModal (destructive) abre
+    T->>Admin: "Excluir permanentemente"
+    Admin->>API: DELETE /posts/:id
+    alt 204
+        API-->>Admin: ok
+        Admin->>API: re-fetch stats + page 1
+        Admin->>T: toast "Post excluído"
+    else 403
+        API-->>Admin: forbidden
+        Admin->>T: toast "Sem permissão"
+    end
+```
+
 ## Decisões arquiteturais (ADRs)
 
 Algumas escolhas divergem do conteúdo padrão das aulas — registradas aqui para transparência.
@@ -295,6 +333,7 @@ Algumas escolhas divergem do conteúdo padrão das aulas — registradas aqui pa
 | 17 | **`@expo/vector-icons / MaterialCommunityIcons`** em vez de Material Symbols (que o web usa) | Material Symbols não é fonte instalável em RN sem hacks. MaterialCommunityIcons (6k+ ícones) já vem com Expo SDK 56, tem cobertura comparável e visual Material Design. Wrapper `<Icon>` com enum `IconName` força mapeamento tipado e centraliza os ≈25 ícones usados no app — typos pegam em compile time. |
 | 18 | **`expo-linear-gradient`** para CTAs (`Button primary` e `Button nav`) | Espelhamento dos `cta-gradient` (teal) e `primary-gradient` (navy) do web. NativeWind não suporta gradientes nativamente; expo-linear-gradient é a API canônica do Expo e tem custo de bundle desprezível (~30KB). |
 | 19 | **Comment avatar usa ícone `account`**, NÃO iniciais — divergência intencional do PostCard's AuthorId | Espelhamento exato do web (CommentItem.tsx usa Material Symbol `person`, não iniciais; PostCard.tsx usa iniciais). A diferença semântica: no PostCard, o autor é a identidade editorial (nome + iniciais reforçam isso); no comentário, o autor é um ator transitivo dentro de uma discussão (ícone neutro pesa menos). |
+| 20 | **Stats via 3 chamadas paralelas a `searchPosts(status=X, limit=1)`** em vez de um endpoint de estatísticas dedicado | Backend não expõe `/posts/stats`. As 3 chamadas com `limit=1` lêem só `pagination.total`, o que é barato (apenas COUNT(*) no SQL). Falha silenciosa nas stats não bloqueia a lista — degradação aceita. |
 
 ## Design System
 
