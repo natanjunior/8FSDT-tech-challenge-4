@@ -1,5 +1,5 @@
 import { apiClient } from '@/api/client';
-import type { PaginatedResponse, Post } from '@/types/api';
+import type { PaginatedResponse, Post, PostStatus } from '@/types/api';
 import type { PostFormData } from '@/features/posts/validators/post.schema';
 
 const DEFAULT_LIMIT = 10;
@@ -13,7 +13,7 @@ interface ListPostsParams {
 interface SearchPostsParams {
   query?: string;
   discipline?: string;
-  status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+  status?: PostStatus;
   page?: number;
   limit?: number;
 }

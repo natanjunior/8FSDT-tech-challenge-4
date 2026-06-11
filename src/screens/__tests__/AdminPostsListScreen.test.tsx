@@ -161,6 +161,24 @@ describe('AdminPostsListScreen — filters', () => {
     );
   });
 
+  it('issues exactly one fetch per filter change (no double-fetch)', async () => {
+    useAuthSpy.mockReturnValue(teacher);
+    const { findByText } = render(<AdminPostsListScreen />);
+    await findByText('Post Teste');
+    await waitFor(() => expect(mockSearch).toHaveBeenCalled());
+    const before = mockSearch.mock.calls.length;
+    await act(async () => {
+      fireEvent.press(await findByText('RASCUNHO'));
+    });
+    await waitFor(() =>
+      expect(mockSearch).toHaveBeenLastCalledWith(
+        expect.objectContaining({ status: 'DRAFT', page: 1 })
+      )
+    );
+    // exactly one new call (the filter refetch), not two
+    expect(mockSearch.mock.calls.length).toBe(before + 1);
+  });
+
   it('clears status filter when "Todos" is tapped', async () => {
     useAuthSpy.mockReturnValue(teacher);
     const { findByText } = render(<AdminPostsListScreen />);

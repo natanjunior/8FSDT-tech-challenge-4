@@ -92,17 +92,26 @@ export function AdminPostsListScreen() {
   const [query, setQuery] = useState('');
   const [disciplines, setDisciplines] = useState<Discipline[]>([]);
 
-  const fetchPage = useCallback(
-    async (targetPage: number, append: boolean) => {
+  const fetchPosts = useCallback(
+    (nextPage: number) =>
+      searchPosts({
+        page: nextPage,
+        limit: 10,
+        ...(query ? { query } : {}),
+        ...(statusFilter ? { status: statusFilter } : {}),
+        ...(disciplineFilter ? { discipline: disciplineFilter } : {}),
+      }),
+    [query, statusFilter, disciplineFilter]
+  );
+
+  const loadPage = useCallback(
+    async (nextPage: number, mode: 'replace' | 'append' | 'refresh') => {
       try {
-        const res = await searchPosts({
-          page: targetPage,
-          limit: 10,
-          ...(query ? { query } : {}),
-          ...(statusFilter ? { status: statusFilter } : {}),
-          ...(disciplineFilter ? { discipline: disciplineFilter } : {}),
-        });
-        setPosts((prev) => (append ? [...prev, ...res.data] : res.data));
+        if (mode === 'append') setIsLoadingMore(true);
+        else if (mode === 'refresh') setIsRefreshing(true);
+        else setIsLoading(true);
+        const res = await fetchPosts(nextPage);
+        setPosts((prev) => (mode === 'append' ? [...prev, ...res.data] : res.data));
         setPage(res.pagination.page);
         setTotalPages(res.pagination.totalPages);
       } catch (err: any) {
@@ -116,39 +125,33 @@ export function AdminPostsListScreen() {
             text2: err?.response?.data?.error ?? 'Tente novamente.',
           });
         }
+      } finally {
+        setIsLoading(false);
+        setIsLoadingMore(false);
+        setIsRefreshing(false);
       }
     },
-    [logout, navigation, query, statusFilter, disciplineFilter]
+    [fetchPosts, logout, navigation]
   );
 
   useEffect(() => {
     if (!allowed) return;
-    setIsLoading(true);
-    fetchPage(1, false).finally(() => setIsLoading(false));
-  }, [allowed, fetchPage]);
+    loadPage(1, 'replace');
+  }, [allowed, loadPage]);
 
   useEffect(() => {
     if (!allowed) return;
     listDisciplines().then(setDisciplines);
   }, [allowed]);
 
-  useEffect(() => {
-    if (!allowed || isLoading) return;
-    fetchPage(1, false);
-  }, [statusFilter, disciplineFilter, query]); // eslint-disable-line react-hooks/exhaustive-deps
+  const onRefresh = useCallback(() => {
+    loadPage(1, 'refresh');
+  }, [loadPage]);
 
-  const onRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    await fetchPage(1, false);
-    setIsRefreshing(false);
-  }, [fetchPage]);
-
-  const onLoadMore = useCallback(async () => {
+  const onLoadMore = useCallback(() => {
     if (isLoadingMore || page >= totalPages) return;
-    setIsLoadingMore(true);
-    await fetchPage(page + 1, true);
-    setIsLoadingMore(false);
-  }, [fetchPage, isLoadingMore, page, totalPages]);
+    loadPage(page + 1, 'append');
+  }, [loadPage, isLoadingMore, page, totalPages]);
 
   const onConfirmDelete = useCallback(async () => {
     if (!pendingDelete) return;
@@ -157,7 +160,7 @@ export function AdminPostsListScreen() {
       await deletePost(pendingDelete.id);
       Toast.show({ type: 'success', text1: 'Post excluído.' });
       setPendingDelete(null);
-      await fetchPage(1, false);
+      await loadPage(1, 'replace');
     } catch (err: any) {
       const status = err?.response?.status;
       if (status === 401) {
@@ -181,7 +184,7 @@ export function AdminPostsListScreen() {
     } finally {
       setIsDeleting(false);
     }
-  }, [pendingDelete, fetchPage, logout, navigation]);
+  }, [pendingDelete, loadPage, logout, navigation]);
 
   if (!allowed) return null;
 
