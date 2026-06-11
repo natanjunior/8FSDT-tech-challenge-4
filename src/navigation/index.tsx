@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { HeaderRight } from '@/components/layout/Header';
 import { HomeScreen } from '@/screens/HomeScreen';
 import { LoginScreen } from '@/features/auth/screens/LoginScreen';
-import { AdminStub } from '@/screens/AdminStub';
+import { AdminPostsListScreen } from '@/screens/AdminPostsListScreen';
 import { PostDetailScreen } from '@/screens/PostDetailScreen';
 import { GrupoScreen } from '@/features/grupo/GrupoScreen';
 import { PostCreateScreen } from '@/screens/PostCreateScreen';
@@ -63,8 +63,8 @@ export function AppRoutes() {
           options={{ headerShown: false }}
         />
         <RootStack.Screen
-          name="AdminStub"
-          component={AdminStub}
+          name="AdminPosts"
+          component={AdminPostsListScreen}
           options={{ title: 'Painel admin' }}
         />
         <RootStack.Screen

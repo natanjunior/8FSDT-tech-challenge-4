@@ -112,7 +112,7 @@ export function HeaderRight() {
               <TouchableOpacity
                 onPress={() => {
                   setMenuOpen(false);
-                  navigation.navigate('AdminStub');
+                  navigation.navigate('AdminPosts');
                 }}
                 className="flex-row items-center gap-3 px-4 py-3"
               >

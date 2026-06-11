@@ -4,7 +4,7 @@ import type { RouteProp } from '@react-navigation/native';
 export type RootStackParamList = {
   Home: undefined;
   Login: undefined;
-  AdminStub: undefined;
+  AdminPosts: undefined;
   PostDetail: { postId: string; title?: string };
   Grupo: undefined;
   PostCreate: undefined;

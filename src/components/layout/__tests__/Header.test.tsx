@@ -82,12 +82,12 @@ describe('HeaderRight', () => {
     expect(getByText('Sair')).toBeTruthy();
   });
 
-  it('navigates to AdminStub when TEACHER presses "Painel"', () => {
+  it('navigates to AdminPosts when TEACHER presses "Painel"', () => {
     useAuthSpy.mockReturnValue(teacher);
     const { getByTestId, getByText } = render(<HeaderRight />);
     fireEvent.press(getByTestId('header-user-trigger'));
     fireEvent.press(getByText('Painel'));
-    expect(mockNavigate).toHaveBeenCalledWith('AdminStub');
+    expect(mockNavigate).toHaveBeenCalledWith('AdminPosts');
   });
 
   it('calls logout when "Sair" is pressed', () => {
