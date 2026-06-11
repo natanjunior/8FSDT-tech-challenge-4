@@ -5,6 +5,7 @@ import { AdminPostsListScreen } from '@/screens/AdminPostsListScreen';
 import * as AuthContextModule from '@/contexts/AuthContext';
 import * as postsService from '@/services/posts.service';
 import * as disciplinesService from '@/services/disciplines.service';
+import type { AuthContextValue } from '@/contexts/AuthContext';
 
 jest.mock('@/services/posts.service');
 jest.mock('@/services/disciplines.service');
@@ -23,23 +24,23 @@ const mockListDisc = disciplinesService.listDisciplines as jest.Mock;
 
 const teacher = {
   user: { id: 't1', login: 'joao', role: 'TEACHER' as const },
-  profile: { id: 'Teacher/abc', name: 'João Silva' },
+  profile: null,
   isAuthenticated: true,
   isHydrating: false,
   isAuthenticating: false,
   login: jest.fn(),
   logout: jest.fn(),
-};
+} satisfies AuthContextValue;
 
 const student = {
   user: { id: 's1', login: 'pedro', role: 'STUDENT' as const },
-  profile: { id: 'Student/xyz', name: 'Pedro Costa' },
+  profile: null,
   isAuthenticated: true,
   isHydrating: false,
   isAuthenticating: false,
   login: jest.fn(),
   logout: jest.fn(),
-};
+} satisfies AuthContextValue;
 
 const fakePost = (overrides: Partial<any> = {}) => ({
   id: 'p1',
@@ -126,5 +127,56 @@ describe('AdminPostsListScreen — base', () => {
     const { findByText } = render(<AdminPostsListScreen />);
     fireEvent.press(await findByText('Novo post'));
     expect(mockNavigate).toHaveBeenCalledWith('PostCreate');
+  });
+});
+
+describe('AdminPostsListScreen — filters', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (useNavigation as jest.Mock).mockReturnValue({ replace: mockReplace, navigate: mockNavigate });
+    mockListDisc.mockResolvedValue([
+      { id: 'd1', label: 'Matemática' },
+      { id: 'd2', label: 'Português' },
+    ]);
+    // NOTE: PUBLISHED fixture (controller-corrected). The original plan used the
+    // default DRAFT fixture, whose StatusBadge renders "RASCUNHO" — colliding with
+    // the "RASCUNHO" status-filter chip and breaking findByText (multiple matches).
+    // A PUBLISHED post's badge reads "PUBLICADO", so "RASCUNHO"/"TODOS" are unique.
+    mockSearch.mockResolvedValue(fakePage([fakePost({ status: 'PUBLISHED', title: 'Post Teste' })]));
+  });
+
+  it('applies status filter when a chip is tapped', async () => {
+    useAuthSpy.mockReturnValue(teacher);
+    const { findByText } = render(<AdminPostsListScreen />);
+    await findByText('Post Teste');
+
+    await act(async () => {
+      fireEvent.press(await findByText('RASCUNHO'));
+    });
+
+    await waitFor(() =>
+      expect(mockSearch).toHaveBeenLastCalledWith(
+        expect.objectContaining({ status: 'DRAFT', page: 1 })
+      )
+    );
+  });
+
+  it('clears status filter when "Todos" is tapped', async () => {
+    useAuthSpy.mockReturnValue(teacher);
+    const { findByText } = render(<AdminPostsListScreen />);
+    await findByText('Post Teste');
+
+    await act(async () => {
+      fireEvent.press(await findByText('RASCUNHO'));
+    });
+
+    await act(async () => {
+      fireEvent.press(await findByText('TODOS'));
+    });
+
+    await waitFor(() => {
+      const lastCall = mockSearch.mock.calls[mockSearch.mock.calls.length - 1]!;
+      expect(lastCall[0]).not.toHaveProperty('status');
+    });
   });
 });

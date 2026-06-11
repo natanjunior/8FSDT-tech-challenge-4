@@ -2,7 +2,9 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   FlatList,
   RefreshControl,
+  ScrollView,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,10 +18,60 @@ import { Loader } from '@/components/ui/Loader';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { AdminPostListItem } from '@/components/admin/AdminPostListItem';
+import { SearchBar } from '@/components/posts/SearchBar';
+import { DisciplineChips } from '@/components/posts/DisciplineChips';
 import { searchPosts, deletePost } from '@/services/posts.service';
+import { listDisciplines } from '@/services/disciplines.service';
 import { colors } from '@/theme/colors';
-import type { Post } from '@/types/api';
+import type { Discipline, Post, PostStatus } from '@/types/api';
 import type { RootStackNavigationProp } from '@/navigation/types';
+
+const STATUS_OPTIONS: Array<{ value: PostStatus | null; label: string; dot: string }> = [
+  { value: null, label: 'TODOS', dot: 'bg-outline' },
+  { value: 'DRAFT', label: 'RASCUNHO', dot: 'bg-status-draft' },
+  { value: 'PUBLISHED', label: 'PUBLICADO', dot: 'bg-status-published' },
+  { value: 'ARCHIVED', label: 'ARQUIVADO', dot: 'bg-status-archived' },
+];
+
+function AdminStatusFilter({
+  value,
+  onChange,
+}: {
+  value: PostStatus | null;
+  onChange: (next: PostStatus | null) => void;
+}) {
+  return (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={{ gap: 8, paddingHorizontal: 16 }}
+    >
+      {STATUS_OPTIONS.map((opt) => {
+        const selected = opt.value === value;
+        return (
+          <TouchableOpacity
+            key={opt.label}
+            accessibilityRole="button"
+            onPress={() => onChange(opt.value)}
+            activeOpacity={0.7}
+            className={`flex-row items-center gap-1.5 rounded-full px-3 py-1.5 ${
+              selected ? 'bg-primary' : 'bg-surface-container-high'
+            }`}
+          >
+            <View className={`h-1.5 w-1.5 rounded-full ${opt.dot}`} />
+            <Text
+              className={`font-sans-bold text-[10px] uppercase tracking-wider ${
+                selected ? 'text-primary-foreground' : 'text-foreground'
+              }`}
+            >
+              {opt.label}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
+    </ScrollView>
+  );
+}
 
 export function AdminPostsListScreen() {
   const allowed = useRequireRole('TEACHER');
@@ -35,10 +87,21 @@ export function AdminPostsListScreen() {
   const [pendingDelete, setPendingDelete] = useState<Post | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const [statusFilter, setStatusFilter] = useState<PostStatus | null>(null);
+  const [disciplineFilter, setDisciplineFilter] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
+  const [disciplines, setDisciplines] = useState<Discipline[]>([]);
+
   const fetchPage = useCallback(
     async (targetPage: number, append: boolean) => {
       try {
-        const res = await searchPosts({ page: targetPage, limit: 10 });
+        const res = await searchPosts({
+          page: targetPage,
+          limit: 10,
+          ...(query ? { query } : {}),
+          ...(statusFilter ? { status: statusFilter } : {}),
+          ...(disciplineFilter ? { discipline: disciplineFilter } : {}),
+        });
         setPosts((prev) => (append ? [...prev, ...res.data] : res.data));
         setPage(res.pagination.page);
         setTotalPages(res.pagination.totalPages);
@@ -55,7 +118,7 @@ export function AdminPostsListScreen() {
         }
       }
     },
-    [logout, navigation]
+    [logout, navigation, query, statusFilter, disciplineFilter]
   );
 
   useEffect(() => {
@@ -63,6 +126,16 @@ export function AdminPostsListScreen() {
     setIsLoading(true);
     fetchPage(1, false).finally(() => setIsLoading(false));
   }, [allowed, fetchPage]);
+
+  useEffect(() => {
+    if (!allowed) return;
+    listDisciplines().then(setDisciplines);
+  }, [allowed]);
+
+  useEffect(() => {
+    if (!allowed || isLoading) return;
+    fetchPage(1, false);
+  }, [statusFilter, disciplineFilter, query]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -126,6 +199,18 @@ export function AdminPostsListScreen() {
           leadingIcon="plus"
           size="sm"
           onPress={() => navigation.navigate('PostCreate')}
+        />
+      </View>
+
+      <View className="gap-3 pb-3">
+        <View className="px-4">
+          <SearchBar value={query} onDebouncedChange={setQuery} />
+        </View>
+        <AdminStatusFilter value={statusFilter} onChange={setStatusFilter} />
+        <DisciplineChips
+          disciplines={disciplines}
+          selectedId={disciplineFilter}
+          onSelect={(id) => setDisciplineFilter(id ?? null)}
         />
       </View>
 

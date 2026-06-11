@@ -35,7 +35,7 @@ function parseStoredProfile(raw: string | null): Profile {
   }
 }
 
-interface AuthContextValue {
+export interface AuthContextValue {
   user: User | null;
   profile: Profile;
   isAuthenticated: boolean;

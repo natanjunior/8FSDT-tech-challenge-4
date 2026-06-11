@@ -13,6 +13,7 @@ interface ListPostsParams {
 interface SearchPostsParams {
   query?: string;
   discipline?: string;
+  status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
   page?: number;
   limit?: number;
 }
@@ -40,6 +41,7 @@ export async function searchPosts(
   };
   if (params.query) searchParams.query = params.query;
   if (params.discipline) searchParams.discipline = params.discipline;
+  if (params.status) searchParams.status = params.status;
 
   const { data } = await apiClient.get<PaginatedResponse<Post>>(
     '/posts/search',

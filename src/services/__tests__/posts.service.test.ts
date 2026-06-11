@@ -88,6 +88,28 @@ describe('posts.service', () => {
         params: { page: 1, limit: 10, sort: '-published_at' },
       });
     });
+
+    it('passes status when provided', async () => {
+      mockGet.mockResolvedValueOnce({
+        data: { data: [], pagination: { page: 1, limit: 10, total: 0, totalPages: 0 } },
+      });
+      await searchPosts({ status: 'DRAFT' });
+      expect(mockGet).toHaveBeenCalledWith(
+        '/posts/search',
+        expect.objectContaining({
+          params: expect.objectContaining({ status: 'DRAFT' }),
+        })
+      );
+    });
+
+    it('omits status when undefined', async () => {
+      mockGet.mockResolvedValueOnce({
+        data: { data: [], pagination: { page: 1, limit: 10, total: 0, totalPages: 0 } },
+      });
+      await searchPosts({});
+      const callArgs = mockGet.mock.calls[0]!;
+      expect(callArgs[1].params).not.toHaveProperty('status');
+    });
   });
 
   describe('getPostById', () => {
