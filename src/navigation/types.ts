@@ -9,6 +9,8 @@ export type RootStackParamList = {
   Grupo: undefined;
   PostCreate: undefined;
   PostEdit: { postId: string };
+  TeacherCreate: undefined;
+  TeacherEdit: { id: string };
 };
 
 export type RootStackNavigationProp = NativeStackNavigationProp<RootStackParamList>;
