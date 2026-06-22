@@ -3,14 +3,24 @@ import { fireEvent, render, waitFor, act } from '@testing-library/react-native';
 import { LoginScreen } from '@/features/auth/screens/LoginScreen';
 import * as AuthContextModule from '@/contexts/AuthContext';
 
+const mockReplace = jest.fn();
+const mockNavigate = jest.fn();
+let mockRouteParams: { login?: string } | undefined = undefined;
+
 jest.mock('@react-navigation/native', () => ({
   useNavigation: jest.fn(),
+  useRoute: jest.fn(),
 }));
 
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 
-const mockReplace = jest.fn();
-(useNavigation as jest.Mock).mockReturnValue({ replace: mockReplace });
+(useNavigation as jest.Mock).mockReturnValue({
+  replace: mockReplace,
+  navigate: mockNavigate,
+});
+(useRoute as jest.Mock).mockImplementation(() => ({
+  params: mockRouteParams,
+}));
 
 describe('LoginScreen', () => {
   const useAuthSpy = jest.spyOn(AuthContextModule, 'useAuth');
@@ -28,6 +38,15 @@ describe('LoginScreen', () => {
   afterEach(() => {
     jest.clearAllMocks();
     mockReplace.mockClear();
+    mockNavigate.mockClear();
+    mockRouteParams = undefined;
+    (useNavigation as jest.Mock).mockReturnValue({
+      replace: mockReplace,
+      navigate: mockNavigate,
+    });
+    (useRoute as jest.Mock).mockImplementation(() => ({
+      params: mockRouteParams,
+    }));
   });
 
   it('renders login + password fields and submit button', () => {
@@ -98,5 +117,22 @@ describe('LoginScreen', () => {
 
     expect(await findByText('Credenciais inválidas')).toBeTruthy();
     expect(mockReplace).not.toHaveBeenCalled();
+  });
+
+  it('pre-popula login a partir do route param', async () => {
+    mockRouteParams = { login: 'novo' };
+    (useRoute as jest.Mock).mockImplementation(() => ({
+      params: mockRouteParams,
+    }));
+    useAuthSpy.mockReturnValue(guestAuth);
+    const { getByDisplayValue } = render(<LoginScreen />);
+    expect(getByDisplayValue('novo')).toBeTruthy();
+  });
+
+  it('navega para Signup quando "Cadastre-se" é tocado', () => {
+    useAuthSpy.mockReturnValue(guestAuth);
+    const { getByText } = render(<LoginScreen />);
+    fireEvent.press(getByText(/Cadastre-se como aluno/i));
+    expect(mockNavigate).toHaveBeenCalledWith('Signup');
   });
 });

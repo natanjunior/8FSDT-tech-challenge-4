@@ -12,6 +12,13 @@ import { PostDetailScreen } from '@/screens/PostDetailScreen';
 import { GrupoScreen } from '@/features/grupo/GrupoScreen';
 import { PostCreateScreen } from '@/screens/PostCreateScreen';
 import { PostEditScreen } from '@/screens/PostEditScreen';
+import { TeachersListScreen } from '@/screens/TeachersListScreen';
+import { TeacherCreateScreen } from '@/screens/TeacherCreateScreen';
+import { TeacherEditScreen } from '@/screens/TeacherEditScreen';
+import { StudentsListScreen } from '@/screens/StudentsListScreen';
+import { StudentCreateScreen } from '@/screens/StudentCreateScreen';
+import { StudentEditScreen } from '@/screens/StudentEditScreen';
+import { SignupScreen } from '@/screens/SignupScreen';
 import { Loader } from '@/components/ui/Loader';
 import { colors } from '@/theme/colors';
 import type { RootStackParamList } from './types';
@@ -88,6 +95,41 @@ export function AppRoutes() {
           name="PostEdit"
           component={PostEditScreen}
           options={{ title: 'Editar post' }}
+        />
+        <RootStack.Screen
+          name="TeachersList"
+          component={TeachersListScreen}
+          options={{ title: 'Professores' }}
+        />
+        <RootStack.Screen
+          name="TeacherCreate"
+          component={TeacherCreateScreen}
+          options={{ title: 'Novo professor' }}
+        />
+        <RootStack.Screen
+          name="TeacherEdit"
+          component={TeacherEditScreen}
+          options={{ title: 'Editar professor' }}
+        />
+        <RootStack.Screen
+          name="StudentsList"
+          component={StudentsListScreen}
+          options={{ title: 'Alunos' }}
+        />
+        <RootStack.Screen
+          name="StudentCreate"
+          component={StudentCreateScreen}
+          options={{ title: 'Novo aluno' }}
+        />
+        <RootStack.Screen
+          name="StudentEdit"
+          component={StudentEditScreen}
+          options={{ title: 'Editar aluno' }}
+        />
+        <RootStack.Screen
+          name="Signup"
+          component={SignupScreen}
+          options={{ title: 'Cadastro' }}
         />
       </RootStack.Navigator>
     </NavigationContainer>

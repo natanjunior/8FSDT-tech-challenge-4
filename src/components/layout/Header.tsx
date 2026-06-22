@@ -109,18 +109,44 @@ export function HeaderRight() {
             }}
           >
             {isTeacher ? (
-              <TouchableOpacity
-                onPress={() => {
-                  setMenuOpen(false);
-                  navigation.navigate('AdminPosts');
-                }}
-                className="flex-row items-center gap-3 px-4 py-3"
-              >
-                <Icon name="view-dashboard" size={18} color={colors.outline} />
-                <Text className="font-sans-medium text-sm text-primary">
-                  Painel
-                </Text>
-              </TouchableOpacity>
+              <>
+                <TouchableOpacity
+                  onPress={() => {
+                    setMenuOpen(false);
+                    navigation.navigate('AdminPosts');
+                  }}
+                  className="flex-row items-center gap-3 px-4 py-3"
+                >
+                  <Icon name="view-dashboard" size={18} color={colors.outline} />
+                  <Text className="font-sans-medium text-sm text-primary">
+                    Painel
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => {
+                    setMenuOpen(false);
+                    navigation.navigate('TeachersList');
+                  }}
+                  className="flex-row items-center gap-3 px-4 py-3"
+                >
+                  <Icon name="account-group" size={18} color={colors.outline} />
+                  <Text className="font-sans-medium text-sm text-primary">
+                    Professores
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => {
+                    setMenuOpen(false);
+                    navigation.navigate('StudentsList');
+                  }}
+                  className="flex-row items-center gap-3 px-4 py-3"
+                >
+                  <Icon name="account-outline" size={18} color={colors.outline} />
+                  <Text className="font-sans-medium text-sm text-primary">
+                    Alunos
+                  </Text>
+                </TouchableOpacity>
+              </>
             ) : null}
             <View className="h-px bg-outline-variant/40" />
             <TouchableOpacity

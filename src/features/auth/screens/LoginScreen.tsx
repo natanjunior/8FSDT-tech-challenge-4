@@ -5,9 +5,11 @@ import {
   ScrollView,
   Text,
   TextInput,
+  TouchableOpacity,
   View,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import type { LoginRouteProp } from '@/navigation/types';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -23,6 +25,8 @@ export function LoginScreen() {
   const { login, isAuthenticating } = useAuth();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const navigation = useNavigation<RootStackNavigationProp>();
+  const route = useRoute<LoginRouteProp>();
+  const prefilledLogin = route.params?.login ?? '';
   const passwordRef = useRef<TextInput>(null);
 
   const {
@@ -31,7 +35,7 @@ export function LoginScreen() {
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { login: '', password: '' },
+    defaultValues: { login: prefilledLogin, password: '' },
   });
 
   const onSubmit = async (data: LoginFormData) => {
@@ -115,6 +119,16 @@ export function LoginScreen() {
               onPress={handleSubmit(onSubmit)}
               loading={isAuthenticating}
             />
+
+            <TouchableOpacity
+              accessibilityRole="button"
+              onPress={() => navigation.navigate('Signup')}
+              className="items-center pt-2"
+            >
+              <Text className="font-sans-medium text-sm text-secondary">
+                Não tem conta? Cadastre-se como aluno
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
