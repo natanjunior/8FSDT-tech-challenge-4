@@ -2,7 +2,7 @@
 
 Frontend mobile do sistema de blogging educacional, consumindo a API da Fase 2.
 
-> **Status do projeto:** Em desenvolvimento — Fase 3 (Criação e Edição de Posts) concluída.
+> **Status do projeto:** Em desenvolvimento — Fase 5 (CRUD de Professores e Alunos + Signup) concluída.
 
 ---
 
@@ -113,12 +113,20 @@ Login é uma rota acessada via botão "Entrar" no header. Ele existe principalme
 ```
 RootStack (Native Stack único)
 │
-├── Home          (pública — entry point)
-├── Login         (pública — acessada via "Entrar")
-├── AdminStub     (TEACHER-only — auto-redirect para Home se não-TEACHER)
-├── PostDetail    (pública — redireciona Home se DRAFT/ARCHIVED e não-TEACHER)
-├── PostCreate    (TEACHER-only — gated via useRequireRole)
-└── PostEdit      (TEACHER-only — gated via useRequireRole, carrega post por id)
+├── Home             (pública — entry point)
+├── Login            (pública — acessada via "Entrar")
+├── Signup           (pública — auto-cadastro de aluno; bloqueia STUDENT já logado)
+├── AdminStub        (TEACHER-only — auto-redirect para Home se não-TEACHER)
+├── AdminPosts       (TEACHER-only — lista admin com stats + delete)
+├── PostDetail       (pública — redireciona Home se DRAFT/ARCHIVED e não-TEACHER)
+├── PostCreate       (TEACHER-only — gated via useRequireRole)
+├── PostEdit         (TEACHER-only — gated via useRequireRole, carrega post por id)
+├── TeachersList     (TEACHER-only — lista paginada com busca, editar e excluir)
+├── TeacherCreate    (TEACHER-only — cria novo professor)
+├── TeacherEdit      (TEACHER-only — edita professor existente por id)
+├── StudentsList     (TEACHER-only — lista paginada com busca, editar e excluir)
+├── StudentCreate    (TEACHER-only — cria novo aluno)
+└── StudentEdit      (TEACHER-only — edita aluno existente por id)
 ```
 
 Rotas TEACHER-only não são "escondidas" do navigator — o hook `useRequireRole` faz auto-gate no `useEffect`: se `user.role !== 'TEACHER'`, dispara Toast informativo + `navigation.replace('Home')`. A tela retorna `null` enquanto o redirect acontece.
@@ -162,6 +170,11 @@ Em qualquer 401 (token expirado, sessão invalidada server-side, credencial remo
 | **Editar post** (`PATCH /posts/:id`) | ❌ | ❌ | ✅ |
 | **Excluir post** (`DELETE /posts/:id`) | ❌ | ❌ | ✅ |
 | **Listar todos os posts (admin)** (`GET /posts/search`) | ❌ | ❌ | ✅ (vê todos os status) |
+| **CRUD /teachers** (`GET/POST/PATCH/DELETE`) | ❌ | ❌ | ✅ |
+| **CRUD /students** (`GET/PATCH/DELETE`) | ❌ | ❌ | ✅ |
+| **`POST /students` (auto-cadastro)** | ✅ (sem Bearer) | ❌ (403) | ❌ |
+| **`PATCH /students/:id` próprio** | ❌ | ✅ (próprio) | ✅ |
+| **`PATCH /teachers/:id` próprio** | ❌ | — | ✅ (próprio ou outro) |
 | Ver página do grupo | ✅ | ✅ | ✅ |
 
 ### Troca de senha
@@ -272,6 +285,65 @@ sequenceDiagram
     Edit->>T: goBack() (volta pro Detail)
 ```
 
+### Req 5/6 — Gerenciamento de professores e alunos (TEACHER)
+
+```mermaid
+sequenceDiagram
+    participant T as TEACHER
+    participant Hdr as Header dropdown
+    participant L as TeachersListScreen
+    participant F as TeacherForm
+    participant API
+
+    T->>Hdr: toca avatar → dropdown
+    Hdr->>L: navigate('TeachersList')
+    L->>L: useRequireRole('TEACHER') ok
+    L->>API: GET /teachers?page=1&limit=20
+    API-->>L: página
+    T->>L: filtra/busca → re-fetch
+    T->>L: toca lápis em item
+    L->>F: navigate('TeacherEdit', { id })
+    F->>API: GET /teachers/:id
+    F-->>T: form pré-populado
+    T->>F: edita e submete
+    F->>API: PATCH /teachers/:id
+    F->>L: goBack
+    T->>L: toca lixeira → ConfirmModal
+    T->>L: confirma
+    L->>API: DELETE /teachers/:id (soft)
+    L->>API: GET /teachers (refetch)
+```
+
+### Req 7 — Criação admin de aluno (TEACHER)
+
+Pattern idêntico a Req 5/6 com `StudentsList`/`StudentCreate`/`StudentEdit`. `course` (texto livre) substitui `discipline_ids`.
+
+### Req 8 — Auto-cadastro de aluno (público)
+
+```mermaid
+sequenceDiagram
+    participant A as Anônimo
+    participant L as LoginScreen
+    participant S as SignupScreen
+    participant API
+
+    A->>L: abre Login
+    L->>A: mostra link "Cadastre-se como aluno"
+    A->>L: toca link
+    L->>S: navigate('Signup')
+    S->>S: useEffect checa se STUDENT logado → bloqueia
+    A->>S: preenche StudentForm mode=signup
+    S->>API: POST /students (axios cru, SEM Bearer)
+    alt 201
+        API-->>S: novo aluno
+        S->>L: navigate('Login', { login: novo.login })
+        L->>A: campo login pré-preenchido
+    else 409 (login duplicado)
+        API-->>S: conflict
+        S->>A: toast "Login já em uso"
+    end
+```
+
 ### Req 9 — Painel administrativo de posts (TEACHER)
 
 ```mermaid
@@ -334,6 +406,7 @@ Algumas escolhas divergem do conteúdo padrão das aulas — registradas aqui pa
 | 18 | **`expo-linear-gradient`** para CTAs (`Button primary` e `Button nav`) | Espelhamento dos `cta-gradient` (teal) e `primary-gradient` (navy) do web. NativeWind não suporta gradientes nativamente; expo-linear-gradient é a API canônica do Expo e tem custo de bundle desprezível (~30KB). |
 | 19 | **Comment avatar usa ícone `account`**, NÃO iniciais — divergência intencional do PostCard's AuthorId | Espelhamento exato do web (CommentItem.tsx usa Material Symbol `person`, não iniciais; PostCard.tsx usa iniciais). A diferença semântica: no PostCard, o autor é a identidade editorial (nome + iniciais reforçam isso); no comentário, o autor é um ator transitivo dentro de uma discussão (ícone neutro pesa menos). |
 | 20 | **Stats via 3 chamadas paralelas a `searchPosts(status=X, limit=1)`** em vez de um endpoint de estatísticas dedicado | Backend não expõe `/posts/stats`. As 3 chamadas com `limit=1` lêem só `pagination.total`, o que é barato (apenas COUNT(*) no SQL). Falha silenciosa nas stats não bloqueia a lista — degradação aceita. |
+| 21 | **`signupStudent` usa `axios` cru em vez do `apiClient` interceptado** | O interceptor de request do `apiClient` injeta `Authorization: Bearer <token>` quando há sessão. O endpoint `POST /students` é público e o backend retorna 403 quando recebe um Bearer de STUDENT logado (regra de produto: STUDENT não pode "se recadastrar"). Usar `axios.post(\`${API_BASE_URL}/students\`, ...)` direto evita o header e mantém o endpoint genuinamente público. |
 
 ## Design System
 
@@ -423,8 +496,71 @@ Mapping `label → { icon, color }` em [src/lib/disciplines.ts](src/lib/discipli
 - ✅ Fase 1 — Fundação + Login
 - ✅ Fase 2 — Posts: leitura (lista, busca, detalhe, comentários, reads)
 - ✅ Fase 3 — Posts: escrita para professor (criar/editar)
-- Fase 4 — Posts: administração (lista admin + delete)
-- Fase 5 — Usuários: CRUD de professores e alunos
+- ✅ Fase 4 — Posts: administração (lista admin + delete)
+- ✅ Fase 5 — Usuários: CRUD de professores e alunos (req 5, 6, 7, 8)
+
+## Dificuldades Encontradas
+
+### 1. Validação Zod falha silenciosa em campos string vazios (formulários de professor/aluno)
+
+**Problema:** campos `name`, `email` e `login` definidos como `z.string().min(1)` passavam na validação mesmo quando o usuário não tinha digitado nada. O valor entregue pelo `react-hook-form` para inputs não tocados era `""` (string vazia), que satisfaz `z.string()` mas deveria falhar em `.min(1)`. Em modo de edição, o campo pode também ser `undefined` antes do `reset(defaultValues)`.
+
+**Tentativas:** aumentar o `.min(1)` para `.min(2)` foi descartado (nomes válidos de 1 letra existem). Usar `.refine(v => v.trim().length > 0)` funcionou mas gerou mensagens de erro fora de padrão.
+
+**Solução final:** `z.preprocess(v => (typeof v === 'string' ? v.trim() : v), z.string().min(1, 'Campo obrigatório'))` — o `preprocess` normaliza o valor antes da validação, elimina espaços em branco e torna o `min(1)` confiável.
+
+**Aprendizado:** `z.preprocess` deve ser o padrão para qualquer campo de texto obrigatório em formulários RHF+Zod no React Native, pois o input nativo entrega strings vazias (não `undefined`) para campos não preenchidos.
+
+---
+
+### 2. Conflito entre `jest-expo` e `@react-native/jest-preset` nos testes de Fase 5
+
+**Problema:** ao rodar `npm test` após adicionar os specs das telas `TeachersListScreen` e `SignupScreen`, o Jest jogava `SyntaxError: Cannot use import statement in a module` para módulos internos do Expo (ex: `expo-secure-store`, `expo-linear-gradient`). A causa era que o `jest.config.js` herdado usava `preset: '@react-native/jest-preset'` diretamente, sem o wrapper `jest-expo` que já inclui as transformações necessárias para módulos nativos do Expo.
+
+**Solução:** substituir o preset por `preset: 'jest-expo'` e mover as entradas de `transformIgnorePatterns` para a lista canônica recomendada pela documentação do Expo (`node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|...)`). Isso resolveu os erros de import sem afetar os testes das fases anteriores.
+
+**Aprendizado:** projetos Expo devem sempre usar `jest-expo` como preset base — não combinar `@react-native/jest-preset` diretamente, mesmo que este seja o que os exemplos genéricos de React Native mostram.
+
+---
+
+### 3. Mock de `createInteropElement` necessário para NativeWind v4 nos testes
+
+**Problema:** após resolver o preset, testes que renderizavam componentes estilizados com NativeWind falhavam com `TypeError: (0 , _reactNative.createElement) is not a function` ou `createInteropElement is not a function`. O NativeWind v4 substitui internamente o `createElement` por um wrapper (`createInteropElement`) que não é transpilado corretamente no ambiente de teste Jest (que não passa pelo Metro bundler).
+
+**Solução:** adicionar em `jest.setup.js`:
+```js
+jest.mock('nativewind', () => ({
+  ...jest.requireActual('nativewind'),
+  styled: (Component) => Component,
+}));
+```
+e mapear `nativewind/dist/style-sheet/native` para um stub vazio no `moduleNameMapper`. Componentes de teste passaram a usar `className` como prop simples sem processar o Tailwind.
+
+**Aprendizado:** NativeWind v4 exige configuração extra de mock em Jest porque o seu babel plugin não é executado fora do Metro. O padrão é sempre ter um `__mocks__/nativewind.js` ou a entrada equivalente no `moduleNameMapper`.
+
+---
+
+### 4. Re-render infinito no `TeachersListScreen` causado por dependência de objeto em `useEffect`
+
+**Problema:** a tela de listagem de professores entrava em loop de re-fetch logo após montar: o `useEffect` de busca declarava `[filters]` como dependência, mas `filters` era um objeto recriado a cada render pelo `useState` com valor inicial inline (`{ page: 1, limit: 20 }`). Como objetos são comparados por referência no JavaScript, o React detectava mudança a cada ciclo e re-disparava o efeito.
+
+**Tentativas:** memoizar `filters` com `useMemo` resolveu o loop mas introduziu dependências circulares com o `setFilters` do state. Usar `useRef` para guardar o valor anterior foi descartado por aumentar a complexidade.
+
+**Solução final:** separar os filtros em primitivos individuais (`page`, `query`, `limit`) no `useState`, e compor o objeto de query apenas dentro do `useEffect`, sem incluí-lo como dependência. Assim as dependências do efeito são apenas primitivos (`page`, `query`, `limit`), cuja comparação por valor é estável.
+
+**Aprendizado:** nunca declarar objetos ou arrays como dependências de `useEffect` quando eles são recriados a cada render. Preferir primitivos como dependências e construir objetos compostos dentro do próprio efeito.
+
+---
+
+### 5. Endpoint `POST /students` retorna 403 para STUDENT logado (axios interceptor injetava Bearer)
+
+**Problema:** ao testar o fluxo de auto-cadastro (`SignupScreen`) com um STUDENT já logado na sessão (cenário de regressão), a chamada `POST /students` retornava 403. O interceptor de request do `apiClient` injeta `Authorization: Bearer <token>` automaticamente sempre que há sessão no `AuthContext`. O backend Fase 2 interpreta o Bearer de um STUDENT como uma tentativa de "se recadastrar" e nega com 403 por regra de negócio.
+
+**Solução:** usar `axios.post(\`${API_BASE_URL}/students\`, payload)` diretamente (sem o `apiClient`), de forma que nenhum header de autorização seja anexado. A `SignupScreen` também bloqueia STUDENTs já logados via `useEffect` (redireciona para Home), mas o uso de axios cru garante que a chamada seja genuinamente pública independentemente do estado da sessão. Registrado como ADR 21.
+
+**Aprendizado:** interceptors de request são convenientes, mas têm efeito colateral em endpoints públicos que são sensíveis à presença do Bearer. Nesses casos, usar a instância base do axios (sem interceptor) é mais correto do que tentar remover o header dentro do interceptor por rota.
+
+---
 
 ## Equipe
 
