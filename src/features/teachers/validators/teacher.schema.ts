@@ -32,11 +32,20 @@ export const teacherSchema = z.object({
     .array(z.string().regex(UUID_REGEX, 'Disciplina inválida.'))
     .default([]),
   user: z
-    .object({
-      login: z.string().min(1, 'Login é obrigatório.'),
-      password: z.string().min(8, 'Senha deve ter no mínimo 8 caracteres.'),
-    })
-    .optional(),
+    .preprocess(
+      (v) => {
+        if (v === undefined || v === null) return undefined;
+        const u = v as { login?: string; password?: string };
+        if (!u.login && !u.password) return undefined;
+        return v;
+      },
+      z
+        .object({
+          login: z.string().min(1, 'Login é obrigatório.'),
+          password: z.string().min(8, 'Senha deve ter no mínimo 8 caracteres.'),
+        })
+        .optional()
+    ),
 });
 
 export type TeacherFormInput = z.input<typeof teacherSchema>;
