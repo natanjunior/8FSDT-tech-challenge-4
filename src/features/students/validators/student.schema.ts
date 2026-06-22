@@ -36,7 +36,15 @@ export const studentSchema = z.object({
     .string()
     .optional()
     .transform((v) => (v === '' ? undefined : v)),
-  user: userBlock.optional(),
+  user: z.preprocess(
+    (v) => {
+      if (v === undefined || v === null) return undefined;
+      const u = v as { login?: string; password?: string };
+      if (!u.login && !u.password) return undefined;
+      return v;
+    },
+    userBlock.optional()
+  ),
 });
 
 /** Variant de auto-cadastro: user é obrigatório. */
