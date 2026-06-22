@@ -19,3 +19,4 @@ export type RootStackParamList = {
 export type RootStackNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 export type PostDetailRouteProp = RouteProp<RootStackParamList, 'PostDetail'>;
 export type PostEditRouteProp = RouteProp<RootStackParamList, 'PostEdit'>;
+export type TeacherEditRouteProp = RouteProp<RootStackParamList, 'TeacherEdit'>;
