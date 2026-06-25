@@ -21,6 +21,7 @@ const teacher: ReturnType<typeof AuthContextModule.useAuth> = {
   isAuthenticating: false,
   login: jest.fn(),
   logout: jest.fn(),
+  refreshProfile: jest.fn(),
 };
 
 const student: ReturnType<typeof AuthContextModule.useAuth> = {
@@ -31,6 +32,7 @@ const student: ReturnType<typeof AuthContextModule.useAuth> = {
   isAuthenticating: false,
   login: jest.fn(),
   logout: jest.fn(),
+  refreshProfile: jest.fn(),
 };
 
 const guest: ReturnType<typeof AuthContextModule.useAuth> = {
@@ -41,6 +43,7 @@ const guest: ReturnType<typeof AuthContextModule.useAuth> = {
   isAuthenticating: false,
   login: jest.fn(),
   logout: jest.fn(),
+  refreshProfile: jest.fn(),
 };
 
 function Probe({ role }: { role: 'TEACHER' | 'STUDENT' }) {

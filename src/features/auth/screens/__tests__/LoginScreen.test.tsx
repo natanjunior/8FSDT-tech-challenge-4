@@ -33,6 +33,7 @@ describe('LoginScreen', () => {
     isAuthenticating: false,
     login: jest.fn(),
     logout: jest.fn(),
+    refreshProfile: jest.fn(),
   };
 
   afterEach(() => {

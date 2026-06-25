@@ -21,6 +21,7 @@ const teacher = {
   isAuthenticating: false,
   login: jest.fn(),
   logout: jest.fn(),
+  refreshProfile: jest.fn(),
 };
 
 const guest = {
@@ -31,6 +32,7 @@ const guest = {
   isAuthenticating: false,
   login: jest.fn(),
   logout: jest.fn(),
+  refreshProfile: jest.fn(),
 };
 
 describe('MarkAsReadButton', () => {

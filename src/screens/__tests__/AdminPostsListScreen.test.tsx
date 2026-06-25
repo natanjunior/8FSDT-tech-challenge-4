@@ -30,6 +30,7 @@ const teacher = {
   isAuthenticating: false,
   login: jest.fn(),
   logout: jest.fn(),
+  refreshProfile: jest.fn(),
 } satisfies AuthContextValue;
 
 const student = {
@@ -40,6 +41,7 @@ const student = {
   isAuthenticating: false,
   login: jest.fn(),
   logout: jest.fn(),
+  refreshProfile: jest.fn(),
 } satisfies AuthContextValue;
 
 const fakePost = (overrides: Partial<any> = {}) => ({

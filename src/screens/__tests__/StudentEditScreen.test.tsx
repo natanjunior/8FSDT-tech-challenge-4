@@ -20,12 +20,13 @@ const mockUpdate = studentsService.updateStudent as jest.Mock;
 
 const teacher = {
   user: { id: 't1', login: 'admin', role: 'TEACHER' as const },
-  profile: { id: 'Teacher/admin', name: 'Admin' },
+  profile: null,
   isAuthenticated: true,
   isHydrating: false,
   isAuthenticating: false,
   login: jest.fn(),
   logout: jest.fn(),
+  refreshProfile: jest.fn(),
 };
 
 const existing = {

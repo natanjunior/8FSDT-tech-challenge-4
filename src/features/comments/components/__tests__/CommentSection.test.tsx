@@ -18,6 +18,7 @@ const guest = {
   isAuthenticating: false,
   login: jest.fn(),
   logout: jest.fn(),
+  refreshProfile: jest.fn(),
 };
 
 const student = {
@@ -28,6 +29,7 @@ const student = {
   isAuthenticating: false,
   login: jest.fn(),
   logout: jest.fn(),
+  refreshProfile: jest.fn(),
 };
 
 describe('CommentSection', () => {

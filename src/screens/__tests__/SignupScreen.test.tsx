@@ -24,16 +24,18 @@ const guest = {
   isAuthenticating: false,
   login: jest.fn(),
   logout: jest.fn(),
+  refreshProfile: jest.fn(),
 };
 
 const studentLogged = {
   user: { id: 's1', login: 'pedro', role: 'STUDENT' as const },
-  profile: { id: 'Student/xyz', name: 'Pedro' },
+  profile: null,
   isAuthenticated: true,
   isHydrating: false,
   isAuthenticating: false,
   login: jest.fn(),
   logout: jest.fn(),
+  refreshProfile: jest.fn(),
 };
 
 describe('SignupScreen', () => {
