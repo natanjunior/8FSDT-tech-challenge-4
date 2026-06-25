@@ -2,6 +2,7 @@ import { apiClient } from '@/api/client';
 import {
   listTeachers,
   getTeacherById,
+  getMyTeacher,
   createTeacher,
   updateTeacher,
   deleteTeacher,
@@ -77,6 +78,15 @@ describe('teachers.service', () => {
       mockGet.mockResolvedValueOnce({ data: fakeTeacher });
       await getTeacherById('Teacher/abc');
       expect(mockGet).toHaveBeenCalledWith('/teachers/Teacher/abc');
+    });
+  });
+
+  describe('getMyTeacher', () => {
+    it('chama GET /teachers/me e retorna o Teacher', async () => {
+      mockGet.mockResolvedValueOnce({ data: fakeTeacher });
+      const r = await getMyTeacher();
+      expect(mockGet).toHaveBeenCalledWith('/teachers/me');
+      expect(r).toEqual(fakeTeacher);
     });
   });
 

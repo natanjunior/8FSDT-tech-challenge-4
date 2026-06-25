@@ -33,6 +33,11 @@ export async function getTeacherById(id: string): Promise<Teacher> {
   return data;
 }
 
+export async function getMyTeacher(): Promise<Teacher> {
+  const { data } = await apiClient.get<Teacher>('/teachers/me');
+  return data;
+}
+
 function buildTeacherBody(payload: Partial<TeacherFormData>): Record<string, unknown> {
   const body: Record<string, unknown> = {};
   if (payload.name !== undefined) body.name = payload.name;

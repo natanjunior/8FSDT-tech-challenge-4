@@ -3,6 +3,7 @@ import { apiClient } from '@/api/client';
 import {
   listStudents,
   getStudentById,
+  getMyStudent,
   createStudent,
   updateStudent,
   deleteStudent,
@@ -68,6 +69,15 @@ describe('students.service', () => {
       mockGet.mockResolvedValueOnce({ data: fakeStudent });
       await getStudentById('Student/xyz');
       expect(mockGet).toHaveBeenCalledWith('/students/Student/xyz');
+    });
+  });
+
+  describe('getMyStudent', () => {
+    it('chama GET /students/me e retorna o Student', async () => {
+      mockGet.mockResolvedValueOnce({ data: fakeStudent });
+      const r = await getMyStudent();
+      expect(mockGet).toHaveBeenCalledWith('/students/me');
+      expect(r).toEqual(fakeStudent);
     });
   });
 

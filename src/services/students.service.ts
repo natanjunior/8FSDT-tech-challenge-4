@@ -37,6 +37,11 @@ export async function getStudentById(id: string): Promise<Student> {
   return data;
 }
 
+export async function getMyStudent(): Promise<Student> {
+  const { data } = await apiClient.get<Student>('/students/me');
+  return data;
+}
+
 function buildStudentBody(payload: Partial<StudentFormData>): Record<string, unknown> {
   const body: Record<string, unknown> = {};
   if (payload.name !== undefined) body.name = payload.name;
