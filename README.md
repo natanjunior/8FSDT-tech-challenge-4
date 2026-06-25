@@ -17,6 +17,21 @@ Frontend mobile (React Native + Expo) do sistema de blogging educacional do Tech
 
 > _(capturas de tela a serem adicionadas em `docs/screenshots/`: HomeScreen, PostDetail, AdminPosts, ProfileScreen, ChangePasswordScreen, Header dropdown.)_
 
+## Índice
+
+- [Sobre o Projeto](#sobre-o-projeto)
+- [Stack](#stack)
+- [Setup e Instalação](#-setup-e-instalação)
+- [Topologia de navegação](#topologia-de-navegação)
+- [Autenticação](#autenticação)
+- [Fluxos por requisito](#fluxos-por-requisito)
+- [Decisões arquiteturais (ADRs)](#decisões-arquiteturais-adrs)
+- [Design System](#design-system)
+- [Testes](#testes)
+- [Roadmap concluído](#roadmap-concluído)
+- [Dificuldades Encontradas](#dificuldades-encontradas)
+- [Equipe](#equipe)
+
 ---
 
 ## Stack
@@ -429,15 +444,15 @@ Algumas escolhas divergem do conteúdo padrão das aulas — registradas aqui pa
 | 04 | **Context API (`AuthContext`)** em vez de Redux Toolkit (aula RN Medium 6) | Um único reducer (auth) não justifica boilerplate de Redux. Spec da Fase 4 permite Context. |
 | 05 | **expo-secure-store** para o JWT, em vez de AsyncStorage | SecureStore criptografa nativamente (Keychain no iOS, Keystore no Android). |
 | 06 | **Single Native Stack com entrada pública**, não login wall | Espelha o modelo da Fase 3 web (lista de posts é pública; login é opcional). Rotas TEACHER-only fazem auto-gate via `useEffect + navigation.replace`. |
-| 12 | **Credencial separada do perfil (`User` ≠ `Profile`)** | Espelhamento do backend Fase 2 (branch `ajustes-fase-4`). Mobile guarda 3 chaves SecureStore (`AUTH_TOKEN`, `AUTH_USER`, `AUTH_PROFILE`). `AuthContext` expõe ambos; UI usa `user.role` para gating e `profile.name` para exibição. |
-| 13 | **Referências FHIR (`Teacher/<uuid>`, `Student/<uuid>`)** | IDs de perfil incluem o tipo no formato FHIR. Concatenar direto nas URLs (`/teachers/${teacher.id}`) — backend resolve. **Não** usar `encodeURIComponent` no id inteiro (quebraria a barra). |
 | 07 | **`comments_count`/`reads_count` no shape de Post** (não chamadas extras) | Backend já retorna esses contadores em toda resposta de Post. PostCard e PostDetail usam sem chamada adicional. |
 | 08 | **Disciplines com fallback hardcoded para anônimos** | `GET /disciplines` exige Bearer; o filtro de disciplina precisa funcionar para visitantes. Solução: array `SEED_DISCIPLINES` com UUIDs estáveis do seed da Fase 2. |
 | 09 | **Comentário criação só autenticada** (regra do backend) | A Fase 2 removeu o fluxo anônimo de comentários: `POST /comments` agora exige Bearer (401 sem token). Mobile mostra CTA "Faça login para comentar" para anônimos. |
-| 14 | **Display de autor com pronouns** | `Post.author` carrega `pronouns` do perfil do TEACHER. Exibimos como `Nome (pronome)` no PostDetail quando presente, omitimos quando `null`. |
-| 15 | **`CommentAuthor.type` para distinguir Teacher/Student** | Backend entrega `type` resolvido. Exibimos "Professor" / "Aluno" no `CommentItem` em vez de parsear o prefixo do FhirRef. |
 | 10 | **`useRequireRole` hook** em vez de lógica inline por tela | Mesmo gate é reusado em AdminPosts, PostCreate, PostEdit e nas telas de CRUD de professores/alunos. Centralizar evita drift de comportamento entre telas. |
 | 11 | **Sem ownership check no client** (qualquer TEACHER pode editar qualquer post) | Espelhamento exato do backend (Fase 2 §2.1). Botão "Editar post" renderiza pra qualquer TEACHER, independente de quem é o autor. |
+| 12 | **Credencial separada do perfil (`User` ≠ `Profile`)** | Espelhamento do backend Fase 2 (branch `ajustes-fase-4`). Mobile guarda 3 chaves SecureStore (`AUTH_TOKEN`, `AUTH_USER`, `AUTH_PROFILE`). `AuthContext` expõe ambos; UI usa `user.role` para gating e `profile.name` para exibição. |
+| 13 | **Referências FHIR (`Teacher/<uuid>`, `Student/<uuid>`)** | IDs de perfil incluem o tipo no formato FHIR. Concatenar direto nas URLs (`/teachers/${teacher.id}`) — backend resolve. **Não** usar `encodeURIComponent` no id inteiro (quebraria a barra). |
+| 14 | **Display de autor com pronouns** | `Post.author` carrega `pronouns` do perfil do TEACHER. Exibimos como `Nome (pronome)` no PostDetail quando presente, omitimos quando `null`. |
+| 15 | **`CommentAuthor.type` para distinguir Teacher/Student** | Backend entrega `type` resolvido. Exibimos "Professor" / "Aluno" no `CommentItem` em vez de parsear o prefixo do FhirRef. |
 | 16 | **Inter (6 pesos) + JetBrains Mono via `@expo-google-fonts`** + SplashScreen gate | Paridade visual direta com a Fase 3 web. Inter 900 é necessário para títulos editoriais do PostDetail; JetBrains Mono é o sistema de metadata (timestamps, contadores, IDs) que o web usa sistematicamente. SplashScreen gate evita FOUT (flash of unstyled text). |
 | 17 | **`@expo/vector-icons / MaterialCommunityIcons`** em vez de Material Symbols (que o web usa) | Material Symbols não é fonte instalável em RN sem hacks. MaterialCommunityIcons (6k+ ícones) já vem com Expo SDK 56, tem cobertura comparável e visual Material Design. Wrapper `<Icon>` com enum `IconName` força mapeamento tipado e centraliza os ≈25 ícones usados no app — typos pegam em compile time. |
 | 18 | **`expo-linear-gradient`** para CTAs (`Button primary` e `Button nav`) | Espelhamento dos `cta-gradient` (teal) e `primary-gradient` (navy) do web. NativeWind não suporta gradientes nativamente; expo-linear-gradient é a API canônica do Expo e tem custo de bundle desprezível (~30KB). |
@@ -474,7 +489,25 @@ Inter Black (900) é usado em títulos editoriais (PostDetail, headlines); Extra
 
 ### Paleta M3 (alinhada à Fase 3 web)
 
-(Mesma tabela das fases anteriores, mantida.)
+Tokens centralizados em [src/theme/colors.ts](src/theme/colors.ts) (espelham os tokens M3 da Fase 3 web). Principais:
+
+| Token | Hex | Uso |
+|-------|-----|-----|
+| `background` / `surface` | `#F9F9FF` | Fundo base das telas |
+| `surfaceContainerLowest` | `#FFFFFF` | Camada mais clara (cards, modais) |
+| `surfaceContainerLow` | `#F0F3FF` | Separação tonal de seções |
+| `surfaceContainer` / `card` | `#E7EEFF` | Container de cards (alias `card` legado) |
+| `foreground` | `#111C2D` | Texto principal |
+| `muted` | `#43474E` | Texto secundário / metadata |
+| `primary` | `#022448` | Cor de marca (navy); base do `primary-gradient` |
+| `primaryForeground` | `#FFFFFF` | Texto sobre `primary` |
+| `secondary` | `#006A61` | Teal; base do `cta-gradient` dos CTAs |
+| `outline` | `#74777F` | Bordas/ícones de contorno |
+| `outlineVariant` / `border` | `#C4C6CF` | Ghost borders (hairline + opacidade) |
+| `success` | `#16A34A` | Confirmações fora de status de post |
+| `warning` | `#D97706` | Avisos |
+| `error` | `#BA1A1A` | Texto/estado de erro |
+| `errorContainer` | `#FFDAD6` | Background de input com erro |
 
 **Status colors** (divergem dos M3 success/warning/neutral — são específicos do DS web):
 | Token | Hex | Uso |
@@ -483,7 +516,17 @@ Inter Black (900) é usado em títulos editoriais (PostDetail, headlines); Extra
 | `status-draft` | `#EAB308` | DRAFT badge + dot |
 | `status-archived` | `#94A3B8` | ARCHIVED badge + dot |
 
-**Paleta `AuthorAvatar`:** 6 cores pastel (blue/emerald/teal/amber/rose/violet) — escolha determinística por hash do nome. Fallback slate para nomes nulos.
+**Paleta `AuthorAvatar`:** 6 cores pastel (bg / border / text) — escolha determinística por hash do nome. Fallback slate para nomes nulos.
+
+| Token | bg | border | text |
+|-------|-----|--------|------|
+| `avatarBlue` | `#DBEAFE` | `#BFDBFE` | `#1D4ED8` |
+| `avatarEmerald` | `#D1FAE5` | `#A7F3D0` | `#047857` |
+| `avatarTeal` | `#CCFBF1` | `#99F6E4` | `#0F766E` |
+| `avatarAmber` | `#FEF3C7` | `#FDE68A` | `#B45309` |
+| `avatarRose` | `#FFE4E6` | `#FECDD3` | `#BE123C` |
+| `avatarViolet` | `#EDE9FE` | `#DDD6FE` | `#6D28D9` |
+| `avatarSlate` (fallback) | `#F1F5F9` | `#E2E8F0` | `#475569` |
 
 ### Disciplinas — referência única
 
