@@ -10,10 +10,15 @@ jest.mock('@/services/students.service');
 
 const mockNavigate = jest.fn();
 const mockReplace = jest.fn();
-jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ navigate: mockNavigate, replace: mockReplace }),
-  useFocusEffect: (cb: () => void) => cb(),
-}));
+jest.mock('@react-navigation/native', () => {
+  const ReactActual = require('react');
+  return {
+    useNavigation: () => ({ navigate: mockNavigate, replace: mockReplace }),
+    useFocusEffect: (cb: () => void) => {
+      ReactActual.useEffect(() => cb(), []);
+    },
+  };
+});
 
 const useAuthSpy = jest.spyOn(AuthContextModule, 'useAuth');
 const mockGetMyTeacher = teachersService.getMyTeacher as jest.Mock;

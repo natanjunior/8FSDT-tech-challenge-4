@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '@/contexts/AuthContext';
@@ -37,8 +37,6 @@ export function ProfileScreen() {
   const [data, setData] = useState<Teacher | Student | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
-  const fetchingRef = useRef(false);
-  const hasFetchedRef = useRef(false);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -46,38 +44,26 @@ export function ProfileScreen() {
     }
   }, [isAuthenticated, navigation]);
 
-  const fetchProfile = useCallback(() => {
-    if (!isAuthenticated || !user) return;
-    if (fetchingRef.current) return;
-    // In production, re-fetch on focus to pick up edits made in ProfileEdit.
-    // In tests (useFocusEffect mock fires on every render), guard against
-    // repeated calls once data has been set.
-    if (hasFetchedRef.current) return;
-    fetchingRef.current = true;
-    let cancelled = false;
-    (async () => {
-      try {
-        const fetched = isTeacher ? await getMyTeacher() : await getMyStudent();
-        if (!cancelled) {
-          setData(fetched);
-          setIsLoading(false);
-          hasFetchedRef.current = true;
+  useFocusEffect(
+    useCallback(() => {
+      if (!isAuthenticated || !user) return;
+      let cancelled = false;
+      setIsLoading(true);
+      (async () => {
+        try {
+          const fetched = isTeacher ? await getMyTeacher() : await getMyStudent();
+          if (!cancelled) setData(fetched);
+        } catch {
+          if (!cancelled) setNotFound(true);
+        } finally {
+          if (!cancelled) setIsLoading(false);
         }
-      } catch {
-        if (!cancelled) {
-          setNotFound(true);
-          setIsLoading(false);
-        }
-      } finally {
-        fetchingRef.current = false;
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [isAuthenticated, isTeacher, user?.id]);
-
-  useFocusEffect(fetchProfile);
+      })();
+      return () => {
+        cancelled = true;
+      };
+    }, [isAuthenticated, isTeacher, user?.id])
+  );
 
   if (!isAuthenticated) return null;
   if (isLoading) return <Loader fullScreen message="Carregando perfil..." />;
