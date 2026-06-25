@@ -49,6 +49,7 @@ export function ProfileScreen() {
       if (!isAuthenticated || !user) return;
       let cancelled = false;
       setIsLoading(true);
+      setNotFound(false);
       (async () => {
         try {
           const fetched = isTeacher ? await getMyTeacher() : await getMyStudent();
