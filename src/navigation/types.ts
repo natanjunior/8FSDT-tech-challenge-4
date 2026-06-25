@@ -16,6 +16,9 @@ export type RootStackParamList = {
   StudentsList: undefined;
   StudentCreate: undefined;
   StudentEdit: { id: string };
+  Profile: undefined;
+  ProfileEdit: undefined;
+  ChangePassword: undefined;
 };
 
 export type RootStackNavigationProp = NativeStackNavigationProp<RootStackParamList>;

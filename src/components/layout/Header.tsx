@@ -108,8 +108,34 @@ export function HeaderRight() {
               elevation: 8,
             }}
           >
+            <TouchableOpacity
+              onPress={() => {
+                setMenuOpen(false);
+                navigation.navigate('Profile');
+              }}
+              className="flex-row items-center gap-3 px-4 py-3"
+            >
+              <Icon name="account-circle-outline" size={18} color={colors.outline} />
+              <Text className="font-sans-medium text-sm text-primary">
+                Meu perfil
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                setMenuOpen(false);
+                navigation.navigate('ChangePassword');
+              }}
+              className="flex-row items-center gap-3 px-4 py-3"
+            >
+              <Icon name="lock-outline" size={18} color={colors.outline} />
+              <Text className="font-sans-medium text-sm text-primary">
+                Trocar senha
+              </Text>
+            </TouchableOpacity>
+
             {isTeacher ? (
               <>
+                <View className="h-px bg-outline-variant/40" />
                 <TouchableOpacity
                   onPress={() => {
                     setMenuOpen(false);

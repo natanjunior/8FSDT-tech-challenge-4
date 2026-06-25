@@ -140,4 +140,61 @@ describe('HeaderRight', () => {
     expect(getByText('Painel')).toBeTruthy();
     expect(getByText('Sair')).toBeTruthy();
   });
+
+  // --- Task 7: Profile/ChangePassword routes in dropdown ---
+
+  it('mostra "Meu perfil" no dropdown autenticado (TEACHER)', () => {
+    useAuthSpy.mockReturnValue(teacher);
+    const { getByTestId, getByText } = render(<HeaderRight />);
+    fireEvent.press(getByTestId('header-user-trigger'));
+    expect(getByText('Meu perfil')).toBeTruthy();
+  });
+
+  it('mostra "Trocar senha" no dropdown autenticado (TEACHER)', () => {
+    useAuthSpy.mockReturnValue(teacher);
+    const { getByTestId, getByText } = render(<HeaderRight />);
+    fireEvent.press(getByTestId('header-user-trigger'));
+    expect(getByText('Trocar senha')).toBeTruthy();
+  });
+
+  it('mostra "Meu perfil" no dropdown autenticado (STUDENT)', () => {
+    useAuthSpy.mockReturnValue(student);
+    const { getByTestId, getByText } = render(<HeaderRight />);
+    fireEvent.press(getByTestId('header-user-trigger'));
+    expect(getByText('Meu perfil')).toBeTruthy();
+  });
+
+  it('mostra "Trocar senha" no dropdown autenticado (STUDENT)', () => {
+    useAuthSpy.mockReturnValue(student);
+    const { getByTestId, getByText } = render(<HeaderRight />);
+    fireEvent.press(getByTestId('header-user-trigger'));
+    expect(getByText('Trocar senha')).toBeTruthy();
+  });
+
+  it('navega para Profile ao tocar "Meu perfil"', () => {
+    useAuthSpy.mockReturnValue(teacher);
+    const { getByTestId, getByText } = render(<HeaderRight />);
+    fireEvent.press(getByTestId('header-user-trigger'));
+    fireEvent.press(getByText('Meu perfil'));
+    expect(mockNavigate).toHaveBeenCalledWith('Profile');
+  });
+
+  it('navega para ChangePassword ao tocar "Trocar senha"', () => {
+    useAuthSpy.mockReturnValue(teacher);
+    const { getByTestId, getByText } = render(<HeaderRight />);
+    fireEvent.press(getByTestId('header-user-trigger'));
+    fireEvent.press(getByText('Trocar senha'));
+    expect(mockNavigate).toHaveBeenCalledWith('ChangePassword');
+  });
+
+  it('STUDENT nao ve Painel/Professores/Alunos mas ve Meu perfil + Trocar senha', () => {
+    useAuthSpy.mockReturnValue(student);
+    const { getByTestId, getByText, queryByText } = render(<HeaderRight />);
+    fireEvent.press(getByTestId('header-user-trigger'));
+    expect(getByText('Meu perfil')).toBeTruthy();
+    expect(getByText('Trocar senha')).toBeTruthy();
+    expect(queryByText('Painel')).toBeNull();
+    expect(queryByText('Professores')).toBeNull();
+    expect(queryByText('Alunos')).toBeNull();
+  });
 });

@@ -18,6 +18,9 @@ import { TeacherEditScreen } from '@/screens/TeacherEditScreen';
 import { StudentsListScreen } from '@/screens/StudentsListScreen';
 import { StudentCreateScreen } from '@/screens/StudentCreateScreen';
 import { StudentEditScreen } from '@/screens/StudentEditScreen';
+import { ProfileScreen } from '@/screens/ProfileScreen';
+import { ProfileEditScreen } from '@/screens/ProfileEditScreen';
+import { ChangePasswordScreen } from '@/screens/ChangePasswordScreen';
 import { SignupScreen } from '@/screens/SignupScreen';
 import { Loader } from '@/components/ui/Loader';
 import { colors } from '@/theme/colors';
@@ -125,6 +128,21 @@ export function AppRoutes() {
           name="StudentEdit"
           component={StudentEditScreen}
           options={{ title: 'Editar aluno' }}
+        />
+        <RootStack.Screen
+          name="Profile"
+          component={ProfileScreen}
+          options={{ title: 'Meu perfil' }}
+        />
+        <RootStack.Screen
+          name="ProfileEdit"
+          component={ProfileEditScreen}
+          options={{ title: 'Editar perfil' }}
+        />
+        <RootStack.Screen
+          name="ChangePassword"
+          component={ChangePasswordScreen}
+          options={{ title: 'Trocar senha' }}
         />
         <RootStack.Screen
           name="Signup"
