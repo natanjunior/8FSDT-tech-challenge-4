@@ -40,14 +40,14 @@ describe('ChangePasswordScreen', () => {
   });
 
   it('mostra erro quando new_password tem menos de 8 chars', async () => {
-    const { getByText, getByPlaceholderText, findByText } = render(
+    const { getByTestId, getByPlaceholderText, findByText } = render(
       <ChangePasswordScreen />
     );
     fireEvent.changeText(getByPlaceholderText('Senha atual'), 'qualquer');
     fireEvent.changeText(getByPlaceholderText('Nova senha (mín. 8 chars)'), '1234');
     fireEvent.changeText(getByPlaceholderText('Confirme a nova senha'), '1234');
     await act(async () => {
-      fireEvent.press(getByText('Trocar senha'));
+      fireEvent.press(getByTestId('change-password-submit'));
     });
     expect(
       await findByText('Nova senha deve ter no mínimo 8 caracteres.')
@@ -56,14 +56,14 @@ describe('ChangePasswordScreen', () => {
   });
 
   it('mostra erro quando senhas não conferem', async () => {
-    const { getByText, getByPlaceholderText, findByText } = render(
+    const { getByTestId, getByPlaceholderText, findByText } = render(
       <ChangePasswordScreen />
     );
     fireEvent.changeText(getByPlaceholderText('Senha atual'), 'qualquer');
     fireEvent.changeText(getByPlaceholderText('Nova senha (mín. 8 chars)'), 'novaSenha123');
     fireEvent.changeText(getByPlaceholderText('Confirme a nova senha'), 'diferente123');
     await act(async () => {
-      fireEvent.press(getByText('Trocar senha'));
+      fireEvent.press(getByTestId('change-password-submit'));
     });
     expect(await findByText('As senhas não conferem.')).toBeTruthy();
     expect(mockChange).not.toHaveBeenCalled();
@@ -71,12 +71,12 @@ describe('ChangePasswordScreen', () => {
 
   it('submete payload correto e goBack em sucesso', async () => {
     mockChange.mockResolvedValueOnce(undefined);
-    const { getByText, getByPlaceholderText } = render(<ChangePasswordScreen />);
+    const { getByTestId, getByPlaceholderText } = render(<ChangePasswordScreen />);
     fireEvent.changeText(getByPlaceholderText('Senha atual'), 'atual123A');
     fireEvent.changeText(getByPlaceholderText('Nova senha (mín. 8 chars)'), 'novaSenha123');
     fireEvent.changeText(getByPlaceholderText('Confirme a nova senha'), 'novaSenha123');
     await act(async () => {
-      fireEvent.press(getByText('Trocar senha'));
+      fireEvent.press(getByTestId('change-password-submit'));
     });
     await waitFor(() =>
       expect(mockChange).toHaveBeenCalledWith({
@@ -89,14 +89,14 @@ describe('ChangePasswordScreen', () => {
 
   it('mostra erro quando service rejeita (senha atual errada)', async () => {
     mockChange.mockRejectedValueOnce(new Error('Senha atual incorreta.'));
-    const { getByText, getByPlaceholderText, findByTestId } = render(
+    const { getByTestId, getByPlaceholderText, findByTestId } = render(
       <ChangePasswordScreen />
     );
     fireEvent.changeText(getByPlaceholderText('Senha atual'), 'errada');
     fireEvent.changeText(getByPlaceholderText('Nova senha (mín. 8 chars)'), 'novaSenha123');
     fireEvent.changeText(getByPlaceholderText('Confirme a nova senha'), 'novaSenha123');
     await act(async () => {
-      fireEvent.press(getByText('Trocar senha'));
+      fireEvent.press(getByTestId('change-password-submit'));
     });
     expect(await findByTestId('submit-error')).toBeTruthy();
     expect(mockGoBack).not.toHaveBeenCalled();

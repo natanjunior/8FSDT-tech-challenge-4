@@ -68,7 +68,7 @@ export function ChangePasswordScreen() {
         <View className="gap-5 p-6">
           <View className="gap-1">
             <Text className="font-sans-black text-2xl text-primary">
-              Alterar senha
+              Trocar senha
             </Text>
             <Text className="font-sans text-sm text-muted">
               Informe sua senha atual e escolha uma nova.
@@ -140,6 +140,7 @@ export function ChangePasswordScreen() {
           ) : null}
 
           <Button
+            testID="change-password-submit"
             title="Trocar senha"
             onPress={handleSubmit(onSubmit)}
             loading={isSubmitting}
