@@ -2,7 +2,20 @@
 
 Frontend mobile do sistema de blogging educacional, consumindo a API da Fase 2.
 
-> **Status do projeto:** Em desenvolvimento — Fase 5 (CRUD de Professores e Alunos + Signup) concluída.
+> **Status do projeto:** ✅ Fase 6 concluída — Tech Challenge Fase 4 entregue. Os 10 requisitos do enunciado + auto-cadastro de aluno + meu perfil + trocar senha estão funcionais.
+
+## Sobre o Projeto
+
+Frontend mobile (React Native + Expo) do sistema de blogging educacional do Tech Challenge da FIAP 8FSDT. Consome a API REST construída na Fase 2 e espelha os fluxos do frontend web da Fase 3, com dois papéis distintos: **TEACHER** (acesso total) e **STUDENT** (leitura + perfil próprio).
+
+### Funcionalidades entregues
+
+- **Leitura pública de posts** — lista paginada, busca por palavra-chave (debounce), filtro por disciplina, detalhe do post, comentários (criar/excluir conforme RBAC) e marcação de "lido".
+- **Auto-cadastro de aluno** — fluxo público de signup (`POST /students` sem Bearer).
+- **Login + meu perfil + trocar senha** — autenticação por `login`/senha, tela de perfil próprio (ver/editar) e troca de senha com validação cruzada.
+- **TEACHER** — criar/editar/excluir posts, painel administrativo de posts (com estatísticas), CRUD completo de professores e CRUD de alunos.
+
+> _(capturas de tela a serem adicionadas em `docs/screenshots/`: HomeScreen, PostDetail, AdminPosts, ProfileScreen, ChangePasswordScreen, Header dropdown.)_
 
 ---
 
@@ -116,20 +129,39 @@ RootStack (Native Stack único)
 ├── Home             (pública — entry point)
 ├── Login            (pública — acessada via "Entrar")
 ├── Signup           (pública — auto-cadastro de aluno; bloqueia STUDENT já logado)
-├── AdminStub        (TEACHER-only — auto-redirect para Home se não-TEACHER)
-├── AdminPosts       (TEACHER-only — lista admin com stats + delete)
 ├── PostDetail       (pública — redireciona Home se DRAFT/ARCHIVED e não-TEACHER)
-├── PostCreate       (TEACHER-only — gated via useRequireRole)
-├── PostEdit         (TEACHER-only — gated via useRequireRole, carrega post por id)
-├── TeachersList     (TEACHER-only — lista paginada com busca, editar e excluir)
-├── TeacherCreate    (TEACHER-only — cria novo professor)
-├── TeacherEdit      (TEACHER-only — edita professor existente por id)
-├── StudentsList     (TEACHER-only — lista paginada com busca, editar e excluir)
-├── StudentCreate    (TEACHER-only — cria novo aluno)
-└── StudentEdit      (TEACHER-only — edita aluno existente por id)
+├── Grupo            (pública — página fixa do grupo 28)
+├── Profile          (autenticado — ProfileScreen read-only)
+├── ProfileEdit      (autenticado — TeacherForm ou StudentForm em modo edit)
+├── ChangePassword   (autenticado — form com Zod cross-field)
+├── AdminPosts       (TEACHER-only — lista admin com stats + delete)
+├── PostCreate       (TEACHER-only)
+├── PostEdit         (TEACHER-only)
+├── TeachersList     (TEACHER-only — lista paginada + filtros + soft delete + reativar)
+├── TeacherCreate    (TEACHER-only)
+├── TeacherEdit      (TEACHER-only)
+├── StudentsList     (TEACHER-only)
+├── StudentCreate    (TEACHER-only)
+└── StudentEdit      (TEACHER-only)
 ```
 
-Rotas TEACHER-only não são "escondidas" do navigator — o hook `useRequireRole` faz auto-gate no `useEffect`: se `user.role !== 'TEACHER'`, dispara Toast informativo + `navigation.replace('Home')`. A tela retorna `null` enquanto o redirect acontece.
+Rotas TEACHER-only não são "escondidas" do navigator — o hook `useRequireRole` faz auto-gate no `useEffect`: se `user.role !== 'TEACHER'`, dispara Toast informativo + `navigation.replace('Home')`. A tela retorna `null` enquanto o redirect acontece. As rotas autenticadas (`Profile`, `ProfileEdit`, `ChangePassword`) seguem o mesmo padrão: redirecionam para `Home` se não houver sessão.
+
+### Camadas
+
+O fluxo de dados segue uma cadeia clara: UI → AuthContext → Services → cliente Axios → backend.
+
+```mermaid
+flowchart LR
+    UI[Screens & Components] --> CTX[AuthContext]
+    UI --> SVC["Services (posts/teachers/students/auth)"]
+    CTX --> SS[SecureStore]
+    CTX --> SVC
+    SVC --> API[apiClient axios + interceptor Bearer]
+    SVC -.signup.-> AXIOS[axios cru — sem Bearer]
+    API --> BACKEND[(Backend Fase 2)]
+    AXIOS --> BACKEND
+```
 
 ## Autenticação
 
@@ -179,7 +211,12 @@ Em qualquer 401 (token expirado, sessão invalidada server-side, credencial remo
 
 ### Troca de senha
 
-`PATCH /auth/password { current_password, new_password }` está disponível e exposto pelo método `changePassword` do `auth.service`. UI é entregue na Fase 6.
+`PATCH /auth/password` aceita `{ current_password, new_password }`, exposto pelo método `changePassword` do `auth.service`. O form em [src/screens/ChangePasswordScreen.tsx](src/screens/ChangePasswordScreen.tsx) tem três campos: senha atual + nova + confirmação. A validação Zod ([src/features/profile/validators/change-password.schema.ts](src/features/profile/validators/change-password.schema.ts)) usa dois `.refine` cruzados, cada um com `path` explícito para ancorar a mensagem no campo certo:
+
+- `new_password === new_password_confirm` → mensagem `"As senhas não conferem."` em `path: ['new_password_confirm']` (campo de confirmação).
+- `current_password !== new_password` → mensagem `"A nova senha deve ser diferente da atual."` em `path: ['new_password']` (campo da nova senha).
+
+Cada campo tem toggle individual de visibilidade (`Input.trailingIcon="eye-outline" / "eye-off-outline"` com estado `showCurrent` / `showNew` / `showConfirm`). Em erro 400 (senha atual incorreta), o backend retorna `{ error: "Senha atual incorreta." }` e o app exibe a mensagem abaixo dos campos (`testID="submit-error"`).
 
 ## Fluxos por requisito
 
@@ -237,12 +274,12 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant T as TEACHER
-    participant Admin as AdminStub
+    participant Admin as AdminPosts
     participant Create as PostCreate
     participant API
 
     T->>Admin: toca "Painel" no header
-    Admin->>T: renderiza placeholder
+    Admin->>T: renderiza lista admin + stats
     T->>Admin: toca "+ Novo post"
     Admin->>Create: navigate('PostCreate')
     Create->>Create: useRequireRole('TEACHER') ok
@@ -399,7 +436,7 @@ Algumas escolhas divergem do conteúdo padrão das aulas — registradas aqui pa
 | 09 | **Comentário criação só autenticada** (regra do backend) | A Fase 2 removeu o fluxo anônimo de comentários: `POST /comments` agora exige Bearer (401 sem token). Mobile mostra CTA "Faça login para comentar" para anônimos. |
 | 14 | **Display de autor com pronouns** | `Post.author` carrega `pronouns` do perfil do TEACHER. Exibimos como `Nome (pronome)` no PostDetail quando presente, omitimos quando `null`. |
 | 15 | **`CommentAuthor.type` para distinguir Teacher/Student** | Backend entrega `type` resolvido. Exibimos "Professor" / "Aluno" no `CommentItem` em vez de parsear o prefixo do FhirRef. |
-| 10 | **`useRequireRole` hook** em vez de lógica inline por tela | Mesmo gate é usado em AdminStub, PostCreate, PostEdit (e Fases 4 e 5 vão reusar). Centralizar evita drift de comportamento entre telas. |
+| 10 | **`useRequireRole` hook** em vez de lógica inline por tela | Mesmo gate é reusado em AdminPosts, PostCreate, PostEdit e nas telas de CRUD de professores/alunos. Centralizar evita drift de comportamento entre telas. |
 | 11 | **Sem ownership check no client** (qualquer TEACHER pode editar qualquer post) | Espelhamento exato do backend (Fase 2 §2.1). Botão "Editar post" renderiza pra qualquer TEACHER, independente de quem é o autor. |
 | 16 | **Inter (6 pesos) + JetBrains Mono via `@expo-google-fonts`** + SplashScreen gate | Paridade visual direta com a Fase 3 web. Inter 900 é necessário para títulos editoriais do PostDetail; JetBrains Mono é o sistema de metadata (timestamps, contadores, IDs) que o web usa sistematicamente. SplashScreen gate evita FOUT (flash of unstyled text). |
 | 17 | **`@expo/vector-icons / MaterialCommunityIcons`** em vez de Material Symbols (que o web usa) | Material Symbols não é fonte instalável em RN sem hacks. MaterialCommunityIcons (6k+ ícones) já vem com Expo SDK 56, tem cobertura comparável e visual Material Design. Wrapper `<Icon>` com enum `IconName` força mapeamento tipado e centraliza os ≈25 ícones usados no app — typos pegam em compile time. |
@@ -407,6 +444,9 @@ Algumas escolhas divergem do conteúdo padrão das aulas — registradas aqui pa
 | 19 | **Comment avatar usa ícone `account`**, NÃO iniciais — divergência intencional do PostCard's AuthorId | Espelhamento exato do web (CommentItem.tsx usa Material Symbol `person`, não iniciais; PostCard.tsx usa iniciais). A diferença semântica: no PostCard, o autor é a identidade editorial (nome + iniciais reforçam isso); no comentário, o autor é um ator transitivo dentro de uma discussão (ícone neutro pesa menos). |
 | 20 | **Stats via 3 chamadas paralelas a `searchPosts(status=X, limit=1)`** em vez de um endpoint de estatísticas dedicado | Backend não expõe `/posts/stats`. As 3 chamadas com `limit=1` lêem só `pagination.total`, o que é barato (apenas COUNT(*) no SQL). Falha silenciosa nas stats não bloqueia a lista — degradação aceita. |
 | 21 | **`signupStudent` usa `axios` cru em vez do `apiClient` interceptado** | O interceptor de request do `apiClient` injeta `Authorization: Bearer <token>` quando há sessão. O endpoint `POST /students` é público e o backend retorna 403 quando recebe um Bearer de STUDENT logado (regra de produto: STUDENT não pode "se recadastrar"). Usar `axios.post(\`${API_BASE_URL}/students\`, ...)` direto evita o header e mantém o endpoint genuinamente público. |
+| 22 | **`refreshProfile()` na AuthContext em vez de refetch nas telas** | A Header dropdown depende de `profile.name` para mostrar o nome do usuário. Sem `refreshProfile`, depois de editar o perfil o usuário só veria o novo nome após próximo login. Centralizar na AuthContext garante consistência entre todas as telas que leiam `profile`. |
+| 23 | **Cross-field refines no `changePasswordSchema`** com path explícito | Zod `.refine()` permite associar a mensagem a um campo específico via `path: ['new_password_confirm']` / `['new_password']` — isso faz o RHF exibir o erro embaixo do campo certo, não no objeto root. Sem `path`, o RHF entrega `errors.root` e o usuário não sabe qual campo arrumar. |
+| 24 | **`useFocusEffect` na ProfileScreen** em vez de `useEffect` | Quando o usuário volta da ProfileEditScreen via `goBack`, `useEffect` não dispara (o componente não desmontou). `useFocusEffect` do React Navigation re-roda quando a tela ganha foco, garantindo o refetch dos dados recém-editados. |
 
 ## Design System
 
@@ -474,6 +514,10 @@ Mapping `label → { icon, color }` em [src/lib/disciplines.ts](src/lib/discipli
 | `AuthorId` | `name`, `subtitle`, `date` (só `lg`), `size`, `avatarVariant`. Composite avatar + texto. |
 | `IconCount` | `type: 'comment' \| 'bookmark' \| 'views'`, `count`, `size`. Ícone + número em JetBrains Mono. |
 | `ConfirmModal` | `isOpen`, `title`, `description`, `confirmLabel`, `cancelLabel`, `variant: 'destructive' \| 'neutral'`, `onConfirm`, `onCancel`, `isLoading`. |
+| `Badge` | `label`, `tone`. Pílula genérica usada como base de `StatusBadge` / `DisciplineBadge`. |
+| `StatsCard` | `label`, `count`, `tone`, `icon`. Cartão de estatística do painel admin (PUBLISHED / DRAFT / ARCHIVED). |
+| `PronounsPicker` | `value`, `onChange`. Seletor de pronomes do TeacherForm (perfil/edição). |
+| `DisciplinesMultiSelect` | `value` (ids), `onChange`, `options`. Multi-seleção de disciplinas do TeacherForm. |
 | `Icon` | `name: IconName`, `size`, `color`. Wrapper de MaterialCommunityIcons. |
 
 ### Regras visuais críticas (espelham o web)
@@ -491,25 +535,56 @@ Mapping `label → { icon, color }` em [src/lib/disciplines.ts](src/lib/discipli
 2. Adicionar ao tipo `IconName` em [src/components/ui/Icon.tsx](src/components/ui/Icon.tsx).
 3. Usar: `<Icon name="novo-icone" size={20} color={colors.primary} />`.
 
-## Próximas fases
+## Testes
+
+Suíte com **355 testes em 63 suites**, rodando em **Jest + @testing-library/react-native** (preset `jest-expo`). Todos passam (`Tests: 355 passed, 355 total`).
+
+### Cobertura por camada
+
+| Camada | Foco |
+|--------|------|
+| Schemas Zod | login, post, comment, teacher, student, change-password — validação completa de cada campo, refines cruzados e transformações (`trim`, `preprocess`). |
+| Services | auth, posts, comments, reads, disciplines, teachers, students — mock do `apiClient`, URL + payload corretos, omissão de `undefined`, propagação de erro. |
+| Componentes DS | Button, Input, Card, Badge, StatusBadge, DisciplineBadge, AuthorAvatar, AuthorId, IconCount, ConfirmModal, StatsCard, Spinner, EmptyState, Skeleton, Icon, PronounsPicker, DisciplinesMultiSelect — renderização, props críticos e interação. |
+| Componentes de feature | PostCard, SearchBar, MarkAsReadButton, StatusPicker, CommentItem, CommentForm, AdminPostListItem — composição + estado interno. |
+| Screens | Home, PostDetail, PostCreate, PostEdit, AdminPosts, Login, Signup, Grupo, TeachersList, TeacherCreate, TeacherEdit, StudentsList, StudentCreate, StudentEdit, Profile, ProfileEdit, ChangePassword — role gate, fetch + estado, submit e navegação. |
+| Layout | Header — dropdown autenticado, itens por role. |
+| Contexts | AuthContext — hydration, login, logout, `refreshProfile`. |
+
+### Comandos
+
+| Comando | Descrição |
+|---------|-----------|
+| `npm test` | Roda a suíte completa (execução única). |
+| `npm test -- <pattern>` | Filtra por nome de arquivo/teste (ex: `npm test -- ChangePassword`). |
+| `npm test -- --watch` | Modo watch (re-roda ao salvar). |
+
+> **Pré-requisito de runner:** os testes exigem **Node ≥ 20** (Expo SDK 56). Rodar com Node 14/16 quebra o `jest-expo` antes de qualquer teste (ver Dificuldades #6).
+
+## Roadmap concluído
 
 - ✅ Fase 1 — Fundação + Login
+- ✅ Fase 1.1 — Ajustes pós-revisão (tokens M3 + timeout)
+- ✅ Fase 1.2 — Refactor de navegação (modelo público)
+- ✅ Fase 1.3 — Refactor de auth (credencial + perfil + senha)
 - ✅ Fase 2 — Posts: leitura (lista, busca, detalhe, comentários, reads)
 - ✅ Fase 3 — Posts: escrita para professor (criar/editar)
+- ✅ Fase 1.4 — Polimento visual do DS (paridade com Fase 3 web)
 - ✅ Fase 4 — Posts: administração (lista admin + delete)
-- ✅ Fase 5 — Usuários: CRUD de professores e alunos (req 5, 6, 7, 8)
+- ✅ Fase 5 — Usuários: CRUD de professores e alunos + auto-cadastro
+- ✅ Fase 6 — Perfil + Trocar senha + Fechamento de docs
 
 ## Dificuldades Encontradas
 
-### 1. Validação Zod falha silenciosa em campos string vazios (formulários de professor/aluno)
+### 1. Validação Zod aceitando campos só com espaços em branco (formulários de professor/aluno)
 
-**Problema:** campos `name`, `email` e `login` definidos como `z.string().min(1)` passavam na validação mesmo quando o usuário não tinha digitado nada. O valor entregue pelo `react-hook-form` para inputs não tocados era `""` (string vazia), que satisfaz `z.string()` mas deveria falhar em `.min(1)`. Em modo de edição, o campo pode também ser `undefined` antes do `reset(defaultValues)`.
+**Problema:** campos obrigatórios como `name`, `email` e `login` definidos como `z.string().min(1)` passavam na validação quando o usuário digitava apenas espaços. Uma string como `"   "` tem `length > 1`, então satisfaz `.min(1)` — mas semanticamente está vazia. O input nativo entrega exatamente esse conteúdo (whitespace), não `undefined`.
 
-**Tentativas:** aumentar o `.min(1)` para `.min(2)` foi descartado (nomes válidos de 1 letra existem). Usar `.refine(v => v.trim().length > 0)` funcionou mas gerou mensagens de erro fora de padrão.
+**Tentativas:** aumentar o `.min(1)` para `.min(2)` foi descartado (nomes válidos de 1 letra existem). Usar `.refine(v => v.trim().length > 0)` funcionou mas gerou mensagens de erro fora do padrão dos demais campos.
 
-**Solução final:** `z.preprocess(v => (typeof v === 'string' ? v.trim() : v), z.string().min(1, 'Campo obrigatório'))` — o `preprocess` normaliza o valor antes da validação, elimina espaços em branco e torna o `min(1)` confiável.
+**Solução final:** encadear `.trim()` antes do `.min(1)` no próprio schema — `z.string().trim().min(1, 'Nome é obrigatório.')`. O `.trim()` normaliza o valor antes da checagem de tamanho, de forma que `"   "` vira `""` e falha o `.min(1)` corretamente. Para os blocos `user` opcionais (criação de credencial), usamos `z.preprocess` para normalizar/omitir o objeto inteiro quando vazio — caso diferente, que exige transformar o shape, não só aparar a string.
 
-**Aprendizado:** `z.preprocess` deve ser o padrão para qualquer campo de texto obrigatório em formulários RHF+Zod no React Native, pois o input nativo entrega strings vazias (não `undefined`) para campos não preenchidos.
+**Aprendizado:** para qualquer campo de texto obrigatório em RHF + Zod no React Native, `.trim().min(1)` é o padrão correto — o input entrega whitespace, e sem `.trim()` o `.min(1)` é facilmente burlado.
 
 ---
 
@@ -562,6 +637,60 @@ e mapear `nativewind/dist/style-sheet/native` para um stub vazio no `moduleNameM
 
 ---
 
+### 6. Node 14 vs Expo SDK 56 no runner de testes
+
+**Problema:** rodar `npm test` com o Node default da máquina (v14.19.0) quebrava o `jest-expo` com `SyntaxError: Unexpected token '??='` (operador de logical-assignment) vindo do *winter runtime* do Expo — o erro acontecia **antes** de qualquer teste rodar, na fase de setup do preset.
+
+**Causa:** o Expo SDK 56 exige Node ≥ 20. O runtime do Expo usa sintaxe de logical-assignment (`??=`, `||=`) que só é suportada a partir do Node 15, então o Node 14 falha ao parsear o próprio preset.
+
+**Solução:** padronizar o uso do **Node 20.19.4** (versão que o Expo 56 mira), instalado via `nvm`, para todos os comandos `node`/`npm`/`npx`. A linha de **Pré-requisitos** foi atualizada para deixar explícito **Node ≥ 20**, e a seção de Testes registra o mesmo requisito.
+
+**Aprendizado:** a versão do Node não é só uma recomendação no Expo SDK 56 — é um pré-requisito rígido do tooling. Fixar a versão via `nvm` evita falhas que não têm relação com o código de teste em si.
+
+---
+
+### 7. Tornar `refreshProfile` obrigatório na interface `AuthContextValue` quebrou ~15 arquivos de teste
+
+**Problema:** depois de adicionar `refreshProfile` como propriedade **obrigatória** de `AuthContextValue` (necessário para o padrão da ADR 22), o `tsc` passou a acusar `Property 'refreshProfile' is missing in type ...` em todos os mocks inline do contexto espalhados pelos testes (Header, várias screens, etc.).
+
+**Causa:** o TypeScript em modo strict exige que **todo** consumidor/produtor do tipo seja atualizado. Cada teste que montava um literal de `AuthContextValue` à mão tornou-se inválido ao adicionar o novo membro obrigatório.
+
+**Solução:** adicionar `refreshProfile: jest.fn()` a cada literal de mock do contexto nos ~15 arquivos afetados.
+
+**Aprendizado:** estender um tipo de contexto amplamente consumido é uma mudança transversal — o custo não está em implementar a função, e sim em propagar o novo membro por todos os mocks. Vale considerar um helper `makeAuthValue(overrides)` para centralizar a forma do mock e evitar essa cascata no futuro.
+
+---
+
+### 8. `useFocusEffect` (re-fetch ao focar) causando loop de render no teste da ProfileScreen
+
+**Contexto:** a `ProfileScreen` usa `useFocusEffect` para re-buscar os dados sempre que a tela ganha foco — assim, ao voltar da edição (`goBack`), ela mostra os dados atualizados (ADR 24).
+
+**Problema:** o mock ingênuo `useFocusEffect: (cb) => cb()` disparava o callback **durante** o render. Como o callback chama `setState`, isso re-renderizava o componente, que chamava o `cb` de novo → `Error: Too many re-renders`.
+
+**Causa:** o `useFocusEffect` real roda o callback **depois** do render (dentro de um efeito), não durante. O mock síncrono violava essa garantia e criava o loop.
+
+**Solução:** o mock passou a rodar o callback uma única vez **após a montagem**, via `useEffect`. O componente de produção permaneceu fiel ao comportamento real (re-fetch ao focar). (Relacionado à Dificuldade #4, sobre dependência de objeto em `useEffect`.)
+
+**Aprendizado:** ao mockar hooks de ciclo de vida (`useFocusEffect`, `useEffect`), o mock precisa respeitar **quando** o callback roda, não só **se** ele roda. Disparar um efeito durante o render é o caminho mais rápido para um loop infinito.
+
+---
+
+### 9. Refines cruzados do Zod precisam de `path` explícito para ancorar a mensagem no campo certo
+
+**Contexto:** o `changePasswordSchema` valida que a confirmação bate com a nova senha e que a nova senha é diferente da atual — duas regras que envolvem mais de um campo (cross-field).
+
+**Problema:** sem `path`, um `.refine()` do Zod associa a mensagem ao objeto raiz; o `react-hook-form` então entrega o erro em `errors.root`, e o usuário não vê **embaixo de qual campo** está o problema.
+
+**Causa:** `.refine()` por padrão não sabe a qual campo a falha pertence — para regras de objeto, o erro nasce no nível do objeto.
+
+**Solução:** declarar `path: ['new_password_confirm']` no refine de confirmação e `path: ['new_password']` no refine de "senha diferente da atual". Assim o RHF expõe `errors.new_password_confirm` / `errors.new_password` e a mensagem aparece ancorada no `Input` correto. Registrado como ADR 23.
+
+**Aprendizado:** todo refine cruzado em RHF + Zod deve declarar `path` apontando para o campo onde o usuário precisa agir; do contrário a UX de validação fica "cega".
+
+---
+
 ## Equipe
 
 Grupo 28 — turma 8FSDT (FIAP).
+
+Projeto desenvolvido pelo Grupo 28 ao longo das 6 fases: fundação e login, refactors de navegação e autenticação, leitura e escrita de posts, painel administrativo, CRUD de usuários e auto-cadastro, e o fechamento com perfil próprio + troca de senha + documentação.
