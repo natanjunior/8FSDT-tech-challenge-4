@@ -11,8 +11,11 @@ import {
   login as loginService,
   logout as logoutService,
 } from '@/services/auth.service';
+import { getMyTeacher } from '@/services/teachers.service';
+import { getMyStudent } from '@/services/students.service';
 import {
   getSecureItem,
+  setSecureItem,
   SECURE_KEYS,
 } from '@/services/secure-storage.service';
 import type { LoginRequest, Profile, User } from '@/types/api';
@@ -43,6 +46,7 @@ export interface AuthContextValue {
   isAuthenticating: boolean;
   login: (payload: LoginRequest) => Promise<void>;
   logout: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -95,6 +99,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setProfile(null);
   }, []);
 
+  const refreshProfile = useCallback(async () => {
+    if (!user) return;
+    const next =
+      user.role === 'TEACHER'
+        ? await getMyTeacher()
+        : await getMyStudent();
+    setProfile(next);
+    await setSecureItem(SECURE_KEYS.AUTH_PROFILE, JSON.stringify(next));
+  }, [user]);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
@@ -104,8 +118,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       isAuthenticating,
       login,
       logout,
+      refreshProfile,
     }),
-    [user, profile, isHydrating, isAuthenticating, login, logout]
+    [user, profile, isHydrating, isAuthenticating, login, logout, refreshProfile]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -4,13 +4,24 @@ import { render, waitFor, act } from '@testing-library/react-native';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import * as authService from '@/services/auth.service';
 import * as secureStorage from '@/services/secure-storage.service';
+import { getMyTeacher } from '@/services/teachers.service';
+import { getMyStudent } from '@/services/students.service';
 
 jest.mock('@/services/auth.service');
 jest.mock('@/services/secure-storage.service');
+jest.mock('@/services/teachers.service', () => ({
+  getMyTeacher: jest.fn(),
+}));
+jest.mock('@/services/students.service', () => ({
+  getMyStudent: jest.fn(),
+}));
 
 const mockGet = secureStorage.getSecureItem as jest.Mock;
+const mockSet = secureStorage.setSecureItem as jest.Mock;
 const mockLogin = authService.login as jest.Mock;
 const mockLogout = authService.logout as jest.Mock;
+const mockGetMyTeacher = getMyTeacher as jest.Mock;
+const mockGetMyStudent = getMyStudent as jest.Mock;
 
 const fakeUser = {
   id: 'u1',
@@ -32,7 +43,7 @@ const fakeProfile = {
 };
 
 function Probe() {
-  const { user, profile, isAuthenticated, isHydrating, login, logout } = useAuth();
+  const { user, profile, isAuthenticated, isHydrating, login, logout, refreshProfile } = useAuth();
   return (
     <>
       <Text testID="status">
@@ -47,6 +58,7 @@ function Probe() {
         login
       </Text>
       <Text testID="do-logout" onPress={() => logout()}>logout</Text>
+      <Text testID="do-refresh" onPress={() => refreshProfile()}>refresh</Text>
     </>
   );
 }
@@ -161,5 +173,142 @@ describe('AuthContext', () => {
       expect(getByTestId('status').props.children).toBe('guest')
     );
     expect(getByTestId('profile-name').props.children).toBe('none');
+  });
+
+  describe('refreshProfile', () => {
+    it('chama getMyTeacher quando user.role é TEACHER e atualiza profile', async () => {
+      // Arrange: hydrate as a logged-in TEACHER
+      mockGet
+        .mockResolvedValueOnce('jwt-xyz')
+        .mockResolvedValueOnce(JSON.stringify(fakeUser))   // role: TEACHER
+        .mockResolvedValueOnce(JSON.stringify(fakeProfile));
+      mockSet.mockResolvedValue(undefined);
+
+      const updatedTeacherProfile = {
+        ...fakeProfile,
+        id: 'Teacher/abc',
+        name: 'João Atualizado',
+        email: null as null,
+        birth_date: null as null,
+        pronouns: null as null,
+        biography: null as null,
+        status: 'ATIVO' as const,
+        disciplines: [],
+        user: null as null,
+        created_at: '2026-01-01',
+        updated_at: '2026-06-01',
+      };
+      mockGetMyTeacher.mockResolvedValueOnce(updatedTeacherProfile);
+
+      const { getByTestId } = render(
+        <AuthProvider>
+          <Probe />
+        </AuthProvider>
+      );
+
+      // Wait for hydration
+      await waitFor(() =>
+        expect(getByTestId('status').props.children).toBe('auth')
+      );
+
+      // Act: call refreshProfile
+      await act(async () => {
+        getByTestId('do-refresh').props.onPress();
+      });
+
+      // Assert: profile updated to new name
+      await waitFor(() =>
+        expect(getByTestId('profile-name').props.children).toBe('João Atualizado')
+      );
+
+      // Assert: getMyTeacher called, getMyStudent NOT called
+      expect(mockGetMyTeacher).toHaveBeenCalledTimes(1);
+      expect(mockGetMyStudent).not.toHaveBeenCalled();
+
+      // Assert: SecureStore persisted the updated profile
+      expect(mockSet).toHaveBeenCalledWith(
+        '8fsdt.auth-profile',
+        JSON.stringify(updatedTeacherProfile)
+      );
+    });
+
+    it('chama getMyStudent quando user.role é STUDENT', async () => {
+      const fakeStudentUser = { id: 'u2', login: 'ana.student', role: 'STUDENT' as const };
+      const fakeStudentProfile = {
+        id: 'Student/def',
+        name: 'Ana Original',
+        email: 'ana@escola.com',
+        birth_date: null as null,
+        pronouns: null as null,
+        biography: null as null,
+        status: 'ATIVO' as const,
+        disciplines: [],
+        user: null as null,
+        created_at: '2026-01-01',
+        updated_at: '2026-01-01',
+      };
+
+      // Hydrate as a logged-in STUDENT
+      mockGet
+        .mockResolvedValueOnce('jwt-abc')
+        .mockResolvedValueOnce(JSON.stringify(fakeStudentUser))
+        .mockResolvedValueOnce(JSON.stringify(fakeStudentProfile));
+      mockSet.mockResolvedValue(undefined);
+
+      const updatedStudentProfile = { ...fakeStudentProfile, name: 'Ana Atualizada' };
+      mockGetMyStudent.mockResolvedValueOnce(updatedStudentProfile);
+
+      const { getByTestId } = render(
+        <AuthProvider>
+          <Probe />
+        </AuthProvider>
+      );
+
+      await waitFor(() =>
+        expect(getByTestId('status').props.children).toBe('auth')
+      );
+
+      await act(async () => {
+        getByTestId('do-refresh').props.onPress();
+      });
+
+      await waitFor(() =>
+        expect(getByTestId('profile-name').props.children).toBe('Ana Atualizada')
+      );
+
+      expect(mockGetMyStudent).toHaveBeenCalledTimes(1);
+      expect(mockGetMyTeacher).not.toHaveBeenCalled();
+
+      expect(mockSet).toHaveBeenCalledWith(
+        '8fsdt.auth-profile',
+        JSON.stringify(updatedStudentProfile)
+      );
+    });
+
+    it('é no-op quando user é null (não autenticado)', async () => {
+      // Hydrate as guest (no token)
+      mockGet.mockResolvedValue(null);
+
+      const { getByTestId } = render(
+        <AuthProvider>
+          <Probe />
+        </AuthProvider>
+      );
+
+      await waitFor(() =>
+        expect(getByTestId('status').props.children).toBe('guest')
+      );
+
+      // Act: call refreshProfile while logged out
+      await act(async () => {
+        getByTestId('do-refresh').props.onPress();
+      });
+
+      // Neither service should be called
+      expect(mockGetMyTeacher).not.toHaveBeenCalled();
+      expect(mockGetMyStudent).not.toHaveBeenCalled();
+      // SecureStore should not have been written
+      expect(mockSet).not.toHaveBeenCalled();
+    });
   });
 });
