@@ -6,6 +6,8 @@ import * as authService from '@/services/auth.service';
 import * as secureStorage from '@/services/secure-storage.service';
 import { getMyTeacher } from '@/services/teachers.service';
 import { getMyStudent } from '@/services/students.service';
+import Toast from 'react-native-toast-message';
+import { setUnauthorizedHandler } from '@/api/client';
 
 jest.mock('@/services/auth.service');
 jest.mock('@/services/secure-storage.service');
@@ -14,6 +16,22 @@ jest.mock('@/services/teachers.service', () => ({
 }));
 jest.mock('@/services/students.service', () => ({
   getMyStudent: jest.fn(),
+}));
+jest.mock('react-native-toast-message', () => ({ show: jest.fn() }));
+jest.mock('@/api/client', () => ({
+  setUnauthorizedHandler: jest.fn(),
+  attachAuthInterceptor: jest.fn(),
+  apiClient: {
+    interceptors: {
+      request: { use: jest.fn() },
+      response: { use: jest.fn() },
+    },
+    post: jest.fn(),
+    patch: jest.fn(),
+    get: jest.fn(),
+    delete: jest.fn(),
+  },
+  API_BASE_URL: 'http://test',
 }));
 
 const mockGet = secureStorage.getSecureItem as jest.Mock;
@@ -310,5 +328,81 @@ describe('AuthContext', () => {
       // SecureStore should not have been written
       expect(mockSet).not.toHaveBeenCalled();
     });
+  });
+});
+
+describe('AuthContext — handler de 401 (sessão expirada)', () => {
+  const mockSetHandler = setUnauthorizedHandler as jest.Mock;
+
+  // O AuthProvider registra o handler no mount (fn) e o limpa no unmount (null).
+  // Pega a última chamada que recebeu uma função.
+  function getRegisteredHandler(): (() => void) | null {
+    const calls = mockSetHandler.mock.calls;
+    for (let i = calls.length - 1; i >= 0; i--) {
+      if (typeof calls[i][0] === 'function') return calls[i][0] as () => void;
+    }
+    return null;
+  }
+
+  function hydrateAuthenticated() {
+    mockGet
+      .mockResolvedValueOnce('jwt-xyz') // AUTH_TOKEN
+      .mockResolvedValueOnce(JSON.stringify(fakeUser)) // AUTH_USER
+      .mockResolvedValueOnce(JSON.stringify(fakeProfile)); // AUTH_PROFILE
+  }
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('limpa a sessão e mostra Toast ao receber o sinal de 401', async () => {
+    hydrateAuthenticated();
+    const { getByTestId } = render(
+      <AuthProvider>
+        <Probe />
+      </AuthProvider>
+    );
+    await waitFor(() =>
+      expect(getByTestId('status').props.children).toBe('auth')
+    );
+
+    const handler = getRegisteredHandler();
+    expect(handler).toBeTruthy();
+
+    await act(async () => {
+      handler!();
+    });
+
+    await waitFor(() =>
+      expect(getByTestId('status').props.children).toBe('guest')
+    );
+    expect(authService.clearSession).toHaveBeenCalledTimes(1);
+    expect(Toast.show).toHaveBeenCalledWith(
+      expect.objectContaining({ text1: 'Sessão expirada' })
+    );
+  });
+
+  it('mostra o Toast de expiração só uma vez para 401s repetidas (guard)', async () => {
+    hydrateAuthenticated();
+    const { getByTestId } = render(
+      <AuthProvider>
+        <Probe />
+      </AuthProvider>
+    );
+    await waitFor(() =>
+      expect(getByTestId('status').props.children).toBe('auth')
+    );
+
+    const handler = getRegisteredHandler();
+
+    await act(async () => {
+      handler!();
+      handler!();
+    });
+
+    await waitFor(() =>
+      expect(getByTestId('status').props.children).toBe('guest')
+    );
+    expect(Toast.show).toHaveBeenCalledTimes(1);
   });
 });
