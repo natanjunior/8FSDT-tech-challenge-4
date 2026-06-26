@@ -2,6 +2,7 @@ import { apiClient } from '@/api/client';
 import {
   login,
   logout,
+  clearSession,
   changePassword,
   parseStoredUser,
   parseStoredProfile,
@@ -131,6 +132,16 @@ describe('auth.service', () => {
       expect(mockDelete).toHaveBeenCalledWith(SECURE_KEYS.AUTH_TOKEN);
       expect(mockDelete).toHaveBeenCalledWith(SECURE_KEYS.AUTH_USER);
       expect(mockDelete).toHaveBeenCalledWith(SECURE_KEYS.AUTH_PROFILE);
+    });
+  });
+
+  describe('clearSession', () => {
+    it('apaga as 3 chaves do SecureStore sem chamar a rede', async () => {
+      await clearSession();
+      expect(mockDelete).toHaveBeenCalledWith(SECURE_KEYS.AUTH_TOKEN);
+      expect(mockDelete).toHaveBeenCalledWith(SECURE_KEYS.AUTH_USER);
+      expect(mockDelete).toHaveBeenCalledWith(SECURE_KEYS.AUTH_PROFILE);
+      expect(mockPost).not.toHaveBeenCalled();
     });
   });
 
