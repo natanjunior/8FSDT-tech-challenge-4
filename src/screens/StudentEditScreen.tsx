@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
-import { useAuth } from '@/contexts/AuthContext';
 import { useRequireRole } from '@/hooks/useRequireRole';
 import { StudentForm } from '@/features/students/components/StudentForm';
 import { Loader } from '@/components/ui/Loader';
@@ -19,7 +18,6 @@ export function StudentEditScreen() {
   const allowed = useRequireRole('TEACHER');
   const navigation = useNavigation<RootStackNavigationProp>();
   const route = useRoute<StudentEditRouteProp>();
-  const { logout } = useAuth();
   const { id } = route.params;
 
   const [student, setStudent] = useState<Student | null>(null);
@@ -63,17 +61,11 @@ export function StudentEditScreen() {
       Toast.show({ type: 'success', text1: 'Aluno atualizado.' });
       navigation.goBack();
     } catch (err: any) {
-      const status = err?.response?.status;
-      if (status === 401) {
-        await logout();
-        navigation.replace('Login');
-      } else {
-        Toast.show({
-          type: 'error',
-          text1: 'Erro ao salvar',
-          text2: err?.response?.data?.error ?? 'Tente novamente.',
-        });
-      }
+      Toast.show({
+        type: 'error',
+        text1: 'Erro ao salvar',
+        text2: err?.response?.data?.error ?? 'Tente novamente.',
+      });
     } finally {
       setIsSubmitting(false);
     }

@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
-import { useAuth } from '@/contexts/AuthContext';
 import { useRequireRole } from '@/hooks/useRequireRole';
 import { TeacherForm } from '@/features/teachers/components/TeacherForm';
 import { createTeacher } from '@/services/teachers.service';
@@ -12,7 +11,6 @@ import type { RootStackNavigationProp } from '@/navigation/types';
 export function TeacherCreateScreen() {
   const allowed = useRequireRole('TEACHER');
   const navigation = useNavigation<RootStackNavigationProp>();
-  const { logout } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!allowed) return null;
@@ -25,11 +23,7 @@ export function TeacherCreateScreen() {
       navigation.navigate('TeachersList');
     } catch (err: any) {
       const status = err?.response?.status;
-      if (status === 401) {
-        Toast.show({ type: 'error', text1: 'Sessão expirada' });
-        await logout();
-        navigation.replace('Login');
-      } else if (status === 409) {
+      if (status === 409) {
         Toast.show({
           type: 'error',
           text1: 'Login já em uso',
