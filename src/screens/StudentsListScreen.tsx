@@ -10,7 +10,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
-import { useAuth } from '@/contexts/AuthContext';
 import { useRequireRole } from '@/hooks/useRequireRole';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -151,11 +150,6 @@ function StudentItem({ student, onPressEdit, onPressDelete, onPressReactivate }:
 export function StudentsListScreen() {
   const allowed = useRequireRole('TEACHER');
   const navigation = useNavigation<RootStackNavigationProp>();
-  const navigationRef = React.useRef(navigation);
-  React.useEffect(() => { navigationRef.current = navigation; });
-  const { logout } = useAuth();
-  const logoutRef = React.useRef(logout);
-  React.useEffect(() => { logoutRef.current = logout; });
 
   const [students, setStudents] = useState<Student[]>([]);
   const [page, setPage] = useState(1);
@@ -182,16 +176,11 @@ export function StudentsListScreen() {
         setPage(res.pagination.page);
         setTotalPages(res.pagination.totalPages);
       } catch (err: any) {
-        if (err?.response?.status === 401) {
-          await logoutRef.current();
-          navigationRef.current.replace('Login');
-        } else {
-          Toast.show({
-            type: 'error',
-            text1: 'Erro ao carregar alunos',
-            text2: err?.response?.data?.error ?? 'Tente novamente.',
-          });
-        }
+        Toast.show({
+          type: 'error',
+          text1: 'Erro ao carregar alunos',
+          text2: err?.response?.data?.error ?? 'Tente novamente.',
+        });
       }
     },
     [nameQuery, statusFilter]
