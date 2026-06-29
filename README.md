@@ -198,7 +198,7 @@ AuthContext atualiza estado → HeaderRight troca "Entrar" por "Sair" (+ "Painel
 
 Na inicialização do app, o `AuthContext` faz **hydration** lendo as 3 chaves do SecureStore. Logout limpa as 3 chaves.
 
-Em qualquer 401 (token expirado, sessão invalidada server-side, credencial removida), o interceptor do Axios e o handler do AuthContext limpam o estado local e redirecionam para a tela de login.
+Em uma 401 de **request autenticada** (token expirado, sessão invalidada server-side, credencial removida), o response interceptor do Axios sinaliza o `AuthContext`, que limpa a sessão local **sem rede** (apaga `AUTH_TOKEN`/`AUTH_USER`/`AUTH_PROFILE` do SecureStore, zera `user`/`profile`) e exibe um Toast "Sessão expirada". Não há navegação forçada: as telas protegidas voltam ao fluxo público (Home) pelos guards de papel (`useRequireRole`). A detecção exige que a request tenha enviado `Authorization: Bearer` — por isso uma 401 **anônima** (ex.: `POST /comments` sem login) **não** desloga ninguém: ela continua exibindo o CTA "Faça login".
 
 ### Matriz de RBAC por ação
 
@@ -729,6 +729,20 @@ e mapear `nativewind/dist/style-sheet/native` para um stub vazio no `moduleNameM
 **Solução:** declarar `path: ['new_password_confirm']` no refine de confirmação e `path: ['new_password']` no refine de "senha diferente da atual". Assim o RHF expõe `errors.new_password_confirm` / `errors.new_password` e a mensagem aparece ancorada no `Input` correto. Registrado como ADR 23.
 
 **Aprendizado:** todo refine cruzado em RHF + Zod deve declarar `path` apontando para o campo onde o usuário precisa agir; do contrário a UX de validação fica "cega".
+
+---
+
+### 10. Ponte entre o singleton do Axios e o React Context para tratar 401 global
+
+**Contexto:** o `apiClient` é um singleton de módulo criado no import, mas o estado de sessão vive no `AuthContext` (React state). Para deslogar automaticamente numa 401 de sessão expirada, o response interceptor (módulo) precisava acionar o `AuthContext` (React).
+
+**Problema:** o interceptor não pode importar o Context — não há instância React no escopo do módulo, e o import criaria acoplamento/ciclo (Context → api → Context). Antes desta correção o comportamento de auto-logout nem existia: cada tela autenticada tratava 401 de forma ad-hoc (`logout()` + `replace('Login')`), e o README afirmava um tratamento global que não estava no código.
+
+**Solução:** **registro de callback**. A camada de api expõe `setUnauthorizedHandler(fn)`; o `AuthProvider` registra o handler num `useEffect` (e o limpa no cleanup); o interceptor chama esse handler numa 401 qualificada e **sempre** re-rejeita o erro (os catches dos services/telas seguem funcionando). O handler limpa a sessão **localmente** (`clearSession()` — sem `POST /auth/logout`, que só geraria outra 401) e zera o estado; sem navegação, as telas protegidas caem para Home pelos guards (`useRequireRole`). Os 10 handlers 401 ad-hoc das telas foram removidos para o handler global virar fonte única.
+
+**Cuidado central:** **não deslogar 401 anônima.** O gatilho checa `error.config.headers.Authorization` — só dispara quando a request realmente carregava um Bearer. Assim, `POST /comments` de visitante (401 proposital, ADR 09) e o próprio login (que não envia Bearer) não derrubam sessão nenhuma. Detalhe descoberto na implementação: o `POST /auth/login` com credencial inválida retorna **401**, não 400/404 — mas como a request de login não carrega Bearer, o handler corretamente a ignora; a robustez vem de checar o header, não o status.
+
+**Aprendizado:** para conectar um singleton de módulo a estado de React sem acoplamento, exponha um setter de callback registrado via `useEffect` em vez de importar o Context. E ao centralizar tratamento de erro num interceptor, distinga a 401 "de sessão" (request autenticada) da 401 "de autorização anônima" pela presença do token enviado — não pelo status code.
 
 ---
 
