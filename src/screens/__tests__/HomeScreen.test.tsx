@@ -1,48 +1,50 @@
+// src/screens/__tests__/HomeScreen.test.tsx
 import React from 'react';
-import { render, waitFor } from '@testing-library/react-native';
+import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import { HomeScreen } from '@/screens/HomeScreen';
 import * as postsService from '@/services/posts.service';
-import * as disciplinesService from '@/services/disciplines.service';
+
+// params controláveis por teste (prefixo "mock" é permitido no factory do jest.mock)
+let mockParams: { disciplineId?: string; disciplineLabel?: string } = {};
+const mockSetParams = jest.fn();
+const mockNavigate = jest.fn();
 
 jest.mock('@/services/posts.service');
-jest.mock('@/services/disciplines.service');
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ navigate: jest.fn() }),
+  useNavigation: () => ({ navigate: mockNavigate, setParams: mockSetParams }),
+  useRoute: () => ({ params: mockParams }),
 }));
 
 const mockList = postsService.listPosts as jest.Mock;
-const mockListDisciplines = disciplinesService.listDisciplines as jest.Mock;
+const mockSearch = postsService.searchPosts as jest.Mock;
+
+const onePost = {
+  data: [
+    {
+      id: 'p1',
+      title: 'Post Um',
+      content: 'oi',
+      status: 'PUBLISHED',
+      published_at: '2026-01-01',
+      created_at: '2026-01-01',
+      updated_at: '2026-01-01',
+      author: { id: 'Teacher/1', name: 'Prof', pronouns: 'ele/dele' },
+      discipline: { id: 'd1', label: 'Ciências' },
+      comments_count: 0,
+      reads_count: 0,
+    },
+  ],
+  pagination: { page: 1, limit: 10, total: 1, totalPages: 1 },
+};
 
 describe('HomeScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockListDisciplines.mockResolvedValue([]);
+    mockParams = {};
   });
 
   it('renders posts after load', async () => {
-    mockList.mockResolvedValueOnce({
-      data: [
-        {
-          id: 'p1',
-          title: 'Post Um',
-          content: 'oi',
-          status: 'PUBLISHED',
-          published_at: '2026-01-01',
-          created_at: '2026-01-01',
-          updated_at: '2026-01-01',
-          author: {
-            id: 'Teacher/550e8400-e29b-41d4-a716-446655440001',
-            name: 'Prof',
-            pronouns: 'ele/dele',
-          },
-          discipline: { id: 'd1', label: 'Matemática' },
-          comments_count: 0,
-          reads_count: 0,
-        },
-      ],
-      pagination: { page: 1, limit: 10, total: 1, totalPages: 1 },
-    });
-
+    mockList.mockResolvedValueOnce(onePost);
     const { findByText } = render(<HomeScreen />);
     expect(await findByText('Post Um')).toBeTruthy();
   });
@@ -61,5 +63,43 @@ describe('HomeScreen', () => {
     const { findByText } = render(<HomeScreen />);
     expect(await findByText('Erro ao carregar')).toBeTruthy();
     await waitFor(() => expect(mockList).toHaveBeenCalledTimes(1));
+  });
+
+  it('filtra por disciplina quando o param disciplineId está presente', async () => {
+    mockParams = { disciplineId: 'd1', disciplineLabel: 'Ciências' };
+    mockSearch.mockResolvedValueOnce(onePost);
+    const { findByText } = render(<HomeScreen />);
+    expect(await findByText('Post Um')).toBeTruthy();
+    await waitFor(() =>
+      expect(mockSearch).toHaveBeenCalledWith(
+        expect.objectContaining({ discipline: 'd1' })
+      )
+    );
+  });
+
+  it('mostra a pill com o label da disciplina ativa', async () => {
+    mockParams = { disciplineId: 'd1', disciplineLabel: 'Ciências' };
+    mockSearch.mockResolvedValueOnce(onePost);
+    const { findByText } = render(<HomeScreen />);
+    // "Ciências" aparece na pill (findByText resolve após render inicial)
+    expect(await findByText('Ciências')).toBeTruthy();
+  });
+
+  it('limpa o filtro (setParams undefined) ao tocar no ✕ da pill', async () => {
+    mockParams = { disciplineId: 'd1', disciplineLabel: 'Ciências' };
+    mockSearch.mockResolvedValue(onePost);
+    const { findByTestId } = render(<HomeScreen />);
+    fireEvent.press(await findByTestId('active-filter-clear'));
+    expect(mockSetParams).toHaveBeenCalledWith({
+      disciplineId: undefined,
+      disciplineLabel: undefined,
+    });
+  });
+
+  it('não renderiza mais os chips de disciplina', async () => {
+    mockList.mockResolvedValueOnce(onePost);
+    const { queryByText } = render(<HomeScreen />);
+    // o chip "Todas" era o marcador da fileira de chips
+    expect(queryByText('Todas')).toBeNull();
   });
 });
