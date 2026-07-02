@@ -6,6 +6,7 @@ import {
   DrawerActions,
 } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import type { NativeStackNavigationOptions } from '@react-navigation/native-stack';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { BlurView } from 'expo-blur';
 import { useAuth } from '@/contexts/AuthContext';
@@ -62,7 +63,7 @@ function DrawerToggle({ onPress }: { onPress: () => void }) {
 // options() que injeta o hamburger no headerLeft de uma tela-destino.
 const withDrawerToggle =
   (title: string) =>
-  ({ navigation }: { navigation: { dispatch: (a: unknown) => void } }) => ({
+  ({ navigation }: { navigation: { dispatch: (a: any) => void } }): NativeStackNavigationOptions => ({
     title,
     headerLeft: () => (
       <DrawerToggle onPress={() => navigation.dispatch(DrawerActions.openDrawer())} />
