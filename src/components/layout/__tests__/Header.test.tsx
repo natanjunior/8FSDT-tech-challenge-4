@@ -23,152 +23,60 @@ const guest = {
   logout: jest.fn(),
   refreshProfile: jest.fn(),
 };
-
-const student = {
-  user: { id: 's1', login: 'pedro.costa', role: 'STUDENT' as const },
-  profile: null,
-  isAuthenticated: true,
-  isHydrating: false,
-  isAuthenticating: false,
-  login: jest.fn(),
-  logout: jest.fn(),
-  refreshProfile: jest.fn(),
-};
-
-const teacher = {
-  user: { id: 't1', login: 'joao.silva', role: 'TEACHER' as const },
-  profile: null,
-  isAuthenticated: true,
-  isHydrating: false,
-  isAuthenticating: false,
-  login: jest.fn(),
-  logout: jest.fn(),
-  refreshProfile: jest.fn(),
-};
+const student = { ...guest, user: { id: 's1', login: 'pedro.costa', role: 'STUDENT' as const }, isAuthenticated: true };
+const teacher = { ...guest, user: { id: 't1', login: 'joao.silva', role: 'TEACHER' as const }, isAuthenticated: true };
 
 describe('HeaderRight', () => {
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
+  afterEach(() => jest.clearAllMocks());
 
-  it('renders "Entrar" when guest', () => {
+  it('visitante: mostra "Entrar" e nada de "Grupo"/"Sair"/"Painel"', () => {
     useAuthSpy.mockReturnValue(guest);
     const { getByText, queryByText } = render(<HeaderRight />);
     expect(getByText('Entrar')).toBeTruthy();
+    expect(queryByText('Grupo')).toBeNull();
     expect(queryByText('Sair')).toBeNull();
     expect(queryByText('Painel')).toBeNull();
   });
 
-  it('navigates to Login when "Entrar" is pressed', () => {
+  it('navega para Login ao tocar "Entrar"', () => {
     useAuthSpy.mockReturnValue(guest);
     const { getByText } = render(<HeaderRight />);
     fireEvent.press(getByText('Entrar'));
     expect(mockNavigate).toHaveBeenCalledWith('Login');
   });
 
-  it('renders "Sair" but no "Painel" when STUDENT', () => {
+  it('não renderiza mais o botão "Grupo" em nenhum estado', () => {
+    useAuthSpy.mockReturnValue(guest);
+    const { queryByText, rerender } = render(<HeaderRight />);
+    expect(queryByText('Grupo')).toBeNull();
     useAuthSpy.mockReturnValue(student);
+    rerender(<HeaderRight />);
+    expect(queryByText('Grupo')).toBeNull();
+    useAuthSpy.mockReturnValue(teacher);
+    rerender(<HeaderRight />);
+    expect(queryByText('Grupo')).toBeNull();
+  });
+
+  it('dropdown (TEACHER) = só conta: Meu perfil, Trocar senha, Sair; sem admin', () => {
+    useAuthSpy.mockReturnValue(teacher);
     const { getByTestId, getByText, queryByText } = render(<HeaderRight />);
-    // open the dropdown
     fireEvent.press(getByTestId('header-user-trigger'));
+    expect(getByText('Meu perfil')).toBeTruthy();
+    expect(getByText('Trocar senha')).toBeTruthy();
     expect(getByText('Sair')).toBeTruthy();
     expect(queryByText('Painel')).toBeNull();
-    expect(queryByText('Entrar')).toBeNull();
+    expect(queryByText('Professores')).toBeNull();
+    expect(queryByText('Alunos')).toBeNull();
   });
 
-  it('renders both "Painel" and "Sair" when TEACHER', () => {
-    useAuthSpy.mockReturnValue(teacher);
-    const { getByTestId, getByText } = render(<HeaderRight />);
-    // open the dropdown
-    fireEvent.press(getByTestId('header-user-trigger'));
-    expect(getByText('Painel')).toBeTruthy();
-    expect(getByText('Sair')).toBeTruthy();
-  });
-
-  it('navigates to AdminPosts when TEACHER presses "Painel"', () => {
-    useAuthSpy.mockReturnValue(teacher);
-    const { getByTestId, getByText } = render(<HeaderRight />);
-    fireEvent.press(getByTestId('header-user-trigger'));
-    fireEvent.press(getByText('Painel'));
-    expect(mockNavigate).toHaveBeenCalledWith('AdminPosts');
-  });
-
-  it('calls logout when "Sair" is pressed', () => {
-    const logoutMock = jest.fn();
-    useAuthSpy.mockReturnValue({ ...teacher, logout: logoutMock });
-    const { getByTestId, getByText } = render(<HeaderRight />);
-    fireEvent.press(getByTestId('header-user-trigger'));
-    fireEvent.press(getByText('Sair'));
-    expect(logoutMock).toHaveBeenCalledTimes(1);
-  });
-
-  it('renders "Grupo" for all auth states', () => {
-    useAuthSpy.mockReturnValue(guest);
-    const { getByText, rerender } = render(<HeaderRight />);
-    expect(getByText('Grupo')).toBeTruthy();
-
+  it('dropdown (STUDENT) = Meu perfil, Trocar senha, Sair; sem admin', () => {
     useAuthSpy.mockReturnValue(student);
-    rerender(<HeaderRight />);
-    expect(getByText('Grupo')).toBeTruthy();
-
-    useAuthSpy.mockReturnValue(teacher);
-    rerender(<HeaderRight />);
-    expect(getByText('Grupo')).toBeTruthy();
-  });
-
-  it('navigates to Grupo when "Grupo" is pressed', () => {
-    useAuthSpy.mockReturnValue(guest);
-    const { getByText } = render(<HeaderRight />);
-    fireEvent.press(getByText('Grupo'));
-    expect(mockNavigate).toHaveBeenCalledWith('Grupo');
-  });
-
-  // --- New behaviors (Task 19) ---
-
-  it('guest: header-login-icon and header-grupo-icon are present', () => {
-    useAuthSpy.mockReturnValue(guest);
-    const { getByTestId } = render(<HeaderRight />);
-    expect(getByTestId('header-login-icon')).toBeTruthy();
-    expect(getByTestId('header-grupo-icon')).toBeTruthy();
-  });
-
-  it('authenticated (teacher): header-user-trigger is visible; pressing it shows "Painel" and "Sair"', () => {
-    useAuthSpy.mockReturnValue(teacher);
-    const { getByTestId, getByText } = render(<HeaderRight />);
-    expect(getByTestId('header-user-trigger')).toBeTruthy();
-    fireEvent.press(getByTestId('header-user-trigger'));
-    expect(getByText('Painel')).toBeTruthy();
-    expect(getByText('Sair')).toBeTruthy();
-  });
-
-  // --- Task 7: Profile/ChangePassword routes in dropdown ---
-
-  it('mostra "Meu perfil" no dropdown autenticado (TEACHER)', () => {
-    useAuthSpy.mockReturnValue(teacher);
-    const { getByTestId, getByText } = render(<HeaderRight />);
+    const { getByTestId, getByText, queryByText } = render(<HeaderRight />);
     fireEvent.press(getByTestId('header-user-trigger'));
     expect(getByText('Meu perfil')).toBeTruthy();
-  });
-
-  it('mostra "Trocar senha" no dropdown autenticado (TEACHER)', () => {
-    useAuthSpy.mockReturnValue(teacher);
-    const { getByTestId, getByText } = render(<HeaderRight />);
-    fireEvent.press(getByTestId('header-user-trigger'));
     expect(getByText('Trocar senha')).toBeTruthy();
-  });
-
-  it('mostra "Meu perfil" no dropdown autenticado (STUDENT)', () => {
-    useAuthSpy.mockReturnValue(student);
-    const { getByTestId, getByText } = render(<HeaderRight />);
-    fireEvent.press(getByTestId('header-user-trigger'));
-    expect(getByText('Meu perfil')).toBeTruthy();
-  });
-
-  it('mostra "Trocar senha" no dropdown autenticado (STUDENT)', () => {
-    useAuthSpy.mockReturnValue(student);
-    const { getByTestId, getByText } = render(<HeaderRight />);
-    fireEvent.press(getByTestId('header-user-trigger'));
-    expect(getByText('Trocar senha')).toBeTruthy();
+    expect(getByText('Sair')).toBeTruthy();
+    expect(queryByText('Painel')).toBeNull();
   });
 
   it('navega para Profile ao tocar "Meu perfil"', () => {
@@ -187,14 +95,12 @@ describe('HeaderRight', () => {
     expect(mockNavigate).toHaveBeenCalledWith('ChangePassword');
   });
 
-  it('STUDENT nao ve Painel/Professores/Alunos mas ve Meu perfil + Trocar senha', () => {
-    useAuthSpy.mockReturnValue(student);
-    const { getByTestId, getByText, queryByText } = render(<HeaderRight />);
+  it('chama logout ao tocar "Sair"', () => {
+    const logoutMock = jest.fn();
+    useAuthSpy.mockReturnValue({ ...teacher, logout: logoutMock });
+    const { getByTestId, getByText } = render(<HeaderRight />);
     fireEvent.press(getByTestId('header-user-trigger'));
-    expect(getByText('Meu perfil')).toBeTruthy();
-    expect(getByText('Trocar senha')).toBeTruthy();
-    expect(queryByText('Painel')).toBeNull();
-    expect(queryByText('Professores')).toBeNull();
-    expect(queryByText('Alunos')).toBeNull();
+    fireEvent.press(getByText('Sair'));
+    expect(logoutMock).toHaveBeenCalledTimes(1);
   });
 });

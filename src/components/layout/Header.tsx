@@ -25,9 +25,7 @@ function HeaderItem({ icon, iconTestID, label, onPress }: HeaderItemProps) {
       <View testID={iconTestID}>
         <Icon name={icon} size={16} color={colors.primaryForeground} />
       </View>
-      <Text className="font-sans-bold text-sm text-primary-foreground">
-        {label}
-      </Text>
+      <Text className="font-sans-bold text-sm text-primary-foreground">{label}</Text>
     </TouchableOpacity>
   );
 }
@@ -37,19 +35,9 @@ export function HeaderRight() {
   const { isAuthenticated, user, profile, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const grupoButton = (
-    <HeaderItem
-      icon="account-group"
-      iconTestID="header-grupo-icon"
-      label="Grupo"
-      onPress={() => navigation.navigate('Grupo')}
-    />
-  );
-
   if (!isAuthenticated) {
     return (
       <View className="flex-row items-center gap-1 pr-2">
-        {grupoButton}
         <HeaderItem
           icon="login"
           iconTestID="header-login-icon"
@@ -66,7 +54,6 @@ export function HeaderRight() {
   return (
     <>
       <View className="flex-row items-center gap-2 pr-2">
-        {grupoButton}
         <TouchableOpacity
           testID="header-user-trigger"
           accessibilityRole="button"
@@ -79,11 +66,7 @@ export function HeaderRight() {
             subtitle={isTeacher ? 'Professor' : 'Aluno'}
             size="sm"
           />
-          <Icon
-            name="chevron-down"
-            size={16}
-            color={colors.primaryForeground}
-          />
+          <Icon name="chevron-down" size={16} color={colors.primaryForeground} />
         </TouchableOpacity>
       </View>
 
@@ -93,10 +76,7 @@ export function HeaderRight() {
         animationType="fade"
         onRequestClose={() => setMenuOpen(false)}
       >
-        <Pressable
-          onPress={() => setMenuOpen(false)}
-          className="flex-1 bg-foreground/20"
-        >
+        <Pressable onPress={() => setMenuOpen(false)} className="flex-1 bg-foreground/20">
           <Pressable
             onPress={(e) => e.stopPropagation()}
             className="absolute right-3 top-14 w-48 overflow-hidden rounded-xl bg-surface-container-lowest"
@@ -116,9 +96,7 @@ export function HeaderRight() {
               className="flex-row items-center gap-3 px-4 py-3"
             >
               <Icon name="account-circle-outline" size={18} color={colors.outline} />
-              <Text className="font-sans-medium text-sm text-primary">
-                Meu perfil
-              </Text>
+              <Text className="font-sans-medium text-sm text-primary">Meu perfil</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => {
@@ -128,52 +106,9 @@ export function HeaderRight() {
               className="flex-row items-center gap-3 px-4 py-3"
             >
               <Icon name="lock-outline" size={18} color={colors.outline} />
-              <Text className="font-sans-medium text-sm text-primary">
-                Trocar senha
-              </Text>
+              <Text className="font-sans-medium text-sm text-primary">Trocar senha</Text>
             </TouchableOpacity>
 
-            {isTeacher ? (
-              <>
-                <View className="h-px bg-outline-variant/40" />
-                <TouchableOpacity
-                  onPress={() => {
-                    setMenuOpen(false);
-                    navigation.navigate('AdminPosts');
-                  }}
-                  className="flex-row items-center gap-3 px-4 py-3"
-                >
-                  <Icon name="view-dashboard" size={18} color={colors.outline} />
-                  <Text className="font-sans-medium text-sm text-primary">
-                    Painel
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => {
-                    setMenuOpen(false);
-                    navigation.navigate('TeachersList');
-                  }}
-                  className="flex-row items-center gap-3 px-4 py-3"
-                >
-                  <Icon name="account-group" size={18} color={colors.outline} />
-                  <Text className="font-sans-medium text-sm text-primary">
-                    Professores
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => {
-                    setMenuOpen(false);
-                    navigation.navigate('StudentsList');
-                  }}
-                  className="flex-row items-center gap-3 px-4 py-3"
-                >
-                  <Icon name="account-outline" size={18} color={colors.outline} />
-                  <Text className="font-sans-medium text-sm text-primary">
-                    Alunos
-                  </Text>
-                </TouchableOpacity>
-              </>
-            ) : null}
             <View className="h-px bg-outline-variant/40" />
             <TouchableOpacity
               onPress={() => {
