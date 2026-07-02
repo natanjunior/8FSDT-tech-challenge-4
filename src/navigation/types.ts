@@ -1,5 +1,6 @@
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RouteProp } from '@react-navigation/native';
+import type { RouteProp, NavigatorScreenParams } from '@react-navigation/native';
+import type { DrawerNavigationProp } from '@react-navigation/drawer';
 
 export type RootStackParamList = {
   Home: { disciplineId?: string; disciplineLabel?: string } | undefined;
@@ -28,3 +29,9 @@ export type PostDetailRouteProp = RouteProp<RootStackParamList, 'PostDetail'>;
 export type PostEditRouteProp = RouteProp<RootStackParamList, 'PostEdit'>;
 export type TeacherEditRouteProp = RouteProp<RootStackParamList, 'TeacherEdit'>;
 export type StudentEditRouteProp = RouteProp<RootStackParamList, 'StudentEdit'>;
+
+export type RootDrawerParamList = {
+  Root: NavigatorScreenParams<RootStackParamList> | undefined;
+};
+
+export type RootDrawerNavigationProp = DrawerNavigationProp<RootDrawerParamList>;
