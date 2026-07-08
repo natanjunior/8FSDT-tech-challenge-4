@@ -92,7 +92,7 @@ function RootStackNavigator() {
       <RootStack.Screen
         name="Home"
         component={HomeScreen}
-        options={withDrawerToggle('8FSDT — Fase 4')}
+        options={withDrawerToggle('TC4')}
       />
       <RootStack.Screen
         name="AdminPosts"
