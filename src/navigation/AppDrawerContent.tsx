@@ -88,7 +88,7 @@ export function AppDrawerContent(props: DrawerContentComponentProps) {
         className="px-4 pt-6 pb-5 gap-2"
       >
         <Text className="font-sans-black text-lg text-primary-foreground">
-          8FSDT — Fase 4
+          TC4
         </Text>
         {isAuthenticated ? (
           <AuthorId
@@ -103,7 +103,7 @@ export function AppDrawerContent(props: DrawerContentComponentProps) {
         <SectionLabel>Navegação</SectionLabel>
         <DrawerItem
           icon="book-open-outline"
-          label="Início (todos os posts)"
+          label="Home"
           active={activeDisciplineId === null && focused?.name === 'Home'}
           onPress={() => go('Home', undefined)}
         />
