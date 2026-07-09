@@ -4,12 +4,16 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   ReactNode,
 } from 'react';
+import Toast from 'react-native-toast-message';
+import { setUnauthorizedHandler } from '@/api/client';
 import {
   login as loginService,
   logout as logoutService,
+  clearSession,
 } from '@/services/auth.service';
 import { getMyTeacher } from '@/services/teachers.service';
 import { getMyStudent } from '@/services/students.service';
@@ -61,6 +65,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isHydrating, setIsHydrating] = useState(true);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
+  // Evita N toasts/limpezas quando várias requests autenticadas 401 quase juntas.
+  // Rearmado no login bem-sucedido.
+  const isClearingRef = useRef(false);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -82,12 +90,34 @@ export function AuthProvider({ children }: AuthProviderProps) {
     };
   }, []);
 
+  // Ponte com o response interceptor do apiClient: numa 401 de sessão (request que
+  // carregava Bearer), limpa a sessão local SEM rede e zera o estado. Sem navegação —
+  // as telas protegidas caem para Home pelos guards (useRequireRole / isAuthenticated).
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      if (isClearingRef.current) return;
+      isClearingRef.current = true;
+      void (async () => {
+        await clearSession();
+        setUser(null);
+        setProfile(null);
+        Toast.show({
+          type: 'error',
+          text1: 'Sessão expirada',
+          text2: 'Faça login novamente.',
+        });
+      })();
+    });
+    return () => setUnauthorizedHandler(null);
+  }, []);
+
   const login = useCallback(async (payload: LoginRequest) => {
     setIsAuthenticating(true);
     try {
       const { user: nextUser, profile: nextProfile } = await loginService(payload);
       setUser(nextUser);
       setProfile(nextProfile);
+      isClearingRef.current = false;
     } finally {
       setIsAuthenticating(false);
     }

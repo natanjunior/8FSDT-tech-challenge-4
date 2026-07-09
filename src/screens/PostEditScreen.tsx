@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
-import { useAuth } from '@/contexts/AuthContext';
 import { useRequireRole } from '@/hooks/useRequireRole';
 import { PostForm } from '@/features/posts/components/PostForm';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -16,7 +15,6 @@ export function PostEditScreen() {
   const allowed = useRequireRole('TEACHER');
   const navigation = useNavigation<RootStackNavigationProp>();
   const route = useRoute<PostEditRouteProp>();
-  const { logout } = useAuth();
   const { postId } = route.params;
 
   const [post, setPost] = useState<Post | null>(null);
@@ -65,15 +63,7 @@ export function PostEditScreen() {
       navigation.goBack();
     } catch (err: any) {
       const status = err?.response?.status;
-      if (status === 401) {
-        Toast.show({
-          type: 'error',
-          text1: 'Sessão expirada',
-          text2: 'Faça login novamente.',
-        });
-        await logout();
-        navigation.replace('Login');
-      } else if (status === 403) {
+      if (status === 403) {
         Toast.show({
           type: 'error',
           text1: 'Sem permissão',

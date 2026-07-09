@@ -16,7 +16,7 @@ import type { RootStackNavigationProp } from '@/navigation/types';
 
 export function ProfileEditScreen() {
   const navigation = useNavigation<RootStackNavigationProp>();
-  const { user, isAuthenticated, logout, refreshProfile } = useAuth();
+  const { user, isAuthenticated, refreshProfile } = useAuth();
   const isTeacher = user?.role === 'TEACHER';
 
   const [data, setData] = useState<Teacher | Student | null>(null);
@@ -74,17 +74,11 @@ export function ProfileEditScreen() {
       Toast.show({ type: 'success', text1: 'Perfil atualizado.' });
       navigation.goBack();
     } catch (err: any) {
-      const status = err?.response?.status;
-      if (status === 401) {
-        await logout();
-        navigation.replace('Login');
-      } else {
-        Toast.show({
-          type: 'error',
-          text1: 'Erro ao salvar',
-          text2: err?.response?.data?.error ?? 'Tente novamente.',
-        });
-      }
+      Toast.show({
+        type: 'error',
+        text1: 'Erro ao salvar',
+        text2: err?.response?.data?.error ?? 'Tente novamente.',
+      });
     } finally {
       setIsSubmitting(false);
     }

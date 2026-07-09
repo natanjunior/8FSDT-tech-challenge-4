@@ -32,15 +32,19 @@ export async function login(payload: LoginRequest): Promise<LoginResponse> {
   }
 }
 
+export async function clearSession(): Promise<void> {
+  await deleteSecureItem(SECURE_KEYS.AUTH_TOKEN);
+  await deleteSecureItem(SECURE_KEYS.AUTH_USER);
+  await deleteSecureItem(SECURE_KEYS.AUTH_PROFILE);
+}
+
 export async function logout(): Promise<void> {
   try {
     await apiClient.post('/auth/logout');
   } catch {
     // Ignora erro de rede — sempre limpa o estado local.
   } finally {
-    await deleteSecureItem(SECURE_KEYS.AUTH_TOKEN);
-    await deleteSecureItem(SECURE_KEYS.AUTH_USER);
-    await deleteSecureItem(SECURE_KEYS.AUTH_PROFILE);
+    await clearSession();
   }
 }
 

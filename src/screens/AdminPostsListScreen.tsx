@@ -10,7 +10,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
-import { useAuth } from '@/contexts/AuthContext';
 import { useRequireRole } from '@/hooks/useRequireRole';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
@@ -77,7 +76,6 @@ function AdminStatusFilter({
 export function AdminPostsListScreen() {
   const allowed = useRequireRole('TEACHER');
   const navigation = useNavigation<RootStackNavigationProp>();
-  const { logout } = useAuth();
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [page, setPage] = useState(1);
@@ -121,23 +119,18 @@ export function AdminPostsListScreen() {
         setPage(res.pagination.page);
         setTotalPages(res.pagination.totalPages);
       } catch (err: any) {
-        if (err?.response?.status === 401) {
-          await logout();
-          navigation.replace('Login');
-        } else {
-          Toast.show({
-            type: 'error',
-            text1: 'Erro ao carregar posts',
-            text2: err?.response?.data?.error ?? 'Tente novamente.',
-          });
-        }
+        Toast.show({
+          type: 'error',
+          text1: 'Erro ao carregar posts',
+          text2: err?.response?.data?.error ?? 'Tente novamente.',
+        });
       } finally {
         setIsLoading(false);
         setIsLoadingMore(false);
         setIsRefreshing(false);
       }
     },
-    [fetchPosts, logout, navigation]
+    [fetchPosts, navigation]
   );
 
   const fetchStats = useCallback(async () => {
@@ -192,11 +185,7 @@ export function AdminPostsListScreen() {
       await fetchStats();
     } catch (err: any) {
       const status = err?.response?.status;
-      if (status === 401) {
-        Toast.show({ type: 'error', text1: 'Sessão expirada' });
-        await logout();
-        navigation.replace('Login');
-      } else if (status === 403) {
+      if (status === 403) {
         Toast.show({
           type: 'error',
           text1: 'Sem permissão',
@@ -213,7 +202,7 @@ export function AdminPostsListScreen() {
     } finally {
       setIsDeleting(false);
     }
-  }, [pendingDelete, loadPage, fetchStats, logout, navigation]);
+  }, [pendingDelete, loadPage, fetchStats, navigation]);
 
   if (!allowed) return null;
 
