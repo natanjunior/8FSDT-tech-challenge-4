@@ -6,6 +6,7 @@ import { DisciplineBadge } from '@/components/ui/DisciplineBadge';
 import { AuthorId } from '@/components/ui/AuthorId';
 import { IconCount } from '@/components/ui/IconCount';
 import type { Post } from '@/types/api';
+import { stripMarkdown } from '@/lib/markdown';
 
 interface PostCardProps {
   post: Post;
@@ -22,7 +23,8 @@ function formatDate(iso: string | null | undefined): string {
 }
 
 function getExcerpt(content: string, maxLength = 140): string {
-  return content.length > maxLength ? content.slice(0, maxLength) + '…' : content;
+  const clean = stripMarkdown(content);
+  return clean.length > maxLength ? clean.slice(0, maxLength) + '…' : clean;
 }
 
 export function PostCard({ post, onPress, testID }: PostCardProps) {

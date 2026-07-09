@@ -43,6 +43,18 @@ describe('PostCard', () => {
     expect(getByText(basePost.title)).toBeTruthy();
   });
 
+  it('remove a sintaxe Markdown do excerpt', () => {
+    const mdPost = {
+      ...basePost,
+      content: '## Seção\n\n**Negrito** e *itálico* com `código`.',
+    };
+    const { getByText, queryByText } = render(
+      <PostCard post={mdPost} onPress={() => {}} />
+    );
+    expect(getByText('Seção Negrito e itálico com código.')).toBeTruthy();
+    expect(queryByText(/##|\*\*|`/)).toBeNull();
+  });
+
   it('renders DisciplineBadge floating', () => {
     const { getAllByText } = render(<PostCard post={basePost} onPress={() => {}} />);
     // DisciplineBadge (floating) + AuthorId subtitle both render the discipline label
