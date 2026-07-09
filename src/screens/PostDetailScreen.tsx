@@ -9,6 +9,7 @@ import { DisciplineBadge } from '@/components/ui/DisciplineBadge';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { IconCount } from '@/components/ui/IconCount';
 import { AuthorId } from '@/components/ui/AuthorId';
+import { MarkdownContent } from '@/components/ui/MarkdownContent';
 import { MarkAsReadButton } from '@/components/posts/MarkAsReadButton';
 import { CommentSection } from '@/features/comments/components/CommentSection';
 import { getPostById } from '@/services/posts.service';
@@ -100,9 +101,9 @@ export function PostDetailScreen() {
           size="lg"
         />
 
-        <Text className="font-sans text-base text-foreground leading-7 mt-3">
-          {post.content}
-        </Text>
+        <View className="mt-3">
+          <MarkdownContent value={post.content} />
+        </View>
 
         <View className="mt-2 gap-3">
           <MarkAsReadButton postId={post.id} initialHasRead={hasRead} />
