@@ -480,6 +480,7 @@ Algumas escolhas divergem do conteúdo padrão das aulas — registradas aqui pa
 | 23 | **Cross-field refines no `changePasswordSchema`** com path explícito | Zod `.refine()` permite associar a mensagem a um campo específico via `path: ['new_password_confirm']` / `['new_password']` — isso faz o RHF exibir o erro embaixo do campo certo, não no objeto root. Sem `path`, o RHF entrega `errors.root` e o usuário não sabe qual campo arrumar. |
 | 24 | **`useFocusEffect` na ProfileScreen** em vez de `useEffect` | Quando o usuário volta da ProfileEditScreen via `goBack`, `useEffect` não dispara (o componente não desmontou). `useFocusEffect` do React Navigation re-roda quando a tela ganha foco, garantindo o refetch dos dados recém-editados. |
 | 25 | **Drawer (menu lateral) como navegação primária**, em vez de Bottom Tabs | Espelha a **sidebar** da Fase 3 web (navegação + disciplinas + administração numa coluna lateral), não uma tab bar. O Drawer acomoda melhor a seção **Disciplinas** — de tamanho variável, carregada dinamicamente via `listDisciplines()` e usada como eixo de descoberta/filtro — e a seção **Administração** que só aparece para TEACHER; uma tab bar (3–5 abas fixas) não comporta esse número variável de destinos. Implementado como `@react-navigation/drawer` (v7) envolvendo o Native Stack numa única `Screen` (`Root`); `@react-navigation/bottom-tabs` foi removido. O Drawer é só navegação — o gate de acesso permanece no `useRequireRole` (ADR 06/10). |
+| 26 | **Markdown no mobile: leitura com o fork mantido `@ronradtke/react-native-markdown-display`, edição com `TextInput` + abas Escrever/Prévia, sem toolbar** | O `content` do post é Markdown puro guardado como texto pelo backend (Fase 2 não processa/sanitiza; o cliente renderiza). O guia mobile da Fase 2 recomenda `react-native-markdown-display`, mas o pacote nominal (v7.0.2/2023) está desatualizado para a stack nova (React 19 / RN 0.85); usamos o fork mantido `@ronradtke` (v9.0.3/2026), que é drop-in (mesma API). Leitura e prévia do editor reusam um único componente `MarkdownContent`, estilizado via `StyleSheet` mapeado aos tokens do Design System (`colors.ts`) — a única exceção a `className`/NativeWind no app, pois a API da lib exige um objeto de estilo por elemento. Edição usa `TextInput` multiline com abas **Escrever/Prévia**, sem toolbar de formatação: no mobile, inserir sintaxe manipulando seleção/cursor do `TextInput` é frágil e caro em testes, com pouco retorno; as abas entregam o benefício central (ver o resultado) reusando a mesma peça de render. Segurança: o renderer não interpreta HTML cru por padrão (equivalente ao `skipHtml` da web). Diverge do editor rico da Fase 3 web (`@uiw/react-md-editor`, com toolbar) e da lib nominal da Fase 2. |
 
 ## Design System
 
@@ -761,6 +762,18 @@ e mapear `nativewind/dist/style-sheet/native` para um stub vazio no `moduleNameM
 **Cuidado central:** **não deslogar 401 anônima.** O gatilho checa `error.config.headers.Authorization` — só dispara quando a request realmente carregava um Bearer. Assim, `POST /comments` de visitante (401 proposital, ADR 09) e o próprio login (que não envia Bearer) não derrubam sessão nenhuma. Detalhe descoberto na implementação: o `POST /auth/login` com credencial inválida retorna **401**, não 400/404 — mas como a request de login não carrega Bearer, o handler corretamente a ignora; a robustez vem de checar o header, não o status.
 
 **Aprendizado:** para conectar um singleton de módulo a estado de React sem acoplamento, exponha um setter de callback registrado via `useEffect` em vez de importar o Context. E ao centralizar tratamento de erro num interceptor, distinga a 401 "de sessão" (request autenticada) da 401 "de autorização anônima" pela presença do token enviado — não pelo status code.
+
+---
+
+### 11. Títulos do Markdown renderizavam sem negrito (peso normal)
+
+**Problema:** ao renderizar Markdown no `MarkdownContent` (leitura do post e prévia do editor), os headings (`h1`-`h6`) apareciam com o mesmo peso visual do corpo do texto — sem negrito —, apesar do estilo de cada heading definir `fontWeight: '700'`/`'800'`.
+
+**Causa:** o renderer da lib de Markdown propaga o `fontFamily` do estilo `body` (`Inter_400Regular`) para os elementos filhos, incluindo os headings. As fontes carregadas via `@expo-google-fonts/inter` são de **peso fixo** — cada peso é uma família separada (`Inter_400Regular`, `Inter_700Bold`, `Inter_800ExtraBold` etc.), não uma família variável com múltiplos pesos. Nesse cenário, `fontWeight` isolado é um no-op no React Native: a fonte efetivamente carregada (`Inter_400Regular`) não tem uma variante 700/800 para o motor de texto escolher.
+
+**Solução:** trocar `fontWeight` por `fontFamily` explícito nos estilos dos headings — `Inter_800ExtraBold` para `heading1`/`heading2`, `Inter_700Bold` para `heading3`-`heading6` — seguindo a mesma convenção já usada no resto do app, que usa classes NativeWind como `font-sans-bold`/`font-sans-extrabold` e nunca a prop `fontWeight` isolada, justamente por essa limitação de fontes de peso fixo.
+
+**Aprendizado:** com fontes de peso fixo (cada peso = uma família distinta), `fontWeight` sozinho não produz negrito no React Native — é preciso apontar a família correta via `fontFamily`. Vale como regra geral para qualquer estilo do app que precise de peso de fonte, dentro ou fora do NativeWind.
 
 ---
 
