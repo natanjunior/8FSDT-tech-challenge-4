@@ -3,6 +3,7 @@ import { ScrollView, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import type { DrawerContentComponentProps } from '@react-navigation/drawer';
+import type { NavigationState, PartialState } from '@react-navigation/native';
 import { useAuth } from '@/contexts/AuthContext';
 import { Icon, IconName } from '@/components/ui/Icon';
 import { AuthorId } from '@/components/ui/AuthorId';
@@ -14,6 +15,12 @@ import type { RootStackParamList } from './types';
 
 // primary-gradient navy (mesmo do Button variant="nav")
 const NAVY_GRADIENT = ['#022448', '#1E3A5F'] as const;
+
+// Args de `go` tipados por tela: params obrigatórios viram obrigatórios,
+// params opcionais/`undefined` viram opcionais — impede `go('PostDetail')` sem id.
+type GoArgs<S extends keyof RootStackParamList> = undefined extends RootStackParamList[S]
+  ? [screen: S, params?: RootStackParamList[S]]
+  : [screen: S, params: RootStackParamList[S]];
 
 function SectionLabel({ children }: { children: string }) {
   return (
@@ -35,6 +42,8 @@ function DrawerItem({ icon, iconColor, label, active, onPress }: DrawerItemProps
   return (
     <TouchableOpacity
       accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ selected: !!active }}
       onPress={onPress}
       activeOpacity={0.7}
       className={`flex-row items-center gap-3 px-4 py-3 rounded-lg ${
@@ -58,22 +67,35 @@ export function AppDrawerContent(props: DrawerContentComponentProps) {
   const [disciplines, setDisciplines] = useState<Discipline[]>([]);
 
   useEffect(() => {
-    listDisciplines().then(setDisciplines).catch(() => {});
+    listDisciplines()
+      .then(setDisciplines)
+      .catch((err) =>
+        console.warn('AppDrawerContent: falha ao carregar disciplinas', err)
+      );
   }, []);
 
   const isTeacher = user?.role === 'TEACHER';
 
-  // disciplina ativa = param disciplineId da rota Home aninhada (best-effort)
+  // Tela do Native Stack aninhado atualmente em foco — tipada (sem cast ad-hoc),
+  // usada para realçar o item correspondente do drawer (também fora da Home).
   const rootRoute = props.state.routes[props.state.index];
   const nested = rootRoute?.state as
-    | { index?: number; routes?: Array<{ name: string; params?: { disciplineId?: string } }> }
+    | NavigationState<RootStackParamList>
+    | PartialState<NavigationState<RootStackParamList>>
     | undefined;
-  const focused = nested?.routes?.[nested.index ?? 0];
+  const nestedRoutes = nested?.routes;
+  const focused = nestedRoutes?.length
+    ? nestedRoutes[nested?.index ?? nestedRoutes.length - 1]
+    : undefined;
+  const focusedName = focused?.name as keyof RootStackParamList | undefined;
   const activeDisciplineId =
-    focused?.name === 'Home' ? focused?.params?.disciplineId ?? null : null;
+    focusedName === 'Home'
+      ? (focused?.params as RootStackParamList['Home'])?.disciplineId ?? null
+      : null;
 
-  const go = (screen: keyof RootStackParamList, params?: object) => {
-    props.navigation.navigate('Root', { screen, params });
+  // navigate tipado por tela: params conferidos contra RootStackParamList.
+  const go = <S extends keyof RootStackParamList>(...[screen, params]: GoArgs<S>) => {
+    props.navigation.navigate('Root', { screen, params } as never);
     props.navigation.closeDrawer();
   };
 
@@ -104,8 +126,10 @@ export function AppDrawerContent(props: DrawerContentComponentProps) {
         <DrawerItem
           icon="book-open-outline"
           label="Home"
-          active={activeDisciplineId === null && focused?.name === 'Home'}
-          onPress={() => go('Home', undefined)}
+          active={focusedName === 'Home' && activeDisciplineId === null}
+          onPress={() =>
+            go('Home', { disciplineId: undefined, disciplineLabel: undefined })
+          }
         />
 
         <SectionLabel>Disciplinas</SectionLabel>
@@ -117,7 +141,7 @@ export function AppDrawerContent(props: DrawerContentComponentProps) {
               icon={meta.icon}
               iconColor={meta.color}
               label={d.label}
-              active={activeDisciplineId === d.id}
+              active={focusedName === 'Home' && activeDisciplineId === d.id}
               onPress={() => go('Home', { disciplineId: d.id, disciplineLabel: d.label })}
             />
           );
@@ -126,14 +150,14 @@ export function AppDrawerContent(props: DrawerContentComponentProps) {
         {isTeacher ? (
           <>
             <SectionLabel>Administração</SectionLabel>
-            <DrawerItem icon="view-dashboard" label="Painel admin" onPress={() => go('AdminPosts')} />
-            <DrawerItem icon="account-group" label="Professores" onPress={() => go('TeachersList')} />
-            <DrawerItem icon="account-outline" label="Alunos" onPress={() => go('StudentsList')} />
+            <DrawerItem icon="view-dashboard" label="Painel admin" active={focusedName === 'AdminPosts'} onPress={() => go('AdminPosts')} />
+            <DrawerItem icon="account-group" label="Professores" active={focusedName === 'TeachersList'} onPress={() => go('TeachersList')} />
+            <DrawerItem icon="account-outline" label="Alunos" active={focusedName === 'StudentsList'} onPress={() => go('StudentsList')} />
           </>
         ) : null}
 
         <SectionLabel>Seções</SectionLabel>
-        <DrawerItem icon="account-group-outline" label="Grupo" onPress={() => go('Grupo')} />
+        <DrawerItem icon="account-group-outline" label="Grupo" active={focusedName === 'Grupo'} onPress={() => go('Grupo')} />
       </ScrollView>
     </SafeAreaView>
   );

@@ -47,6 +47,14 @@ const SIZE_ICON: Record<ButtonSize, number> = {
   lg: 20,
 };
 
+// Padding do gradiente aplicado via `style` (NativeWind não passa className
+// para o <LinearGradient>, então padding/centralização precisam ser inline).
+const GRADIENT_PADDING: Record<ButtonSize, { paddingHorizontal: number; paddingVertical: number }> = {
+  sm: { paddingHorizontal: 16, paddingVertical: 8 },
+  md: { paddingHorizontal: 24, paddingVertical: 12 },
+  lg: { paddingHorizontal: 32, paddingVertical: 14 },
+};
+
 // typed as readonly tuples so LinearGradient's `colors` prop is satisfied
 const GRADIENT_COLORS: Partial<Record<ButtonVariant, readonly [string, string]>> = {
   primary: ['#006A61', '#005049'], // cta-gradient teal (90deg)
@@ -131,7 +139,14 @@ export function Button({
           start={variant === 'nav' ? { x: 0, y: 0 } : { x: 0, y: 0.5 }}
           end={variant === 'nav' ? { x: 1, y: 1 } : { x: 1, y: 0.5 }}
           testID={testID ? `${testID}-gradient` : undefined}
-          className={`flex-row items-center justify-center gap-2 rounded-xl ${sizeClass}`}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            borderRadius: 8,
+            ...GRADIENT_PADDING[size],
+          }}
         >
           {loading ? (
             <ActivityIndicator color={colors.primaryForeground} />

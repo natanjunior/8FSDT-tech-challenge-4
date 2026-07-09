@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render } from '@testing-library/react-native';
+import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import { AppDrawerContent } from '@/navigation/AppDrawerContent';
 import * as AuthContextModule from '@/contexts/AuthContext';
 import * as disciplinesService from '@/services/disciplines.service';
@@ -26,6 +26,22 @@ const makeProps = () => ({
   state: { index: 0, routes: [{ key: 'Root-1', name: 'Root' }] } as any,
   descriptors: {} as any,
 });
+
+// Estado do Drawer com uma tela do Native Stack aninhado em foco.
+const makeState = (focusedName: string, params?: object) =>
+  ({
+    index: 0,
+    routes: [
+      {
+        key: 'Root-1',
+        name: 'Root',
+        state: {
+          index: 0,
+          routes: [{ key: `${focusedName}-1`, name: focusedName, params }],
+        },
+      },
+    ],
+  }) as any;
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -95,5 +111,68 @@ describe('AppDrawerContent', () => {
       screen: 'Home',
       params: { disciplineId: 'd1', disciplineLabel: 'Matemática' },
     });
+  });
+
+  // D1 — "Home" deve LIMPAR o filtro de disciplina. Params explícitos
+  // (não `undefined`) garantem a limpeza sob merge=false e merge=true.
+  it('limpa o filtro de disciplina ao tocar em Home (params explícitos)', async () => {
+    useAuthSpy.mockReturnValue(baseAuth);
+    const props = makeProps();
+    const { findByText } = render(<AppDrawerContent {...props} />);
+    fireEvent.press(await findByText('Home'));
+    expect(props.navigation.navigate).toHaveBeenCalledWith('Root', {
+      screen: 'Home',
+      params: { disciplineId: undefined, disciplineLabel: undefined },
+    });
+  });
+
+  // D3 — realce do item ativo, tipado e válido também fora da Home.
+  it('destaca a Home quando é a tela focada sem filtro', async () => {
+    useAuthSpy.mockReturnValue(baseAuth);
+    const props = makeProps();
+    props.state = makeState('Home');
+    const { findByText, getByRole } = render(<AppDrawerContent {...props} />);
+    await findByText('Home');
+    expect(getByRole('button', { name: 'Home' })).toHaveAccessibilityState({
+      selected: true,
+    });
+  });
+
+  it('destaca a disciplina ativa (e não a Home) quando há filtro', async () => {
+    useAuthSpy.mockReturnValue(baseAuth);
+    const props = makeProps();
+    props.state = makeState('Home', { disciplineId: 'd1', disciplineLabel: 'Matemática' });
+    const { findByText, getByRole } = render(<AppDrawerContent {...props} />);
+    await findByText('Matemática');
+    expect(getByRole('button', { name: 'Matemática' })).toHaveAccessibilityState({
+      selected: true,
+    });
+    expect(getByRole('button', { name: 'Home' })).toHaveAccessibilityState({
+      selected: false,
+    });
+  });
+
+  it('destaca a tela focada mesmo fora da Home (Painel admin)', async () => {
+    useAuthSpy.mockReturnValue(teacher);
+    const props = makeProps();
+    props.state = makeState('AdminPosts');
+    const { findByText, getByRole } = render(<AppDrawerContent {...props} />);
+    await findByText('Painel admin');
+    expect(getByRole('button', { name: 'Painel admin' })).toHaveAccessibilityState({
+      selected: true,
+    });
+    expect(getByRole('button', { name: 'Home' })).toHaveAccessibilityState({
+      selected: false,
+    });
+  });
+
+  // D5 — falha ao carregar disciplinas não pode ser engolida em silêncio.
+  it('loga um aviso quando listDisciplines falha (sem swallow silencioso)', async () => {
+    useAuthSpy.mockReturnValue(baseAuth);
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    mockListDisciplines.mockRejectedValueOnce(new Error('boom'));
+    render(<AppDrawerContent {...makeProps()} />);
+    await waitFor(() => expect(warnSpy).toHaveBeenCalled());
+    warnSpy.mockRestore();
   });
 });

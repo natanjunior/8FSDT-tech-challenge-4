@@ -60,9 +60,11 @@ export function LoginScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View className="flex-1 justify-center gap-6 p-6">
-          <View className="gap-2">
-            <Text className="text-3xl font-bold text-foreground">Blog FIAP</Text>
-            <Text className="text-base text-muted">
+          <View className="gap-2 items-center">
+            <Text className="text-3xl font-bold text-foreground text-center">
+              TC4
+            </Text>
+            <Text className="text-base text-muted text-center">
               Entre com seu login e senha.
             </Text>
           </View>
