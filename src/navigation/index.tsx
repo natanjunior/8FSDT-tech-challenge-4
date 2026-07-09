@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, TouchableOpacity } from 'react-native';
+import { TouchableOpacity } from 'react-native';
 import {
   NavigationContainer,
   DefaultTheme,
@@ -8,7 +8,6 @@ import {
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { NativeStackNavigationOptions } from '@react-navigation/native-stack';
 import { createDrawerNavigator } from '@react-navigation/drawer';
-import { BlurView } from 'expo-blur';
 import { useAuth } from '@/contexts/AuthContext';
 import { HeaderRight } from '@/components/layout/Header';
 import { Icon } from '@/components/ui/Icon';
@@ -75,14 +74,7 @@ function RootStackNavigator() {
     <RootStack.Navigator
       initialRouteName="Home"
       screenOptions={{
-        headerStyle: { backgroundColor: 'transparent' },
-        headerBackground: () => (
-          <BlurView
-            intensity={60}
-            tint="dark"
-            style={[StyleSheet.absoluteFill, { backgroundColor: colors.primary + 'E6' }]}
-          />
-        ),
+        headerStyle: { backgroundColor: colors.primary },
         headerTintColor: colors.primaryForeground,
         headerTitleStyle: { fontWeight: '600' },
         headerRight: () => <HeaderRight />,
@@ -102,7 +94,7 @@ function RootStackNavigator() {
       <RootStack.Screen
         name="Grupo"
         component={GrupoScreen}
-        options={withDrawerToggle('Grupo 28')}
+        options={withDrawerToggle('Grupo 6')}
       />
       <RootStack.Screen
         name="TeachersList"
