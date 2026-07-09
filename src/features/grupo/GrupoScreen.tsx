@@ -29,12 +29,9 @@ export function GrupoScreen() {
   return (
     <ScrollView className="flex-1 bg-background">
       <View className="p-4 gap-4">
-        <View className="gap-2">
-          <Text className="text-3xl font-bold text-foreground">Grupo 28</Text>
-          <Text className="text-base text-muted">
-            Turma 8FSDT — Pós Tech FIAP. Tech Challenge Fase 4.
-          </Text>
-        </View>
+        <Text className="text-base text-muted">
+          Turma 8FSDT — Pós Tech FIAP. Tech Challenge Fase 4.
+        </Text>
 
         <View className="gap-3">
           {MEMBERS.map((m) => (

@@ -6,25 +6,21 @@ import {
   Text,
   View,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { SearchBar } from '@/components/posts/SearchBar';
-import { DisciplineChips } from '@/components/posts/DisciplineChips';
+import { ActiveFilterPill } from '@/components/posts/ActiveFilterPill';
 import { PostCard } from '@/components/posts/PostCard';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { Loader } from '@/components/ui/Loader';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { listPosts, searchPosts } from '@/services/posts.service';
-import { listDisciplines } from '@/services/disciplines.service';
 import { colors } from '@/theme/colors';
-import type {
-  Discipline,
-  PaginatedResponse,
-  Post,
-} from '@/types/api';
-import type { RootStackNavigationProp } from '@/navigation/types';
+import type { PaginatedResponse, Post } from '@/types/api';
+import type { HomeRouteProp, RootStackNavigationProp } from '@/navigation/types';
 
 export function HomeScreen() {
   const navigation = useNavigation<RootStackNavigationProp>();
+  const route = useRoute<HomeRouteProp>();
+
   const [posts, setPosts] = useState<Post[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -33,21 +29,28 @@ export function HomeScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
-  const [disciplineId, setDisciplineId] = useState<string | null>(null);
-  const [disciplines, setDisciplines] = useState<Discipline[]>([]);
+  const [disciplineId, setDisciplineId] = useState<string | null>(
+    route.params?.disciplineId ?? null
+  );
+  const [disciplineLabel, setDisciplineLabel] = useState<string | null>(
+    route.params?.disciplineLabel ?? null
+  );
 
+  // Sincroniza o filtro quando o drawer muda o param (mesmo já estando na Home).
   useEffect(() => {
-    listDisciplines().then(setDisciplines);
-  }, []);
+    setDisciplineId(route.params?.disciplineId ?? null);
+    setDisciplineLabel(route.params?.disciplineLabel ?? null);
+  }, [route.params?.disciplineId, route.params?.disciplineLabel]);
 
   const fetchPosts = useCallback(
-    async (
-      nextPage: number,
-      append: boolean
-    ): Promise<PaginatedResponse<Post>> => {
+    async (nextPage: number): Promise<PaginatedResponse<Post>> => {
       const hasFilters = !!query || !!disciplineId;
       return hasFilters
-        ? searchPosts({ query: query || undefined, discipline: disciplineId ?? undefined, page: nextPage })
+        ? searchPosts({
+            query: query || undefined,
+            discipline: disciplineId ?? undefined,
+            page: nextPage,
+          })
         : listPosts({ page: nextPage });
     },
     [query, disciplineId]
@@ -61,7 +64,7 @@ export function HomeScreen() {
         else setIsLoading(true);
 
         setError(null);
-        const result = await fetchPosts(nextPage, mode === 'append');
+        const result = await fetchPosts(nextPage);
         setPosts((prev) => (mode === 'append' ? [...prev, ...result.data] : result.data));
         setPage(result.pagination.page);
         setTotalPages(result.pagination.totalPages);
@@ -92,15 +95,17 @@ export function HomeScreen() {
     navigation.navigate('PostDetail', { postId: post.id, title: post.title });
   };
 
+  const handleClearDiscipline = () => {
+    navigation.setParams({ disciplineId: undefined, disciplineLabel: undefined });
+  };
+
   return (
     <View className="flex-1 bg-background">
       <View className="p-4 gap-3">
         <SearchBar value={query} onDebouncedChange={setQuery} />
-        <DisciplineChips
-          disciplines={disciplines}
-          selectedId={disciplineId}
-          onSelect={setDisciplineId}
-        />
+        {disciplineId && disciplineLabel ? (
+          <ActiveFilterPill label={disciplineLabel} onClear={handleClearDiscipline} />
+        ) : null}
       </View>
 
       {isLoading ? (
@@ -135,7 +140,11 @@ export function HomeScreen() {
           ListEmptyComponent={
             <EmptyState
               title="Nenhum post encontrado"
-              subtitle={query || disciplineId ? 'Tente outra busca ou disciplina.' : 'Volte mais tarde.'}
+              subtitle={
+                query || disciplineLabel
+                  ? `Tente outra busca${disciplineLabel ? ` em ${disciplineLabel}` : ''}.`
+                  : 'Volte mais tarde.'
+              }
             />
           }
           ListFooterComponent={

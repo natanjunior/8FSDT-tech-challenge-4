@@ -44,7 +44,7 @@ Frontend mobile (React Native + Expo) do sistema de blogging educacional do Tech
 | Forms | react-hook-form + Zod v4 |
 | HTTP | Axios |
 | Estado global | Context API (`AuthContext`) |
-| Navegação | React Navigation v7 (Native Stack) |
+| Navegação | React Navigation v7 (Drawer + Native Stack) |
 | Armazenamento seguro | expo-secure-store |
 | Testes | Jest + @testing-library/react-native |
 
@@ -134,31 +134,48 @@ O terminal exibe um QR Code. Escolha como rodar:
 
 ## Topologia de navegação
 
-O app abre **direto na lista de posts pública** (rota `Home`). Não há "login wall" — qualquer pessoa (anônimo, STUDENT ou TEACHER) pode abrir o app e navegar pelo conteúdo público.
+A navegação é um **Drawer (menu lateral) envolvendo um Native Stack**. O `RootDrawer.Navigator` tem uma única `Screen` (`Root`) cujo componente é o `RootStackNavigator` (`createNativeStackNavigator`). Ou seja: o Drawer é a camada de **navegação e descoberta**, e o Native Stack é quem empilha as telas. O conteúdo do menu lateral é renderizado por um `drawerContent` customizado ([src/navigation/AppDrawerContent.tsx](src/navigation/AppDrawerContent.tsx)), não pela lista automática de rotas.
 
-Login é uma rota acessada via botão "Entrar" no header. Ele existe principalmente para desbloquear o painel administrativo (TEACHER).
+O app abre **direto na lista de posts pública** (rota `Home`). Não há "login wall" — qualquer pessoa (anônimo, STUDENT ou TEACHER) pode abrir o app, abrir o menu lateral e navegar pelo conteúdo público. Login é uma rota acessada via botão "Entrar" no header; existe principalmente para desbloquear o painel administrativo (TEACHER).
 
 ```
-RootStack (Native Stack único)
+RootDrawer (Drawer)  ──drawerContent──▶  AppDrawerContent (menu lateral)
 │
-├── Home             (pública — entry point)
-├── Login            (pública — acessada via "Entrar")
-├── Signup           (pública — auto-cadastro de aluno; bloqueia STUDENT já logado)
-├── PostDetail       (pública — redireciona Home se DRAFT/ARCHIVED e não-TEACHER)
-├── Grupo            (pública — página fixa do grupo 28)
-├── Profile          (autenticado — ProfileScreen read-only)
-├── ProfileEdit      (autenticado — TeacherForm ou StudentForm em modo edit)
-├── ChangePassword   (autenticado — form com Zod cross-field)
-├── AdminPosts       (TEACHER-only — lista admin com stats + delete)
-├── PostCreate       (TEACHER-only)
-├── PostEdit         (TEACHER-only)
-├── TeachersList     (TEACHER-only — lista paginada + filtros + soft delete + reativar)
-├── TeacherCreate    (TEACHER-only)
-├── TeacherEdit      (TEACHER-only)
-├── StudentsList     (TEACHER-only)
-├── StudentCreate    (TEACHER-only)
-└── StudentEdit      (TEACHER-only)
+└── "Root"  =  RootStackNavigator (Native Stack, initialRouteName="Home")
+    │
+    ├── Home             (pública — entry point; aceita disciplineId p/ filtrar a lista)
+    ├── Login            (pública — acessada via "Entrar")
+    ├── Signup           (pública — auto-cadastro de aluno; bloqueia STUDENT já logado)
+    ├── PostDetail       (pública — redireciona Home se DRAFT/ARCHIVED e não-TEACHER)
+    ├── Grupo            (pública — página fixa do grupo 6)
+    ├── Profile          (autenticado — ProfileScreen read-only)
+    ├── ProfileEdit      (autenticado — TeacherForm ou StudentForm em modo edit)
+    ├── ChangePassword   (autenticado — form com Zod cross-field)
+    ├── AdminPosts       (TEACHER-only — lista admin com stats + delete)
+    ├── PostCreate       (TEACHER-only)
+    ├── PostEdit         (TEACHER-only)
+    ├── TeachersList     (TEACHER-only — lista paginada + filtros + soft delete + reativar)
+    ├── TeacherCreate    (TEACHER-only)
+    ├── TeacherEdit      (TEACHER-only)
+    ├── StudentsList     (TEACHER-only)
+    ├── StudentCreate    (TEACHER-only)
+    └── StudentEdit      (TEACHER-only)
 ```
+
+### Seções do menu lateral
+
+O `AppDrawerContent` monta o menu em seções:
+
+| Seção | Itens | Visibilidade |
+|-------|-------|--------------|
+| **Navegação** | `Home` — todos os posts (item ativo quando não há `disciplineId`) | todos |
+| **Disciplinas** | itens **carregados dinamicamente** via `listDisciplines()`; cada um navega para `Home` com `disciplineId`, filtrando a lista pela disciplina | todos |
+| **Administração** | `Painel admin` (AdminPosts), `Professores` (TeachersList), `Alunos` (StudentsList) | apenas `user.role === 'TEACHER'` |
+| **Seções** | `Grupo` — página fixa do grupo 6 | todos |
+
+As telas-destino do Drawer (`Home`, `AdminPosts`, `Grupo`, `TeachersList`, `StudentsList`) recebem um botão **hamburger** no `headerLeft` (via o helper `withDrawerToggle`) que abre o menu. As demais telas ("filhas" do Stack, ex.: `PostDetail`, `PostCreate`, `TeacherEdit`) mantêm o botão **voltar** nativo.
+
+> **O Drawer é navegação/descoberta, não o mecanismo de controle de acesso.** O gate de permissão continua **por tela**, via o hook `useRequireRole`. Exibir a seção "Administração" só para TEACHER é conveniência de UI — a proteção real é o auto-gate de cada tela, descrito a seguir.
 
 Rotas TEACHER-only não são "escondidas" do navigator — o hook `useRequireRole` faz auto-gate no `useEffect`: se `user.role !== 'TEACHER'`, dispara Toast informativo + `navigation.replace('Home')`. A tela retorna `null` enquanto o redirect acontece. As rotas autenticadas (`Profile`, `ProfileEdit`, `ChangePassword`) seguem o mesmo padrão: redirecionam para `Home` se não houver sessão.
 
@@ -443,7 +460,7 @@ Algumas escolhas divergem do conteúdo padrão das aulas — registradas aqui pa
 | 03 | **react-hook-form + Zod** em vez de inputs controlados manuais | Mesmo pattern adotado na Fase 3; menos re-renders e inferência TS automática. |
 | 04 | **Context API (`AuthContext`)** em vez de Redux Toolkit (aula RN Medium 6) | Um único reducer (auth) não justifica boilerplate de Redux. Spec da Fase 4 permite Context. |
 | 05 | **expo-secure-store** para o JWT, em vez de AsyncStorage | SecureStore criptografa nativamente (Keychain no iOS, Keystore no Android). |
-| 06 | **Single Native Stack com entrada pública**, não login wall | Espelha o modelo da Fase 3 web (lista de posts é pública; login é opcional). Rotas TEACHER-only fazem auto-gate via `useEffect + navigation.replace`. |
+| 06 | **Native Stack dentro de um Drawer, com entrada pública** (não login wall) | Espelha o modelo da Fase 3 web (lista de posts é pública; login é opcional). O Drawer é navegação/descoberta; o controle de acesso permanece **por tela** — rotas TEACHER-only e autenticadas fazem auto-gate via `useRequireRole` (`useEffect` + `navigation.replace`). |
 | 07 | **`comments_count`/`reads_count` no shape de Post** (não chamadas extras) | Backend já retorna esses contadores em toda resposta de Post. PostCard e PostDetail usam sem chamada adicional. |
 | 08 | **Disciplines com fallback hardcoded para anônimos** | `GET /disciplines` exige Bearer; o filtro de disciplina precisa funcionar para visitantes. Solução: array `SEED_DISCIPLINES` com UUIDs estáveis do seed da Fase 2. |
 | 09 | **Comentário criação só autenticada** (regra do backend) | A Fase 2 removeu o fluxo anônimo de comentários: `POST /comments` agora exige Bearer (401 sem token). Mobile mostra CTA "Faça login para comentar" para anônimos. |
@@ -462,6 +479,7 @@ Algumas escolhas divergem do conteúdo padrão das aulas — registradas aqui pa
 | 22 | **`refreshProfile()` na AuthContext em vez de refetch nas telas** | A Header dropdown depende de `profile.name` para mostrar o nome do usuário. Sem `refreshProfile`, depois de editar o perfil o usuário só veria o novo nome após próximo login. Centralizar na AuthContext garante consistência entre todas as telas que leiam `profile`. |
 | 23 | **Cross-field refines no `changePasswordSchema`** com path explícito | Zod `.refine()` permite associar a mensagem a um campo específico via `path: ['new_password_confirm']` / `['new_password']` — isso faz o RHF exibir o erro embaixo do campo certo, não no objeto root. Sem `path`, o RHF entrega `errors.root` e o usuário não sabe qual campo arrumar. |
 | 24 | **`useFocusEffect` na ProfileScreen** em vez de `useEffect` | Quando o usuário volta da ProfileEditScreen via `goBack`, `useEffect` não dispara (o componente não desmontou). `useFocusEffect` do React Navigation re-roda quando a tela ganha foco, garantindo o refetch dos dados recém-editados. |
+| 25 | **Drawer (menu lateral) como navegação primária**, em vez de Bottom Tabs | Espelha a **sidebar** da Fase 3 web (navegação + disciplinas + administração numa coluna lateral), não uma tab bar. O Drawer acomoda melhor a seção **Disciplinas** — de tamanho variável, carregada dinamicamente via `listDisciplines()` e usada como eixo de descoberta/filtro — e a seção **Administração** que só aparece para TEACHER; uma tab bar (3–5 abas fixas) não comporta esse número variável de destinos. Implementado como `@react-navigation/drawer` (v7) envolvendo o Native Stack numa única `Screen` (`Root`); `@react-navigation/bottom-tabs` foi removido. O Drawer é só navegação — o gate de acesso permanece no `useRequireRole` (ADR 06/10). |
 
 ## Design System
 
@@ -748,6 +766,6 @@ e mapear `nativewind/dist/style-sheet/native` para um stub vazio no `moduleNameM
 
 ## Equipe
 
-Grupo 28 — turma 8FSDT (FIAP).
+Grupo 6 — turma 8FSDT (FIAP).
 
-Projeto desenvolvido pelo Grupo 28 ao longo das 6 fases: fundação e login, refactors de navegação e autenticação, leitura e escrita de posts, painel administrativo, CRUD de usuários e auto-cadastro, e o fechamento com perfil próprio + troca de senha + documentação.
+Projeto desenvolvido pelo Grupo 6 ao longo das 6 fases: fundação e login, refactors de navegação e autenticação, leitura e escrita de posts, painel administrativo, CRUD de usuários e auto-cadastro, e o fechamento com perfil próprio + troca de senha + documentação.
