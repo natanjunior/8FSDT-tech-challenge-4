@@ -87,6 +87,9 @@ export function PostCard({ post, onPress, testID }: PostCardProps) {
 }
 
 const styles = StyleSheet.create({
+  // Uso legítimo de StyleSheet fora do padrão NativeWind do app:
+  // `StyleSheet.hairlineWidth` é uma constante de runtime (o menor traço físico
+  // do device) que o Tailwind/NativeWind não expressa via className.
   ghostBorder: {
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: 'rgba(196, 198, 207, 0.4)', // outline-variant @ 40%
