@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Text, View } from 'react-native';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   studentSchema,
@@ -15,9 +15,18 @@ import { PronounsPicker } from '@/components/ui/PronounsPicker';
 
 type Mode = 'create' | 'edit' | 'signup';
 
+/**
+ * Field-values do RHF desacoplado do z.input do schema (ver TeacherForm).
+ * `user` concreto opcional só para o form; output continua
+ * StudentFormData | StudentSignupData.
+ */
+type StudentFormValues = Omit<StudentFormInput, 'user'> & {
+  user?: { login?: string; password?: string };
+};
+
 interface StudentFormProps {
   mode: Mode;
-  defaultValues?: Partial<StudentFormInput>;
+  defaultValues?: Partial<StudentFormValues>;
   onSubmit: (data: StudentFormData | StudentSignupData) => Promise<void> | void;
   submitLabel: string;
   isSubmitting?: boolean;
@@ -37,8 +46,12 @@ export function StudentForm({
     control,
     handleSubmit,
     formState: { errors },
-  } = useForm<StudentFormInput, unknown, StudentFormData | StudentSignupData>({
-    resolver: zodResolver(schema),
+  } = useForm<StudentFormValues, unknown, StudentFormData | StudentSignupData>({
+    resolver: zodResolver(schema) as Resolver<
+      StudentFormValues,
+      unknown,
+      StudentFormData | StudentSignupData
+    >,
     defaultValues: {
       name: '',
       email: '',
