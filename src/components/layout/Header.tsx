@@ -7,6 +7,11 @@ import { AuthorId } from '@/components/ui/AuthorId';
 import { colors } from '@/theme/colors';
 import type { RootStackNavigationProp } from '@/navigation/types';
 
+// `top-14` do NativeWind = 3.5rem × inlineRem 14 = 49px. Offset fixo que ancora o
+// dropdown logo abaixo do header nativo (altura conhecida do React Navigation).
+// Extraído como constante nomeada (F-H2). NÃO trocar por 56 — moveria o menu ~7px.
+const HEADER_DROPDOWN_TOP = 49;
+
 interface HeaderItemProps {
   icon: IconName;
   iconTestID: string;
@@ -82,8 +87,9 @@ export function HeaderRight() {
             testID="header-account-menu"
             accessibilityViewIsModal
             onPress={(e) => e.stopPropagation()}
-            className="absolute right-3 top-14 w-48 overflow-hidden rounded-xl bg-surface-container-lowest"
+            className="absolute right-3 w-48 overflow-hidden rounded-xl bg-surface-container-lowest"
             style={{
+              top: HEADER_DROPDOWN_TOP,
               shadowColor: colors.primary,
               shadowOffset: { width: 0, height: 8 },
               shadowOpacity: 0.12,

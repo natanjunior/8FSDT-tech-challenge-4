@@ -1,4 +1,5 @@
 import React from 'react';
+import { StyleSheet } from 'react-native';
 import { fireEvent, render } from '@testing-library/react-native';
 import { useNavigation } from '@react-navigation/native';
 import { HeaderRight } from '@/components/layout/Header';
@@ -126,5 +127,13 @@ describe('HeaderRight', () => {
     const { getByTestId } = render(<HeaderRight />);
     fireEvent.press(getByTestId('header-user-trigger'));
     expect(getByTestId('header-account-menu').props.accessibilityViewIsModal).toBe(true);
+  });
+
+  it('dropdown: card ancora no offset nomeado (top = 49, = top-14 do NativeWind)', () => {
+    useAuthSpy.mockReturnValue(teacher);
+    const { getByTestId } = render(<HeaderRight />);
+    fireEvent.press(getByTestId('header-user-trigger'));
+    const flat = StyleSheet.flatten(getByTestId('header-account-menu').props.style);
+    expect(flat).toMatchObject({ top: 49 });
   });
 });
