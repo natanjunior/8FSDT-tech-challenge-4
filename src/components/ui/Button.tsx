@@ -132,6 +132,9 @@ export function Button({
         testID={testID}
         className={`rounded-xl ${isDisabled ? 'opacity-50' : ''}`}
         style={containerStyle}
+        accessibilityRole="button"
+        accessibilityState={{ disabled: isDisabled, busy: loading }}
+        accessibilityLabel={title}
         {...rest}
       >
         <LinearGradient
@@ -165,6 +168,9 @@ export function Button({
       testID={testID}
       className={`${containerClass} ${isDisabled ? 'opacity-50' : ''}`}
       style={containerStyle}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: isDisabled, busy: loading }}
+      accessibilityLabel={title}
       {...rest}
     >
       {loading ? (

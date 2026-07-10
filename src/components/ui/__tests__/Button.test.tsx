@@ -92,4 +92,32 @@ describe('Button', () => {
     );
     expect(getByText('Pequeno')).toBeTruthy();
   });
+
+  it('exposes accessibility role "button" (variante não-gradient)', () => {
+    const { getByRole } = render(
+      <Button title="Cancelar" variant="secondary" onPress={() => {}} />
+    );
+    expect(getByRole('button', { name: 'Cancelar' })).toBeTruthy();
+  });
+
+  it('exposes accessibility role "button" (variante gradient)', () => {
+    const { getByRole } = render(
+      <Button title="Entrar" variant="primary" onPress={() => {}} />
+    );
+    expect(getByRole('button', { name: 'Entrar' })).toBeTruthy();
+  });
+
+  it('marca accessibilityState.disabled quando disabled', () => {
+    const { getByRole } = render(<Button title="OK" onPress={() => {}} disabled />);
+    expect(getByRole('button', { name: 'OK' })).toHaveAccessibilityState({
+      disabled: true,
+    });
+  });
+
+  it('marca accessibilityState.busy quando loading', () => {
+    const { getByRole } = render(<Button title="OK" onPress={() => {}} loading />);
+    expect(getByRole('button', { name: 'OK' })).toHaveAccessibilityState({
+      busy: true,
+    });
+  });
 });
