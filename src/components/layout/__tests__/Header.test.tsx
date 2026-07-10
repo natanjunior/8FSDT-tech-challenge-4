@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import { fireEvent, render } from '@testing-library/react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -166,7 +166,12 @@ describe('HeaderRight', () => {
   // F-H2: posição do card deriva do safe-area inset (substitui o antigo `top: 49` fixo).
   it('dropdown: posição do card deriva do safe-area inset, não de valor fixo (F-H2)', () => {
     useAuthSpy.mockReturnValue(teacher);
-    // top varia 1:1 com insets.top (47 vs 0) → offset derivado do inset (jest roda como iOS)
-    expect(menuCardTop(47) - menuCardTop(0)).toBe(47);
+    // com inset 0, o top é exatamente HEADER_BAR_HEIGHT → garante que o termo constante
+    // (offset da barra) é somado; o teste diferencial sozinho cancelaria esse termo.
+    const bar = Platform.select({ ios: 44, default: 56 }) as number; // jest roda como iOS → 44
+    const topAt0 = menuCardTop(0);
+    expect(topAt0).toBe(bar);
+    // e varia 1:1 com insets.top (47 vs 0)
+    expect(menuCardTop(47) - topAt0).toBe(47);
   });
 });
