@@ -65,6 +65,7 @@ export function HeaderRight() {
             name={displayName}
             subtitle={isTeacher ? 'Professor' : 'Aluno'}
             size="sm"
+            tone="onDark"
           />
           <Icon name="chevron-down" size={16} color={colors.primaryForeground} />
         </TouchableOpacity>

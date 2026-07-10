@@ -117,6 +117,7 @@ export function AppDrawerContent(props: DrawerContentComponentProps) {
             name={displayName}
             subtitle={isTeacher ? 'Professor' : 'Aluno'}
             size="sm"
+            tone="onDark"
           />
         ) : null}
       </LinearGradient>
