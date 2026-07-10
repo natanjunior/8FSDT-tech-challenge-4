@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   teacherSchema,
@@ -16,9 +16,19 @@ import type { Discipline } from '@/types/api';
 
 type Mode = 'create' | 'edit';
 
+/**
+ * Field-values do RHF desacoplado do z.input do schema: o campo `user`
+ * usa z.preprocess (cujo z.input é `unknown`), o que quebraria o FieldPath.
+ * Aqui declaramos `user` como objeto concreto opcional só para o form.
+ * O output (3º generic do useForm) continua sendo TeacherFormData.
+ */
+type TeacherFormValues = Omit<TeacherFormInput, 'user'> & {
+  user?: { login?: string; password?: string };
+};
+
 interface TeacherFormProps {
   mode: Mode;
-  defaultValues?: Partial<TeacherFormInput>;
+  defaultValues?: Partial<TeacherFormValues>;
   onSubmit: (data: TeacherFormData) => Promise<void> | void;
   submitLabel: string;
   isSubmitting?: boolean;
@@ -42,8 +52,8 @@ export function TeacherForm({
     control,
     handleSubmit,
     formState: { errors },
-  } = useForm<TeacherFormInput, unknown, TeacherFormData>({
-    resolver: zodResolver(teacherSchema),
+  } = useForm<TeacherFormValues, unknown, TeacherFormData>({
+    resolver: zodResolver(teacherSchema) as Resolver<TeacherFormValues, unknown, TeacherFormData>,
     defaultValues: {
       name: '',
       email: '',
