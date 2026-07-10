@@ -68,4 +68,11 @@ describe('SearchBar', () => {
     );
     expect(getByTestId('sb-leading-icon')).toBeTruthy();
   });
+
+  it('expõe o botão de limpar com nome acessível quando há texto', () => {
+    const { getByRole } = render(
+      <SearchBar value="algo" onDebouncedChange={() => {}} testID="sb" />
+    );
+    expect(getByRole('button', { name: 'Limpar busca' })).toBeTruthy();
+  });
 });

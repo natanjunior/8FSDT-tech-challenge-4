@@ -196,6 +196,7 @@ export function StudentForm({
                 secureTextEntry={!showPwd}
                 trailingIcon={showPwd ? 'eye-off-outline' : 'eye-outline'}
                 onTrailingIconPress={() => setShowPwd((v) => !v)}
+                trailingIconLabel={showPwd ? 'Ocultar senha' : 'Mostrar senha'}
                 error={errors.user?.password?.message}
               />
             )}
