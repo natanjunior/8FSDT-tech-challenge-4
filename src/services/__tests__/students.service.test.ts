@@ -84,7 +84,13 @@ describe('students.service', () => {
   describe('createStudent', () => {
     it('POST /students com payload + omite undefined', async () => {
       mockPost.mockResolvedValueOnce({ data: fakeStudent });
-      await createStudent({ name: 'Pedro' });
+      await createStudent({
+        name: 'Pedro',
+        email: undefined,
+        birth_date: undefined,
+        biography: undefined,
+        course: undefined,
+      });
       const body = mockPost.mock.calls[0]![1];
       expect(body).toEqual({ name: 'Pedro' });
     });
@@ -117,6 +123,10 @@ describe('students.service', () => {
       mockAxiosPost.mockResolvedValueOnce({ data: fakeStudent });
       await signupStudent({
         name: 'Novo Aluno',
+        email: undefined,
+        birth_date: undefined,
+        biography: undefined,
+        course: undefined,
         user: { login: 'novo', password: '12345678' },
       });
       expect(mockAxiosPost).toHaveBeenCalledWith(

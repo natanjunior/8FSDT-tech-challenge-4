@@ -96,6 +96,8 @@ describe('teachers.service', () => {
       await createTeacher({
         name: 'João',
         email: 'j@x.com',
+        birth_date: undefined,
+        biography: undefined,
         discipline_ids: ['d1'],
       });
       expect(mockPost).toHaveBeenCalledWith('/teachers', expect.objectContaining({
@@ -107,7 +109,13 @@ describe('teachers.service', () => {
 
     it('omite campos undefined do payload', async () => {
       mockPost.mockResolvedValueOnce({ data: fakeTeacher });
-      await createTeacher({ name: 'João', discipline_ids: [] });
+      await createTeacher({
+        name: 'João',
+        email: undefined,
+        birth_date: undefined,
+        biography: undefined,
+        discipline_ids: [],
+      });
       const body = mockPost.mock.calls[0]![1];
       expect(body).toEqual({ name: 'João', discipline_ids: [] });
     });
@@ -116,6 +124,9 @@ describe('teachers.service', () => {
       mockPost.mockResolvedValueOnce({ data: fakeTeacher });
       await createTeacher({
         name: 'João',
+        email: undefined,
+        birth_date: undefined,
+        biography: undefined,
         discipline_ids: [],
         user: { login: 'joao', password: '12345678' },
       });
