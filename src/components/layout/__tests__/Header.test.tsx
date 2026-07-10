@@ -1,4 +1,5 @@
 import React from 'react';
+import { StyleSheet } from 'react-native';
 import { fireEvent, render } from '@testing-library/react-native';
 import { useNavigation } from '@react-navigation/native';
 import { HeaderRight } from '@/components/layout/Header';
@@ -102,5 +103,37 @@ describe('HeaderRight', () => {
     fireEvent.press(getByTestId('header-user-trigger'));
     fireEvent.press(getByText('Sair'));
     expect(logoutMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('dropdown: os 3 itens expõem accessibilityRole "button" com label acessível', () => {
+    useAuthSpy.mockReturnValue(teacher);
+    const { getByTestId, getByRole } = render(<HeaderRight />);
+    fireEvent.press(getByTestId('header-user-trigger'));
+    expect(getByRole('button', { name: 'Meu perfil' })).toBeTruthy();
+    expect(getByRole('button', { name: 'Trocar senha' })).toBeTruthy();
+    expect(getByRole('button', { name: 'Sair' })).toBeTruthy();
+  });
+
+  it('dropdown: pressionar pelo role "button" dispara a ação (Meu perfil → Profile)', () => {
+    useAuthSpy.mockReturnValue(teacher);
+    const { getByTestId, getByRole } = render(<HeaderRight />);
+    fireEvent.press(getByTestId('header-user-trigger'));
+    fireEvent.press(getByRole('button', { name: 'Meu perfil' }));
+    expect(mockNavigate).toHaveBeenCalledWith('Profile');
+  });
+
+  it('dropdown: card do menu marca accessibilityViewIsModal', () => {
+    useAuthSpy.mockReturnValue(teacher);
+    const { getByTestId } = render(<HeaderRight />);
+    fireEvent.press(getByTestId('header-user-trigger'));
+    expect(getByTestId('header-account-menu').props.accessibilityViewIsModal).toBe(true);
+  });
+
+  it('dropdown: card ancora no offset nomeado (top = 49, = top-14 do NativeWind)', () => {
+    useAuthSpy.mockReturnValue(teacher);
+    const { getByTestId } = render(<HeaderRight />);
+    fireEvent.press(getByTestId('header-user-trigger'));
+    const flat = StyleSheet.flatten(getByTestId('header-account-menu').props.style);
+    expect(flat).toMatchObject({ top: 49 });
   });
 });
