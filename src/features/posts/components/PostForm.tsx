@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { StatusPicker } from '@/components/posts/StatusPicker';
 import { DisciplineChips } from '@/components/posts/DisciplineChips';
+import { MarkdownField } from '@/features/posts/components/MarkdownField';
 import { listDisciplines } from '@/services/disciplines.service';
 import type { Discipline } from '@/types/api';
 
@@ -69,14 +70,11 @@ export function PostForm({
         control={control}
         name="content"
         render={({ field: { onChange, onBlur, value } }) => (
-          <Input
-            label="Conteúdo"
-            placeholder="Escreva o conteúdo do post..."
+          <MarkdownField
             value={value}
             onChangeText={onChange}
             onBlur={onBlur}
             error={errors.content?.message}
-            multiline
           />
         )}
       />
