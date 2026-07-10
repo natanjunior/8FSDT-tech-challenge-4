@@ -86,64 +86,65 @@ function StudentItem({ student, onPressEdit, onPressDelete, onPressReactivate }:
   const courseLabel = student.course ?? 'Sem curso';
 
   return (
-    <View style={{ opacity: inactive ? 0.6 : 1 }}>
-      <Card>
-        <View className="flex-row items-start justify-between gap-2">
-          <View className="flex-1 gap-2">
-            <AuthorId name={student.name} subtitle={courseLabel} size="md" />
+    <Card>
+      <View
+        style={{ opacity: inactive ? 0.6 : 1 }}
+        className="flex-row items-start justify-between gap-2"
+      >
+        <View className="flex-1 gap-2">
+          <AuthorId name={student.name} subtitle={courseLabel} size="md" />
+          <View
+            className={`self-start flex-row items-center gap-1.5 rounded-full px-2.5 py-0.5 ${
+              inactive ? 'bg-status-archived/10' : 'bg-status-published/10'
+            }`}
+          >
             <View
-              className={`self-start flex-row items-center gap-1.5 rounded-full px-2.5 py-0.5 ${
-                inactive ? 'bg-status-archived/10' : 'bg-status-published/10'
+              className={`h-1.5 w-1.5 rounded-full ${
+                inactive ? 'bg-status-archived' : 'bg-status-published'
+              }`}
+            />
+            <Text
+              className={`font-sans-bold text-[10px] ${
+                inactive ? 'text-status-archived' : 'text-status-published'
               }`}
             >
-              <View
-                className={`h-1.5 w-1.5 rounded-full ${
-                  inactive ? 'bg-status-archived' : 'bg-status-published'
-                }`}
-              />
-              <Text
-                className={`font-sans-bold text-[10px] ${
-                  inactive ? 'text-status-archived' : 'text-status-published'
-                }`}
-              >
-                {inactive ? 'INATIVO' : 'ATIVO'}
-              </Text>
-            </View>
-          </View>
-
-          <View className="flex-row items-center gap-1">
-            {inactive ? (
-              <TouchableOpacity
-                onPress={() => onPressReactivate(student)}
-                hitSlop={8}
-                className="rounded-lg bg-primary/10 px-3 py-2"
-              >
-                <Text className="font-sans-bold text-xs text-primary">Reativar</Text>
-              </TouchableOpacity>
-            ) : (
-              <>
-                <TouchableOpacity
-                  testID={`student-${student.id}-edit-btn`}
-                  onPress={() => onPressEdit(student)}
-                  hitSlop={8}
-                  className="h-9 w-9 items-center justify-center rounded-lg"
-                >
-                  <Icon name="pencil-outline" size={18} color={colors.outline} />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  testID={`student-${student.id}-delete-btn`}
-                  onPress={() => onPressDelete(student)}
-                  hitSlop={8}
-                  className="h-9 w-9 items-center justify-center rounded-lg"
-                >
-                  <Icon name="trash-can-outline" size={18} color={colors.error} />
-                </TouchableOpacity>
-              </>
-            )}
+              {inactive ? 'INATIVO' : 'ATIVO'}
+            </Text>
           </View>
         </View>
-      </Card>
-    </View>
+
+        <View className="flex-row items-center gap-1">
+          {inactive ? (
+            <TouchableOpacity
+              onPress={() => onPressReactivate(student)}
+              hitSlop={8}
+              className="rounded-lg bg-primary/10 px-3 py-2"
+            >
+              <Text className="font-sans-bold text-xs text-primary">Reativar</Text>
+            </TouchableOpacity>
+          ) : (
+            <>
+              <TouchableOpacity
+                testID={`student-${student.id}-edit-btn`}
+                onPress={() => onPressEdit(student)}
+                hitSlop={8}
+                className="h-9 w-9 items-center justify-center rounded-lg"
+              >
+                <Icon name="pencil-outline" size={18} color={colors.outline} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                testID={`student-${student.id}-delete-btn`}
+                onPress={() => onPressDelete(student)}
+                hitSlop={8}
+                className="h-9 w-9 items-center justify-center rounded-lg"
+              >
+                <Icon name="trash-can-outline" size={18} color={colors.error} />
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
+      </View>
+    </Card>
   );
 }
 
