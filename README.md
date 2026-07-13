@@ -599,7 +599,7 @@ Mapping `label → { icon, color }` em [src/lib/disciplines.ts](src/lib/discipli
 
 ## Testes
 
-Suíte com **355 testes em 63 suites**, rodando em **Jest + @testing-library/react-native** (preset `jest-expo`). Todos passam (`Tests: 355 passed, 355 total`).
+Suíte com **393 testes em 68 suites**, rodando em **Jest + @testing-library/react-native** (preset `jest-expo`). Todos passam (`Tests: 393 passed, 393 total`).
 
 ### Cobertura por camada
 
