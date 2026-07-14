@@ -15,7 +15,15 @@ Frontend mobile (React Native + Expo) do sistema de blogging educacional do Tech
 - **Login + meu perfil + trocar senha** — autenticação por `login`/senha, tela de perfil próprio (ver/editar) e troca de senha com validação cruzada.
 - **TEACHER** — criar/editar/excluir posts, painel administrativo de posts (com estatísticas), CRUD completo de professores e CRUD de alunos.
 
-> _(capturas de tela a serem adicionadas em `docs/screenshots/`: HomeScreen, PostDetail, AdminPosts, ProfileScreen, ChangePasswordScreen, Header dropdown.)_
+### Capturas de tela
+
+| Home | Header dropdown | Painel admin |
+|------|------------------|--------------|
+| ![Home](docs/screenshots/home.png) | ![Header dropdown](docs/screenshots/header-dropdown.png) | ![Painel admin](docs/screenshots/admin.png) |
+
+| Meu perfil | Trocar senha | Post (detalhe) | Post (comentários) |
+|------------|--------------|-----------------|---------------------|
+| ![Meu perfil](docs/screenshots/profile.png) | ![Trocar senha](docs/screenshots/change-password.png) | ![Post detail](docs/screenshots/post-detail1.png) | ![Post comentários](docs/screenshots/post-detail2.png) |
 
 ## Índice
 
