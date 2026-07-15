@@ -16,6 +16,8 @@ export interface InputProps extends TextInputProps {
   leadingIcon?: IconName;
   trailingIcon?: IconName;
   onTrailingIconPress?: () => void;
+  /** Nome acessível do botão de ícone final (ex.: "Mostrar senha", "Limpar busca"). */
+  trailingIconLabel?: string;
   testID?: string;
 }
 
@@ -27,6 +29,7 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
     leadingIcon,
     trailingIcon,
     onTrailingIconPress,
+    trailingIconLabel,
     testID,
     ...rest
   },
@@ -62,6 +65,7 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
           placeholderTextColor={colors.muted}
           testID={testID}
           className="flex-1 py-3 font-sans text-base text-foreground"
+          accessibilityLabel={label}
           {...rest}
         />
 
@@ -71,6 +75,9 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
             onPress={onTrailingIconPress}
             disabled={!onTrailingIconPress}
             className="ml-2 p-1"
+            accessibilityRole="button"
+            accessibilityLabel={trailingIconLabel}
+            accessibilityState={{ disabled: !onTrailingIconPress }}
           >
             <Icon name={trailingIcon} size={18} color={colors.muted} />
           </TouchableOpacity>
@@ -78,7 +85,11 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
       </View>
 
       {hasError ? (
-        <Text testID="input-error" className="text-error text-sm font-sans-medium">
+        <Text
+          testID="input-error"
+          className="text-error text-sm font-sans-medium"
+          accessibilityLiveRegion="polite"
+        >
           {error}
         </Text>
       ) : null}

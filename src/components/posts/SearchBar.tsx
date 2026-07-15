@@ -45,6 +45,7 @@ export function SearchBar({
       leadingIcon="magnify"
       trailingIcon={local.length > 0 ? 'close' : undefined}
       onTrailingIconPress={local.length > 0 ? () => setLocal('') : undefined}
+      trailingIconLabel="Limpar busca"
       testID={testID}
     />
   );

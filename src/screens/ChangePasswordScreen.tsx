@@ -89,6 +89,7 @@ export function ChangePasswordScreen() {
                 autoCapitalize="none"
                 trailingIcon={showCurrent ? 'eye-off-outline' : 'eye-outline'}
                 onTrailingIconPress={() => setShowCurrent((v) => !v)}
+                trailingIconLabel={showCurrent ? 'Ocultar senha' : 'Mostrar senha'}
                 error={errors.current_password?.message}
               />
             )}
@@ -108,6 +109,7 @@ export function ChangePasswordScreen() {
                 autoCapitalize="none"
                 trailingIcon={showNew ? 'eye-off-outline' : 'eye-outline'}
                 onTrailingIconPress={() => setShowNew((v) => !v)}
+                trailingIconLabel={showNew ? 'Ocultar senha' : 'Mostrar senha'}
                 error={errors.new_password?.message}
                 hint="Mínimo 8 caracteres; deve ser diferente da atual"
               />
@@ -128,6 +130,7 @@ export function ChangePasswordScreen() {
                 autoCapitalize="none"
                 trailingIcon={showConfirm ? 'eye-off-outline' : 'eye-outline'}
                 onTrailingIconPress={() => setShowConfirm((v) => !v)}
+                trailingIconLabel={showConfirm ? 'Ocultar senha' : 'Mostrar senha'}
                 error={errors.new_password_confirm?.message}
               />
             )}

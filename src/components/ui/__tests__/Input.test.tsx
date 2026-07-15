@@ -70,4 +70,23 @@ describe('Input', () => {
     fireEvent.press(getByTestId('in-trailing-icon'));
     expect(fn).toHaveBeenCalled();
   });
+
+  it('associa o label visual ao campo (accessibilityLabel)', () => {
+    const { getByLabelText } = render(
+      <Input label="E-mail" onChangeText={() => {}} />
+    );
+    expect(getByLabelText('E-mail')).toBeTruthy();
+  });
+
+  it('expõe o botão de ícone final com nome acessível', () => {
+    const { getByRole } = render(
+      <Input
+        trailingIcon="close"
+        onTrailingIconPress={() => {}}
+        trailingIconLabel="Limpar busca"
+        onChangeText={() => {}}
+      />
+    );
+    expect(getByRole('button', { name: 'Limpar busca' })).toBeTruthy();
+  });
 });
