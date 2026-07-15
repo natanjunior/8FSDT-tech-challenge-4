@@ -1,12 +1,54 @@
 # Tech Challenge Fase 4 — Frontend Mobile (React Native)
 
-Frontend mobile do sistema de blogging educacional, consumindo a API da Fase 2.
+<div align="center">
 
-> **Status do projeto:** ✅ Fase 6 concluída — Tech Challenge Fase 4 entregue. Os 10 requisitos do enunciado + auto-cadastro de aluno + meu perfil + trocar senha estão funcionais.
+**App mobile da plataforma de blogging educacional — leitura para todos, gestão para docentes.**
 
-## Sobre o Projeto
+[![Expo SDK 56](https://img.shields.io/badge/Expo-SDK_56-000020?logo=expo&logoColor=white)](https://expo.dev/)
+[![React Native](https://img.shields.io/badge/React_Native-0.85-61DAFB?logo=react&logoColor=black)](https://reactnative.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![NativeWind](https://img.shields.io/badge/NativeWind-v4-38BDF8?logo=tailwindcss&logoColor=white)](https://www.nativewind.dev/)
+[![Jest](https://img.shields.io/badge/Jest-355_testes-C21325?logo=jest&logoColor=white)](https://jestjs.io/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+</div>
+
+> **Status:** ✅ Entrega completa — **10/10 requisitos do enunciado** atendidos + extras (auto-cadastro de aluno, meu perfil, troca de senha).
+
+---
+
+## 📋 Índice
+
+1. [Sobre o Projeto](#-sobre-o-projeto)
+2. [Requisitos Atendidos](#-requisitos-atendidos)
+3. [Stack](#️-stack)
+4. [Hooks e Componentes Funcionais](#-hooks-e-componentes-funcionais)
+5. [Arquitetura](#️-arquitetura)
+6. [Autenticação](#-autenticação)
+7. [Fluxos por Requisito](#-fluxos-por-requisito)
+8. [Endpoints Consumidos](#-endpoints-consumidos)
+9. [Design System](#-design-system)
+10. [Testes](#-testes)
+11. [Decisões Arquiteturais (ADRs)](#-decisões-arquiteturais-adrs)
+12. [Dificuldades Encontradas](#️-dificuldades-encontradas)
+13. [Setup e Instalação](#-setup-e-instalação)
+14. [Acessibilidade](#-acessibilidade)
+15. [Equipe](#-equipe)
+16. [Licença](#-licença)
+
+---
+
+## 🎯 Sobre o Projeto
 
 Frontend mobile (React Native + Expo) do sistema de blogging educacional do Tech Challenge da FIAP 8FSDT. Consome a API REST construída na Fase 2 e espelha os fluxos do frontend web da Fase 3, com dois papéis distintos: **TEACHER** (acesso total) e **STUDENT** (leitura + perfil próprio).
+
+### Contexto
+
+Professores da rede pública de educação carecem de plataformas onde possam publicar aulas e compartilhar conhecimento de forma prática, centralizada e tecnológica. A **Fase 2** entregou a API backend (Node.js + PostgreSQL); a **Fase 3** entregou o frontend web (Next.js). A **Fase 4** leva essa experiência para o **celular** — o meio onde alunos e professores da rede pública mais estão — com um app nativo, acessível e offline-tolerante para o cold start do backend.
+
+### Solução
+
+App React Native (Expo, managed workflow) que consome a mesma API REST da Fase 2 e reaproveita as regras de negócio e o Design System da Fase 3. A entrada é **pública** (qualquer pessoa lê os posts publicados, busca e filtra por disciplina); o **login** é opcional e existe para desbloquear comentários, marcação de leitura e — para docentes — o painel administrativo e o CRUD de usuários.
 
 ### Funcionalidades entregues
 
@@ -27,120 +69,111 @@ Frontend mobile (React Native + Expo) do sistema de blogging educacional do Tech
 
 ## Índice
 
-- [Sobre o Projeto](#sobre-o-projeto)
-- [Stack](#stack)
-- [Setup e Instalação](#-setup-e-instalação)
-- [Topologia de navegação](#topologia-de-navegação)
-- [Autenticação](#autenticação)
-- [Fluxos por requisito](#fluxos-por-requisito)
-- [Decisões arquiteturais (ADRs)](#decisões-arquiteturais-adrs)
-- [Design System](#design-system)
-- [Testes](#testes)
-- [Roadmap concluído](#roadmap-concluído)
-- [Dificuldades Encontradas](#dificuldades-encontradas)
-- [Equipe](#equipe)
+| Home (lista pública) | Detalhe do post | Painel admin |
+|:---:|:---:|:---:|
+| ![Home](docs/screenshots/home.png) | ![Detalhe](docs/screenshots/post-detail.png) | ![Admin](docs/screenshots/admin-posts.png) |
+
+| Meu perfil | Trocar senha | Menu lateral (Drawer) |
+|:---:|:---:|:---:|
+| ![Perfil](docs/screenshots/profile.png) | ![Trocar senha](docs/screenshots/change-password.png) | ![Drawer](docs/screenshots/drawer.png) |
 
 ---
 
-## Stack
+## ✅ Requisitos Atendidos
 
-| Camada | Tecnologia |
-|--------|-----------|
-| Runtime | Expo SDK 56 |
-| Linguagem | TypeScript (strict) |
-| Estilização | NativeWind v4 (Tailwind v3) |
-| Forms | react-hook-form + Zod v4 |
-| HTTP | Axios |
-| Estado global | Context API (`AuthContext`) |
-| Navegação | React Navigation v7 (Drawer + Native Stack) |
-| Armazenamento seguro | expo-secure-store |
-| Testes | Jest + @testing-library/react-native |
+Rastreabilidade direta entre os requisitos do enunciado e a tela/rota que os implementa. Os fluxos de cada um estão detalhados em [Fluxos por Requisito](#-fluxos-por-requisito).
 
-## 🚀 Setup e Instalação
+| # | Requisito (enunciado) | Onde foi atendido | Status |
+|---|-----------------------|-------------------|:------:|
+| 1 | Página principal — lista de posts + busca por palavra-chave | `HomeScreen` + `SearchBar` + `DisciplineChips` | ✅ |
+| 2 | Leitura de post (comentários opcionais) | `PostDetailScreen` + `CommentSection` | ✅ |
+| 3 | Criação de postagens (professor) | `PostCreateScreen` | ✅ |
+| 4 | Edição de postagens (professor) | `PostEditScreen` | ✅ |
+| 5 | Criação de professores | `TeacherCreateScreen` | ✅ |
+| 6 | Edição de professores | `TeacherEditScreen` | ✅ |
+| 7 | Listagem paginada de professores (editar/excluir) | `TeachersListScreen` | ✅ |
+| 8 | Replicar 5–7 para estudantes | `StudentsListScreen` · `StudentCreateScreen` · `StudentEditScreen` | ✅ |
+| 9 | Página administrativa — listar todos os posts (editar/excluir) | `AdminPostsListScreen` | ✅ |
+| 10 | Autenticação e autorização (login + gate por papel) | `LoginScreen` + `AuthContext` + `useRequireRole` | ✅ |
 
-### Pré-requisitos
+**Extras entregues além do enunciado:** auto-cadastro público de aluno (`SignupScreen`), meu perfil ver/editar (`ProfileScreen` / `ProfileEditScreen`), troca de senha (`ChangePasswordScreen`), marcação de leitura (`MarkAsReadButton`) e comentários (`CommentSection`).
 
-- **Node.js 20+** ([Download](https://nodejs.org/)) — recomendado: 20.19.x ou 22.x
-- **npm 9+** (incluído com Node.js 20)
-- **Expo Go** instalado no dispositivo móvel ([Android](https://play.google.com/store/apps/details?id=host.exp.exponent) · [iOS](https://apps.apple.com/app/expo-go/id982107779)) **ou** Android Studio com um AVD configurado
-- **API da Fase 2** rodando e acessível ([Repositório](https://github.com/natanjunior/8FSDT-tech-challenge-2))
+---
 
-### 1. Clonar o Repositório
+## 🛠️ Stack
 
-```bash
-git clone https://github.com/natanjunior/8FSDT-tech-challenge-4.git
-cd 8FSDT-tech-challenge-4
+| Camada | Tecnologia | Propósito no projeto |
+|--------|-----------|----------------------|
+| Runtime | Expo SDK 56 (managed) | Build/dev sem toolchain nativo, distribuição via Expo Go / EAS |
+| Linguagem | TypeScript (strict) | Inferência de tipos end-to-end entre schemas Zod, tipos da API e telas |
+| Estilização | NativeWind v4 (Tailwind v3) | Utility-first com continuidade visual direta da Fase 3 web |
+| Formulários | react-hook-form + Zod v4 | Validação tipada, re-renders mínimos, inferência automática Zod → TS |
+| HTTP | Axios | Cliente único + interceptor que injeta `Authorization: Bearer` e trata 401 global |
+| Estado global | Context API (`AuthContext`) | Único domínio global (sessão) — não justifica boilerplate de Redux |
+| Navegação | React Navigation v7 (Drawer + Native Stack) | Drawer como navegação/descoberta; Stack empilha as telas; guard por papel |
+| Armazenamento seguro | expo-secure-store | JWT + credencial + perfil criptografados no Keychain/Keystore |
+| Markdown | `@ronradtke/react-native-markdown-display` | Render do conteúdo Markdown dos posts (fork mantido para RN 0.85 / React 19) |
+| Testes | Jest + @testing-library/react-native | Preset `jest-expo`; 355 testes em 63 suites |
+
+---
+
+## 🪝 Hooks e Componentes Funcionais
+
+A aplicação é **100% componentes funcionais com hooks** — não há class components (requisito técnico nº 1 do enunciado). Hooks do React efetivamente usados no código-fonte:
+
+| Hook | Onde (exemplos) | Para quê |
+|------|-----------------|----------|
+| `useState` | telas, formulários, contexto (26 arquivos) | estado local de UI e dados |
+| `useEffect` | `AuthContext` (hydration), telas (fetch), `useRequireRole` (auto-gate) (22 arquivos) | side effects |
+| `useCallback` | listas com re-fetch, paginação (7 arquivos) | memoização de handlers |
+| `useContext` | `useAuth` | acesso ao `AuthContext` |
+| `useRef` | pickers/detecção de foco (4 arquivos) | referências mutáveis sem re-render |
+| `useMemo` | composição de query derivada | memoização de valor computado |
+
+Hooks de bibliotecas:
+
+| Hook / API | Origem | Onde |
+|------------|--------|------|
+| `useForm` + `Controller` | react-hook-form | todos os formulários (login, post, teacher, student, senha) |
+| `zodResolver` | `@hookform/resolvers/zod` | integra Zod com o RHF nos mesmos formulários |
+| `useNavigation` / `useRoute` | React Navigation | navegação programática e leitura de params (18 / 6 arquivos) |
+| `useFocusEffect` | React Navigation | re-fetch da `ProfileScreen` ao ganhar foco (ADR 24) |
+
+**Custom hooks:**
+- `useAuth()` — encapsula `useContext(AuthContext)` com tratamento de erro; usado em todo componente que precisa da sessão.
+- `useRequireRole(role)` — auto-gate de papel por tela (redireciona para `Home` + Toast se o papel não bate); centraliza o controle de acesso (ADR 10).
+
+---
+
+## 🏗️ Arquitetura
+
+### Estrutura de pastas
+
+```
+src/
+├── api/            # apiClient (Axios) + interceptors (Bearer, handler 401 global)
+├── components/
+│   ├── ui/         # Design System (Button, Input, Card, Badge, ConfirmModal, ...)
+│   ├── layout/     # Header (dropdown autenticado por papel)
+│   ├── posts/      # PostCard, SearchBar, DisciplineChips, MarkAsReadButton, ...
+│   └── admin/      # AdminPostListItem
+├── contexts/       # AuthContext + hook useAuth
+├── features/       # Módulos por domínio: auth, comments, grupo, posts, profile,
+│                   #   students, teachers (screens/components/validators Zod)
+├── hooks/          # useRequireRole (auto-gate por papel)
+├── lib/            # disciplines.ts (mapa + fallback), markdown.ts (render)
+├── navigation/     # RootStackNavigator + Drawer + AppDrawerContent + guards
+├── screens/        # Telas de topo: Home, PostDetail, Admin, CRUD teachers/students,
+│                   #   Profile, ProfileEdit, ChangePassword, Signup
+├── services/       # Acesso à API: auth, posts, comments, reads, disciplines,
+│                   #   teachers, students, secure-storage
+├── theme/          # colors.ts (tokens M3) + elevation.ts
+└── types/          # Interfaces TypeScript da API (Post, Teacher, Student, ...)
 ```
 
-### 2. Instalar Dependências
+> Os schemas Zod não ficam em `lib/schemas`, e sim colocados junto do domínio em `features/<domínio>/validators/` (ex.: `features/auth/validators/login.schema.ts`).
 
-```bash
-npm install
-```
-
-### 3. Configurar Variáveis de Ambiente
-
-```bash
-cp .env.example .env
-```
-
-Edite `.env` ajustando `EXPO_PUBLIC_API_URL` para o endereço onde a API da Fase 2 está rodando. O valor correto **depende de como você está executando o app**:
-
-| Cenário | Valor de `EXPO_PUBLIC_API_URL` |
-|---------|-------------------------------|
-| **Expo Go no dispositivo físico** (Android ou iOS) na mesma rede Wi-Fi | `http://<IP-LAN-DO-SEU-COMPUTADOR>:3030` |
-| **Android Emulator** (Android Studio AVD) | `http://10.0.2.2:3030` |
-| **iOS Simulator** (macOS) | `http://localhost:3030` |
-
-> **Como descobrir o IP LAN do seu computador:**
-> - **Windows:** abra o terminal e rode `ipconfig`. Procure "Endereço IPv4" na rede ativa (Wi-Fi). Exemplo: `192.168.0.173`
-> - **macOS/Linux:** `ifconfig | grep "inet "` ou `ip addr`. Procure o IP da interface `en0` / `wlan0`.
->
-> O IP deve ser o da mesma rede Wi-Fi em que o celular está conectado. Exemplo de `.env` final:
-> ```env
-> EXPO_PUBLIC_API_URL=http://192.168.0.173:3030
-> ```
-
-> **Importante — variáveis `EXPO_PUBLIC_*`:** essas variáveis são embutidas no bundle JavaScript pelo Metro bundler no momento da inicialização. Sempre que alterar o `.env`, reinicie o servidor com `npm start -- --clear` (ou `npx expo start --clear`) para o novo valor ser aplicado.
-
-### 4. Subir o Backend da Fase 2
-
-Em outro terminal, siga o [README da Fase 2](https://github.com/natanjunior/8FSDT-tech-challenge-2) para subir a API localmente. Ela precisa estar acessível na porta `3030` (ou na porta que você configurou em `EXPO_PUBLIC_API_URL`).
-
-> **Nota — cold start da Render (free tier):** se o backend estiver hospedado na Render.com, o serviço hiberna após ~15 min de inatividade e leva 20–40s para acordar no primeiro request. O cliente Axios está configurado com `timeout: 30000ms` para cobrir esse cenário. Se o primeiro login demorar, aguarde e tente novamente — é o backend acordando.
-
-### 5. Iniciar o App
-
-```bash
-npm start
-```
-
-O terminal exibe um QR Code. Escolha como rodar:
-
-| Método | O que fazer |
-|--------|------------|
-| **Expo Go no celular** | Abra o app Expo Go, toque em "Scan QR code" e aponte para o QR do terminal |
-| **Android Emulator** | Com o AVD aberto no Android Studio, pressione `a` no terminal |
-| **iOS Simulator** (macOS) | Pressione `i` no terminal |
-
-### Variáveis de Ambiente
-
-| Variável | Descrição | Padrão | Obrigatória |
-|----------|-----------|--------|-------------|
-| `EXPO_PUBLIC_API_URL` | URL base da API da Fase 2 (sem barra final) | `http://localhost:3030` | Sim |
-
-### Scripts Disponíveis
-
-| Script | Descrição |
-|--------|-----------|
-| `npm start` | Inicia o Metro bundler (Expo Dev Server) |
-| `npm run android` | Inicia diretamente no Android Emulator |
-| `npm run ios` | Inicia diretamente no iOS Simulator |
-| `npm test` | Roda testes com Jest (execução única) |
-| `npm run test:watch` | Testes em watch mode |
-| `npm run lint` | ESLint via Expo |
-
-## Topologia de navegação
+### Topologia de navegação
 
 A navegação é um **Drawer (menu lateral) envolvendo um Native Stack**. O `RootDrawer.Navigator` tem uma única `Screen` (`Root`) cujo componente é o `RootStackNavigator` (`createNativeStackNavigator`). Ou seja: o Drawer é a camada de **navegação e descoberta**, e o Native Stack é quem empilha as telas. O conteúdo do menu lateral é renderizado por um `drawerContent` customizado ([src/navigation/AppDrawerContent.tsx](src/navigation/AppDrawerContent.tsx)), não pela lista automática de rotas.
 
@@ -170,7 +203,7 @@ RootDrawer (Drawer)  ──drawerContent──▶  AppDrawerContent (menu latera
     └── StudentEdit      (TEACHER-only)
 ```
 
-### Seções do menu lateral
+#### Seções do menu lateral
 
 O `AppDrawerContent` monta o menu em seções:
 
@@ -203,7 +236,9 @@ flowchart LR
     AXIOS --> BACKEND
 ```
 
-## Autenticação
+---
+
+## 🔐 Autenticação
 
 A API da Fase 2 (branch `ajustes-fase-4`) utiliza **autenticação com `login` + senha (bcrypt)** e responde com **credencial separada do perfil**:
 
@@ -258,9 +293,13 @@ Em uma 401 de **request autenticada** (token expirado, sessão invalidada server
 
 Cada campo tem toggle individual de visibilidade (`Input.trailingIcon="eye-outline" / "eye-off-outline"` com estado `showCurrent` / `showNew` / `showConfirm`). Em erro 400 (senha atual incorreta), o backend retorna `{ error: "Senha atual incorreta." }` e o app exibe a mensagem abaixo dos campos (`testID="submit-error"`).
 
-## Fluxos por requisito
+---
 
-### Req 1 — Lista de posts com busca e filtro
+## 🔄 Fluxos por Requisito
+
+Os diagramas abaixo seguem a numeração **1–10 do enunciado**. Fluxos que não fazem parte do enunciado (auto-cadastro, perfil, senha) estão agrupados em **Extras** ao final.
+
+### Req 1 — Página principal: lista de posts com busca e filtro
 
 ```mermaid
 sequenceDiagram
@@ -315,26 +354,26 @@ sequenceDiagram
 sequenceDiagram
     participant T as TEACHER
     participant Admin as AdminPosts
-    participant Create as PostCreate
+    participant NovoPost as PostCreate
     participant API
 
     T->>Admin: toca "Painel" no header
     Admin->>T: renderiza lista admin + stats
     T->>Admin: toca "+ Novo post"
-    Admin->>Create: navigate('PostCreate')
-    Create->>Create: useRequireRole('TEACHER') ok
-    T->>Create: preenche form e submete
-    Create->>API: POST /posts { title, content, status, discipline_id? }
+    Admin->>NovoPost: navigate('PostCreate')
+    NovoPost->>NovoPost: useRequireRole('TEACHER') ok
+    T->>NovoPost: preenche form e submete
+    NovoPost->>API: POST /posts { title, content, status, discipline_id? }
     alt 201 Created
-        API-->>Create: Post criado
-        Create->>Create: toast "Post criado"
-        Create->>T: navigate('PostDetail', { postId, title })
+        API-->>NovoPost: Post criado
+        NovoPost->>NovoPost: toast "Post criado"
+        NovoPost->>T: navigate('PostDetail', { postId, title })
     else 401
-        API-->>Create: Sessão expirada
-        Create->>Create: logout() + replace('Login')
+        API-->>NovoPost: Sessão expirada
+        NovoPost->>NovoPost: logout() + replace('Login')
     else 403
-        API-->>Create: Acesso negado
-        Create->>Create: replace('Home') + toast
+        API-->>NovoPost: Acesso negado
+        NovoPost->>NovoPost: replace('Home') + toast
     end
 ```
 
@@ -362,7 +401,9 @@ sequenceDiagram
     Edit->>T: goBack() (volta pro Detail)
 ```
 
-### Req 5/6 — Gerenciamento de professores e alunos (TEACHER)
+### Req 5–7 — Gerenciamento de professores: criar, editar e listar (TEACHER)
+
+O mesmo módulo cobre os três requisitos: **listagem paginada** com filtros e soft delete (Req 7), **criação** (Req 5) e **edição** (Req 6).
 
 ```mermaid
 sequenceDiagram
@@ -391,37 +432,11 @@ sequenceDiagram
     L->>API: GET /teachers (refetch)
 ```
 
-### Req 7 — Criação admin de aluno (TEACHER)
+### Req 8 — Replicar 5–7 para estudantes (TEACHER)
 
-Pattern idêntico a Req 5/6 com `StudentsList`/`StudentCreate`/`StudentEdit`. `course` (texto livre) substitui `discipline_ids`.
+Pattern idêntico ao Req 5–7, com `StudentsList` / `StudentCreate` / `StudentEdit`. A diferença de modelo é que `course` (texto livre) substitui `discipline_ids` do professor.
 
-### Req 8 — Auto-cadastro de aluno (público)
-
-```mermaid
-sequenceDiagram
-    participant A as Anônimo
-    participant L as LoginScreen
-    participant S as SignupScreen
-    participant API
-
-    A->>L: abre Login
-    L->>A: mostra link "Cadastre-se como aluno"
-    A->>L: toca link
-    L->>S: navigate('Signup')
-    S->>S: useEffect checa se STUDENT logado → bloqueia
-    A->>S: preenche StudentForm mode=signup
-    S->>API: POST /students (axios cru, SEM Bearer)
-    alt 201
-        API-->>S: novo aluno
-        S->>L: navigate('Login', { login: novo.login })
-        L->>A: campo login pré-preenchido
-    else 409 (login duplicado)
-        API-->>S: conflict
-        S->>A: toast "Login já em uso"
-    end
-```
-
-### Req 9 — Painel administrativo de posts (TEACHER)
+### Req 9 — Página administrativa de posts (TEACHER)
 
 ```mermaid
 sequenceDiagram
@@ -457,40 +472,100 @@ sequenceDiagram
     end
 ```
 
-## Decisões arquiteturais (ADRs)
+### Req 10 — Autenticação e autorização
 
-Algumas escolhas divergem do conteúdo padrão das aulas — registradas aqui para transparência.
+O login (`POST /auth/login`), a hydration da sessão a partir do SecureStore, a distinção credencial × perfil, o tratamento de 401 global e o gate de acesso por papel (`useRequireRole`) estão detalhados na seção [Autenticação](#-autenticação) e na [Matriz de RBAC](#matriz-de-rbac-por-ação). Em resumo: **login desbloqueia** comentar, marcar leitura e (para TEACHER) todo o painel administrativo; cada tela protegida se auto-defende via `useRequireRole`, independente do que o menu exibe.
 
-| ADR | Decisão | Motivo |
-|-----|---------|--------|
-| 01 | **Expo SDK 56 (managed workflow)** em vez de React Native CLI | DX mais rápido, OTA via EAS, builds sem Xcode/Android Studio nativos para a maior parte do ciclo. |
-| 02 | **NativeWind v4** em vez de `StyleSheet.create` ensinado em aula | Continuidade visual com a Fase 3 (Tailwind) e produtividade. |
-| 03 | **react-hook-form + Zod** em vez de inputs controlados manuais | Mesmo pattern adotado na Fase 3; menos re-renders e inferência TS automática. |
-| 04 | **Context API (`AuthContext`)** em vez de Redux Toolkit (aula RN Medium 6) | Um único reducer (auth) não justifica boilerplate de Redux. Spec da Fase 4 permite Context. |
-| 05 | **expo-secure-store** para o JWT, em vez de AsyncStorage | SecureStore criptografa nativamente (Keychain no iOS, Keystore no Android). |
-| 06 | **Native Stack dentro de um Drawer, com entrada pública** (não login wall) | Espelha o modelo da Fase 3 web (lista de posts é pública; login é opcional). O Drawer é navegação/descoberta; o controle de acesso permanece **por tela** — rotas TEACHER-only e autenticadas fazem auto-gate via `useRequireRole` (`useEffect` + `navigation.replace`). |
-| 07 | **`comments_count`/`reads_count` no shape de Post** (não chamadas extras) | Backend já retorna esses contadores em toda resposta de Post. PostCard e PostDetail usam sem chamada adicional. |
-| 08 | **Disciplines com fallback hardcoded para anônimos** | `GET /disciplines` exige Bearer; o filtro de disciplina precisa funcionar para visitantes. Solução: array `SEED_DISCIPLINES` com UUIDs estáveis do seed da Fase 2. |
-| 09 | **Comentário criação só autenticada** (regra do backend) | A Fase 2 removeu o fluxo anônimo de comentários: `POST /comments` agora exige Bearer (401 sem token). Mobile mostra CTA "Faça login para comentar" para anônimos. |
-| 10 | **`useRequireRole` hook** em vez de lógica inline por tela | Mesmo gate é reusado em AdminPosts, PostCreate, PostEdit e nas telas de CRUD de professores/alunos. Centralizar evita drift de comportamento entre telas. |
-| 11 | **Sem ownership check no client** (qualquer TEACHER pode editar qualquer post) | Espelhamento exato do backend (Fase 2 §2.1). Botão "Editar post" renderiza pra qualquer TEACHER, independente de quem é o autor. |
-| 12 | **Credencial separada do perfil (`User` ≠ `Profile`)** | Espelhamento do backend Fase 2 (branch `ajustes-fase-4`). Mobile guarda 3 chaves SecureStore (`AUTH_TOKEN`, `AUTH_USER`, `AUTH_PROFILE`). `AuthContext` expõe ambos; UI usa `user.role` para gating e `profile.name` para exibição. |
-| 13 | **Referências FHIR (`Teacher/<uuid>`, `Student/<uuid>`)** | IDs de perfil incluem o tipo no formato FHIR. Concatenar direto nas URLs (`/teachers/${teacher.id}`) — backend resolve. **Não** usar `encodeURIComponent` no id inteiro (quebraria a barra). |
-| 14 | **Display de autor com pronouns** | `Post.author` carrega `pronouns` do perfil do TEACHER. Exibimos como `Nome (pronome)` no PostDetail quando presente, omitimos quando `null`. |
-| 15 | **`CommentAuthor.type` para distinguir Teacher/Student** | Backend entrega `type` resolvido. Exibimos "Professor" / "Aluno" no `CommentItem` em vez de parsear o prefixo do FhirRef. |
-| 16 | **Inter (6 pesos) + JetBrains Mono via `@expo-google-fonts`** + SplashScreen gate | Paridade visual direta com a Fase 3 web. Inter 900 é necessário para títulos editoriais do PostDetail; JetBrains Mono é o sistema de metadata (timestamps, contadores, IDs) que o web usa sistematicamente. SplashScreen gate evita FOUT (flash of unstyled text). |
-| 17 | **`@expo/vector-icons / MaterialCommunityIcons`** em vez de Material Symbols (que o web usa) | Material Symbols não é fonte instalável em RN sem hacks. MaterialCommunityIcons (6k+ ícones) já vem com Expo SDK 56, tem cobertura comparável e visual Material Design. Wrapper `<Icon>` com enum `IconName` força mapeamento tipado e centraliza os ≈25 ícones usados no app — typos pegam em compile time. |
-| 18 | **`expo-linear-gradient`** para CTAs (`Button primary` e `Button nav`) | Espelhamento dos `cta-gradient` (teal) e `primary-gradient` (navy) do web. NativeWind não suporta gradientes nativamente; expo-linear-gradient é a API canônica do Expo e tem custo de bundle desprezível (~30KB). |
-| 19 | **Comment avatar usa ícone `account`**, NÃO iniciais — divergência intencional do PostCard's AuthorId | Espelhamento exato do web (CommentItem.tsx usa Material Symbol `person`, não iniciais; PostCard.tsx usa iniciais). A diferença semântica: no PostCard, o autor é a identidade editorial (nome + iniciais reforçam isso); no comentário, o autor é um ator transitivo dentro de uma discussão (ícone neutro pesa menos). |
-| 20 | **Stats via 3 chamadas paralelas a `searchPosts(status=X, limit=1)`** em vez de um endpoint de estatísticas dedicado | Backend não expõe `/posts/stats`. As 3 chamadas com `limit=1` lêem só `pagination.total`, o que é barato (apenas COUNT(*) no SQL). Falha silenciosa nas stats não bloqueia a lista — degradação aceita. |
-| 21 | **`signupStudent` usa `axios` cru em vez do `apiClient` interceptado** | O interceptor de request do `apiClient` injeta `Authorization: Bearer <token>` quando há sessão. O endpoint `POST /students` é público e o backend retorna 403 quando recebe um Bearer de STUDENT logado (regra de produto: STUDENT não pode "se recadastrar"). Usar `axios.post(\`${API_BASE_URL}/students\`, ...)` direto evita o header e mantém o endpoint genuinamente público. |
-| 22 | **`refreshProfile()` na AuthContext em vez de refetch nas telas** | A Header dropdown depende de `profile.name` para mostrar o nome do usuário. Sem `refreshProfile`, depois de editar o perfil o usuário só veria o novo nome após próximo login. Centralizar na AuthContext garante consistência entre todas as telas que leiam `profile`. |
-| 23 | **Cross-field refines no `changePasswordSchema`** com path explícito | Zod `.refine()` permite associar a mensagem a um campo específico via `path: ['new_password_confirm']` / `['new_password']` — isso faz o RHF exibir o erro embaixo do campo certo, não no objeto root. Sem `path`, o RHF entrega `errors.root` e o usuário não sabe qual campo arrumar. |
-| 24 | **`useFocusEffect` na ProfileScreen** em vez de `useEffect` | Quando o usuário volta da ProfileEditScreen via `goBack`, `useEffect` não dispara (o componente não desmontou). `useFocusEffect` do React Navigation re-roda quando a tela ganha foco, garantindo o refetch dos dados recém-editados. |
-| 25 | **Drawer (menu lateral) como navegação primária**, em vez de Bottom Tabs | Espelha a **sidebar** da Fase 3 web (navegação + disciplinas + administração numa coluna lateral), não uma tab bar. O Drawer acomoda melhor a seção **Disciplinas** — de tamanho variável, carregada dinamicamente via `listDisciplines()` e usada como eixo de descoberta/filtro — e a seção **Administração** que só aparece para TEACHER; uma tab bar (3–5 abas fixas) não comporta esse número variável de destinos. Implementado como `@react-navigation/drawer` (v7) envolvendo o Native Stack numa única `Screen` (`Root`); `@react-navigation/bottom-tabs` foi removido. O Drawer é só navegação — o gate de acesso permanece no `useRequireRole` (ADR 06/10). |
-| 26 | **Markdown no mobile: leitura com o fork mantido `@ronradtke/react-native-markdown-display`, edição com `TextInput` + abas Escrever/Prévia, sem toolbar** | O `content` do post é Markdown puro guardado como texto pelo backend (Fase 2 não processa/sanitiza; o cliente renderiza). O guia mobile da Fase 2 recomenda `react-native-markdown-display`, mas o pacote nominal (v7.0.2/2023) está desatualizado para a stack nova (React 19 / RN 0.85); usamos o fork mantido `@ronradtke` (v9.0.3/2026), que é drop-in (mesma API). Leitura e prévia do editor reusam um único componente `MarkdownContent`, estilizado via `StyleSheet` mapeado aos tokens do Design System (`colors.ts`) — a única exceção a `className`/NativeWind no app, pois a API da lib exige um objeto de estilo por elemento. Edição usa `TextInput` multiline com abas **Escrever/Prévia**, sem toolbar de formatação: no mobile, inserir sintaxe manipulando seleção/cursor do `TextInput` é frágil e caro em testes, com pouco retorno; as abas entregam o benefício central (ver o resultado) reusando a mesma peça de render. Segurança: o renderer não interpreta HTML cru por padrão (equivalente ao `skipHtml` da web). Diverge do editor rico da Fase 3 web (`@uiw/react-md-editor`, com toolbar) e da lib nominal da Fase 2. |
+### Extras (além do enunciado)
 
-## Design System
+**Auto-cadastro de aluno (público):**
+
+```mermaid
+sequenceDiagram
+    participant A as Anônimo
+    participant L as LoginScreen
+    participant S as SignupScreen
+    participant API
+
+    A->>L: abre Login
+    L->>A: mostra link "Cadastre-se como aluno"
+    A->>L: toca link
+    L->>S: navigate('Signup')
+    S->>S: useEffect checa se STUDENT logado → bloqueia
+    A->>S: preenche StudentForm mode=signup
+    S->>API: POST /students (axios cru, SEM Bearer)
+    alt 201
+        API-->>S: novo aluno
+        S->>L: navigate('Login', { login: novo.login })
+        L->>A: campo login pré-preenchido
+    else 409 (login duplicado)
+        API-->>S: conflict
+        S->>A: toast "Login já em uso"
+    end
+```
+
+**Meu perfil / troca de senha:** `ProfileScreen` (read-only, re-fetch ao focar), `ProfileEditScreen` (reusa `TeacherForm`/`StudentForm` em modo edit) e `ChangePasswordScreen` (validação cruzada Zod — ver [Troca de senha](#troca-de-senha)).
+
+---
+
+## 🌐 Endpoints Consumidos
+
+Todas as chamadas passam pelo `apiClient` (Axios com interceptor `Bearer`), exceto o auto-cadastro, que usa `axios` cru para permanecer público (ADR 21). As formas de request/response seguem o contrato **congelado** da [API da Fase 2](https://github.com/natanjunior/8FSDT-tech-challenge-2).
+
+**Autenticação**
+| Método | Rota | Uso | Auth |
+|--------|------|-----|------|
+| `POST` | `/auth/login` | login (`{ login, password }` → `{ user, profile, token }`) | pública |
+| `POST` | `/auth/logout` | invalida sessão server-side | Bearer |
+| `PATCH` | `/auth/password` | troca de senha | Bearer |
+
+**Posts**
+| Método | Rota | Uso | Auth |
+|--------|------|-----|------|
+| `GET` | `/posts` | lista pública paginada (`sort=-published_at`) | opcional |
+| `GET` | `/posts/search` | busca/filtro (`query`, `discipline`, `status`) | opcional |
+| `GET` | `/posts/:id` | detalhe do post | opcional |
+| `POST` | `/posts` | criar post | Bearer (TEACHER) |
+| `PATCH` | `/posts/:id` | editar post | Bearer (TEACHER) |
+| `DELETE` | `/posts/:id` | excluir post | Bearer (TEACHER) |
+
+**Comentários e leituras**
+| Método | Rota | Uso | Auth |
+|--------|------|-----|------|
+| `GET` | `/comments/search?post_id=` | listar comentários do post | opcional |
+| `POST` | `/comments` | criar comentário | Bearer |
+| `DELETE` | `/comments/:id` | excluir comentário | Bearer |
+| `POST` | `/reads` | marcar post como lido (idempotente) | Bearer |
+| `GET` | `/reads/search?post_id=` | checar se já leu | Bearer |
+
+**Disciplinas**
+| Método | Rota | Uso | Auth |
+|--------|------|-----|------|
+| `GET` | `/disciplines` | listar disciplinas (com fallback hardcoded p/ anônimo — ADR 08) | Bearer |
+
+**Professores**
+| Método | Rota | Uso | Auth |
+|--------|------|-----|------|
+| `GET` | `/teachers` | lista paginada (filtros `name`, `status`) | Bearer (TEACHER) |
+| `GET` | `/teachers/:id` · `/teachers/me` | detalhe / próprio perfil | Bearer |
+| `POST` | `/teachers` | criar professor | Bearer (TEACHER) |
+| `PATCH` | `/teachers/:id` | editar (próprio ou outro) | Bearer |
+| `DELETE` | `/teachers/:id` | excluir (soft delete) | Bearer (TEACHER) |
+
+**Alunos**
+| Método | Rota | Uso | Auth |
+|--------|------|-----|------|
+| `GET` | `/students` | lista paginada | Bearer (TEACHER) |
+| `GET` | `/students/:id` · `/students/me` | detalhe / próprio perfil | Bearer |
+| `POST` | `/students` | criar / **auto-cadastro** | pública (`axios` cru) |
+| `PATCH` | `/students/:id` | editar (próprio ou admin) | Bearer |
+| `DELETE` | `/students/:id` | excluir | Bearer (TEACHER) |
+
+Isso cobre as quatro áreas de integração exigidas pelo requisito técnico nº 3: **posts, alunos, professores e autenticação**.
+
+---
+
+## 🎨 Design System
 
 ### Tipografia
 
@@ -605,7 +680,9 @@ Mapping `label → { icon, color }` em [src/lib/disciplines.ts](src/lib/discipli
 2. Adicionar ao tipo `IconName` em [src/components/ui/Icon.tsx](src/components/ui/Icon.tsx).
 3. Usar: `<Icon name="novo-icone" size={20} color={colors.primary} />`.
 
-## Testes
+---
+
+## 🧪 Testes
 
 Suíte com **393 testes em 68 suites**, rodando em **Jest + @testing-library/react-native** (preset `jest-expo`). Todos passam (`Tests: 393 passed, 393 total`).
 
@@ -627,166 +704,216 @@ Suíte com **393 testes em 68 suites**, rodando em **Jest + @testing-library/rea
 |---------|-----------|
 | `npm test` | Roda a suíte completa (execução única). |
 | `npm test -- <pattern>` | Filtra por nome de arquivo/teste (ex: `npm test -- ChangePassword`). |
-| `npm test -- --watch` | Modo watch (re-roda ao salvar). |
+| `npm run test:watch` | Modo watch (re-roda ao salvar). |
 
 > **Pré-requisito de runner:** os testes exigem **Node ≥ 20** (Expo SDK 56). Rodar com Node 14/16 quebra o `jest-expo` antes de qualquer teste (ver Dificuldades #6).
 
-## Roadmap concluído
+---
 
-- ✅ Fase 1 — Fundação + Login
-- ✅ Fase 1.1 — Ajustes pós-revisão (tokens M3 + timeout)
-- ✅ Fase 1.2 — Refactor de navegação (modelo público)
-- ✅ Fase 1.3 — Refactor de auth (credencial + perfil + senha)
-- ✅ Fase 2 — Posts: leitura (lista, busca, detalhe, comentários, reads)
-- ✅ Fase 3 — Posts: escrita para professor (criar/editar)
-- ✅ Fase 1.4 — Polimento visual do DS (paridade com Fase 3 web)
-- ✅ Fase 4 — Posts: administração (lista admin + delete)
-- ✅ Fase 5 — Usuários: CRUD de professores e alunos + auto-cadastro
-- ✅ Fase 6 — Perfil + Trocar senha + Fechamento de docs
+## 📐 Decisões Arquiteturais (ADRs)
 
-## Dificuldades Encontradas
+Algumas escolhas divergem do conteúdo padrão das aulas — registradas aqui para transparência. Estão separadas entre **decisões principais** (impacto arquitetural) e **notas de implementação** (escolhas pontuais, úteis mas de menor alcance).
 
-### 1. Validação Zod aceitando campos só com espaços em branco (formulários de professor/aluno)
+### Decisões principais
 
-**Problema:** campos obrigatórios como `name`, `email` e `login` definidos como `z.string().min(1)` passavam na validação quando o usuário digitava apenas espaços. Uma string como `"   "` tem `length > 1`, então satisfaz `.min(1)` — mas semanticamente está vazia. O input nativo entrega exatamente esse conteúdo (whitespace), não `undefined`.
+| ADR | Decisão | Motivo |
+|-----|---------|--------|
+| 01 | **Expo SDK 56 (managed workflow)** em vez de React Native CLI | DX mais rápido, OTA via EAS, builds sem Xcode/Android Studio nativos para a maior parte do ciclo. |
+| 02 | **NativeWind v4** em vez de `StyleSheet.create` ensinado em aula | Continuidade visual com a Fase 3 (Tailwind) e produtividade. |
+| 03 | **react-hook-form + Zod** em vez de inputs controlados manuais | Mesmo pattern adotado na Fase 3; menos re-renders e inferência TS automática. |
+| 04 | **Context API (`AuthContext`)** em vez de Redux Toolkit (aula RN Medium 6) | Um único reducer (auth) não justifica boilerplate de Redux. Spec da Fase 4 permite Context. |
+| 05 | **expo-secure-store** para o JWT, em vez de AsyncStorage | SecureStore criptografa nativamente (Keychain no iOS, Keystore no Android). |
+| 06 | **Native Stack dentro de um Drawer, com entrada pública** (não login wall) | Espelha o modelo da Fase 3 web (lista de posts é pública; login é opcional). O Drawer é navegação/descoberta; o controle de acesso permanece **por tela** — rotas TEACHER-only e autenticadas fazem auto-gate via `useRequireRole` (`useEffect` + `navigation.replace`). |
+| 08 | **Disciplines com fallback hardcoded para anônimos** | `GET /disciplines` exige Bearer; o filtro de disciplina precisa funcionar para visitantes. Solução: array `SEED_DISCIPLINES` com UUIDs estáveis do seed da Fase 2. |
+| 09 | **Comentário criação só autenticada** (regra do backend) | A Fase 2 removeu o fluxo anônimo de comentários: `POST /comments` agora exige Bearer (401 sem token). Mobile mostra CTA "Faça login para comentar" para anônimos. |
+| 10 | **`useRequireRole` hook** em vez de lógica inline por tela | Mesmo gate é reusado em AdminPosts, PostCreate, PostEdit e nas telas de CRUD de professores/alunos. Centralizar evita drift de comportamento entre telas. |
+| 12 | **Credencial separada do perfil (`User` ≠ `Profile`)** | Espelhamento do backend Fase 2 (branch `ajustes-fase-4`). Mobile guarda 3 chaves SecureStore (`AUTH_TOKEN`, `AUTH_USER`, `AUTH_PROFILE`). `AuthContext` expõe ambos; UI usa `user.role` para gating e `profile.name` para exibição. |
+| 25 | **Drawer (menu lateral) como navegação primária**, em vez de Bottom Tabs | Espelha a **sidebar** da Fase 3 web (navegação + disciplinas + administração numa coluna lateral), não uma tab bar. O Drawer acomoda melhor a seção **Disciplinas** — de tamanho variável, carregada dinamicamente via `listDisciplines()` e usada como eixo de descoberta/filtro — e a seção **Administração** que só aparece para TEACHER; uma tab bar (3–5 abas fixas) não comporta esse número variável de destinos. Implementado como `@react-navigation/drawer` (v7) envolvendo o Native Stack numa única `Screen` (`Root`); `@react-navigation/bottom-tabs` foi removido. O Drawer é só navegação — o gate de acesso permanece no `useRequireRole` (ADR 06/10). |
+| 26 | **Markdown: leitura com o fork mantido `@ronradtke/react-native-markdown-display`, edição com `TextInput` + abas Escrever/Prévia, sem toolbar** | O `content` do post é Markdown puro guardado como texto pelo backend (Fase 2 não processa/sanitiza; o cliente renderiza). O pacote nominal recomendado pelo guia da Fase 2 está desatualizado para a stack nova (React 19 / RN 0.85); usamos o fork mantido `@ronradtke` (drop-in, mesma API). Leitura e prévia reusam um único componente `MarkdownContent`, estilizado via `StyleSheet` mapeado aos tokens do DS — a única exceção a NativeWind no app, pois a API da lib exige objeto de estilo por elemento. Edição usa `TextInput` multiline com abas **Escrever/Prévia**, sem toolbar: manipular seleção/cursor no mobile é frágil e caro em testes; as abas entregam o benefício central (ver o resultado). Segurança: o renderer não interpreta HTML cru por padrão (equivalente ao `skipHtml` da web). |
 
-**Tentativas:** aumentar o `.min(1)` para `.min(2)` foi descartado (nomes válidos de 1 letra existem). Usar `.refine(v => v.trim().length > 0)` funcionou mas gerou mensagens de erro fora do padrão dos demais campos.
+### Notas de implementação
 
-**Solução final:** encadear `.trim()` antes do `.min(1)` no próprio schema — `z.string().trim().min(1, 'Nome é obrigatório.')`. O `.trim()` normaliza o valor antes da checagem de tamanho, de forma que `"   "` vira `""` e falha o `.min(1)` corretamente. Para os blocos `user` opcionais (criação de credencial), usamos `z.preprocess` para normalizar/omitir o objeto inteiro quando vazio — caso diferente, que exige transformar o shape, não só aparar a string.
-
-**Aprendizado:** para qualquer campo de texto obrigatório em RHF + Zod no React Native, `.trim().min(1)` é o padrão correto — o input entrega whitespace, e sem `.trim()` o `.min(1)` é facilmente burlado.
+| ADR | Decisão | Motivo |
+|-----|---------|--------|
+| 07 | **`comments_count`/`reads_count` no shape de Post** (não chamadas extras) | Backend já retorna esses contadores em toda resposta de Post. PostCard e PostDetail usam sem chamada adicional. |
+| 11 | **Sem ownership check no client** (qualquer TEACHER edita qualquer post) | Espelhamento exato do backend (Fase 2 §2.1). "Editar post" renderiza pra qualquer TEACHER, independente do autor. |
+| 13 | **Referências FHIR (`Teacher/<uuid>`, `Student/<uuid>`)** | IDs de perfil incluem o tipo no formato FHIR. Concatenar direto nas URLs (`/teachers/${teacher.id}`) — backend resolve. **Não** usar `encodeURIComponent` no id inteiro (quebraria a barra). |
+| 14 | **Display de autor com pronouns** | `Post.author` carrega `pronouns` do perfil do TEACHER. Exibimos como `Nome (pronome)` no PostDetail quando presente, omitimos quando `null`. |
+| 15 | **`CommentAuthor.type` para distinguir Teacher/Student** | Backend entrega `type` resolvido. Exibimos "Professor" / "Aluno" no `CommentItem` em vez de parsear o prefixo do FhirRef. |
+| 16 | **Inter (6 pesos) + JetBrains Mono via `@expo-google-fonts`** + SplashScreen gate | Paridade visual direta com a Fase 3 web. Inter 900 para títulos editoriais; JetBrains Mono para metadata (timestamps, contadores, IDs). SplashScreen gate evita FOUT (flash of unstyled text). |
+| 17 | **`@expo/vector-icons / MaterialCommunityIcons`** em vez de Material Symbols (que o web usa) | Material Symbols não é fonte instalável em RN sem hacks. MaterialCommunityIcons (6k+ ícones) já vem com Expo SDK 56. Wrapper `<Icon>` com enum `IconName` força mapeamento tipado — typos pegam em compile time. |
+| 18 | **`expo-linear-gradient`** para CTAs (`Button primary` e `Button nav`) | Espelhamento dos `cta-gradient` (teal) e `primary-gradient` (navy) do web. NativeWind não suporta gradientes nativamente; custo de bundle desprezível (~30KB). |
+| 19 | **Comment avatar usa ícone `account`**, NÃO iniciais | Espelhamento exato do web (CommentItem usa ícone; PostCard usa iniciais). No PostCard o autor é identidade editorial; no comentário é ator transitivo (ícone neutro pesa menos). |
+| 20 | **Stats via 3 chamadas paralelas a `searchPosts(status=X, limit=1)`** | Backend não expõe `/posts/stats`. As 3 chamadas com `limit=1` lêem só `pagination.total` (COUNT(*) barato). Falha nas stats não bloqueia a lista — degradação aceita. |
+| 21 | **`signupStudent` usa `axios` cru em vez do `apiClient` interceptado** | O interceptor injeta `Bearer` quando há sessão; o backend retorna 403 quando recebe Bearer de STUDENT logado em `POST /students`. Usar `axios` direto mantém o endpoint genuinamente público. (Ver Dificuldade #5.) |
+| 22 | **`refreshProfile()` na AuthContext em vez de refetch nas telas** | A Header depende de `profile.name`. Sem `refreshProfile`, após editar o perfil o nome só mudaria no próximo login. Centralizar garante consistência entre telas. (Ver Dificuldade #7.) |
+| 23 | **Cross-field refines no `changePasswordSchema`** com path explícito | `.refine()` com `path: ['new_password_confirm']` / `['new_password']` faz o RHF exibir o erro embaixo do campo certo, não em `errors.root`. (Ver Dificuldade #9.) |
+| 24 | **`useFocusEffect` na ProfileScreen** em vez de `useEffect` | Ao voltar da edição via `goBack`, `useEffect` não dispara (componente não desmontou). `useFocusEffect` re-roda ao focar, garantindo o refetch. (Ver Dificuldade #8.) |
 
 ---
 
-### 2. Conflito entre `jest-expo` e `@react-native/jest-preset` nos testes de Fase 5
+## ⚠️ Dificuldades Encontradas
 
-**Problema:** ao rodar `npm test` após adicionar os specs das telas `TeachersListScreen` e `SignupScreen`, o Jest jogava `SyntaxError: Cannot use import statement in a module` para módulos internos do Expo (ex: `expo-secure-store`, `expo-linear-gradient`). A causa era que o `jest.config.js` herdado usava `preset: '@react-native/jest-preset'` diretamente, sem o wrapper `jest-expo` que já inclui as transformações necessárias para módulos nativos do Expo.
+Obstáculos reais enfrentados durante o desenvolvimento e como foram resolvidos (registrados à medida que aconteceram).
 
-**Solução:** substituir o preset por `preset: 'jest-expo'` e mover as entradas de `transformIgnorePatterns` para a lista canônica recomendada pela documentação do Expo (`node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|...)`). Isso resolveu os erros de import sem afetar os testes das fases anteriores.
+1. **Zod aceitando campos só com espaços.** `z.string().min(1)` passava com `"   "` (whitespace tem `length > 0`). Solução: encadear `.trim()` antes do `.min(1)` no schema; para blocos `user` opcionais, `z.preprocess` normaliza/omite o objeto vazio. Padrão adotado: `.trim().min(1)` para todo campo de texto obrigatório em RHF + Zod.
 
-**Aprendizado:** projetos Expo devem sempre usar `jest-expo` como preset base — não combinar `@react-native/jest-preset` diretamente, mesmo que este seja o que os exemplos genéricos de React Native mostram.
+2. **Conflito `jest-expo` × `@react-native/jest-preset`.** Testes das telas da Fase 5 quebravam com `Cannot use import statement` em módulos Expo. Causa: preset herdado sem o wrapper `jest-expo`. Solução: trocar para `preset: 'jest-expo'` e usar a lista canônica de `transformIgnorePatterns` do Expo.
+
+3. **Mock de `createInteropElement` para NativeWind v4.** Componentes estilizados falhavam com `createInteropElement is not a function` (o babel plugin do NativeWind não roda fora do Metro). Solução: mockar `nativewind` em `jest.setup` (`styled: (C) => C`) e mapear o módulo interno para um stub vazio.
+
+4. **Re-render infinito no `TeachersListScreen`.** `useEffect` com `[filters]` (objeto recriado a cada render) disparava re-fetch em loop. Solução: separar os filtros em primitivos (`page`, `query`, `limit`) como dependências e compor o objeto de query dentro do efeito. Regra: nunca usar objetos/arrays recriados como deps de `useEffect`.
+
+5. **`POST /students` retornava 403 para STUDENT logado.** O interceptor do `apiClient` injetava `Bearer` e o backend bloqueia auto-cadastro de STUDENT logado (regra de produto). Solução: usar `axios` cru (sem interceptor) no signup, garantindo chamada genuinamente pública (ADR 21).
+
+6. **Node 14 × Expo SDK 56 no runner de testes.** `npm test` com o Node default (v14) quebrava com `Unexpected token '??='` no runtime do Expo, antes de qualquer teste. Causa: Expo 56 exige Node ≥ 20. Solução: padronizar Node 20.19.4 via `nvm`.
+
+7. **`refreshProfile` obrigatório quebrou ~15 arquivos de teste.** Adicionar o membro obrigatório em `AuthContextValue` invalidou todos os mocks inline do contexto (tsc strict). Solução: adicionar `refreshProfile: jest.fn()` a cada mock. Lição: um helper `makeAuthValue(overrides)` centralizaria a forma do mock e evitaria a cascata.
+
+8. **`useFocusEffect` causando loop no teste da ProfileScreen.** O mock ingênuo `(cb) => cb()` rodava o callback durante o render → `Too many re-renders`. Solução: o mock roda o callback uma vez **após** a montagem (via `useEffect`), respeitando *quando* o hook real dispara (ADR 24).
+
+9. **Refines cruzados do Zod precisam de `path` explícito.** Sem `path`, o `.refine()` associa o erro à raiz e o RHF entrega `errors.root` (o usuário não sabe qual campo corrigir). Solução: `path: ['new_password_confirm']` / `['new_password']` ancoram a mensagem no campo certo (ADR 23).
+
+10. **Ponte entre o singleton do Axios e o React Context (401 global).** O interceptor (módulo) não pode importar o Context (React). Solução: registro de callback — a api expõe `setUnauthorizedHandler(fn)`; o `AuthProvider` registra num `useEffect`; o interceptor dispara **só** quando a request enviou `Authorization` — assim uma 401 anônima (ex.: comentário de visitante, ADR 09) não derruba sessão.
+
+11. **Títulos de Markdown sem negrito.** Headings renderizavam com peso normal apesar de `fontWeight: '700'`. Causa: fontes Inter são de peso fixo (cada peso = família separada), então `fontWeight` isolado é no-op no RN. Solução: apontar `fontFamily` explícito (`Inter_800ExtraBold` / `Inter_700Bold`) nos estilos dos headings.
 
 ---
 
-### 3. Mock de `createInteropElement` necessário para NativeWind v4 nos testes
+## 🚀 Setup e Instalação
 
-**Problema:** após resolver o preset, testes que renderizavam componentes estilizados com NativeWind falhavam com `TypeError: (0 , _reactNative.createElement) is not a function` ou `createInteropElement is not a function`. O NativeWind v4 substitui internamente o `createElement` por um wrapper (`createInteropElement`) que não é transpilado corretamente no ambiente de teste Jest (que não passa pelo Metro bundler).
+### Pré-requisitos
 
-**Solução:** adicionar em `jest.setup.js`:
-```js
-jest.mock('nativewind', () => ({
-  ...jest.requireActual('nativewind'),
-  styled: (Component) => Component,
-}));
+- **Node.js 20+** ([Download](https://nodejs.org/)) — recomendado: 20.19.x ou 22.x
+- **npm 9+** (incluído com Node.js 20)
+- **Expo Go** instalado no dispositivo móvel ([Android](https://play.google.com/store/apps/details?id=host.exp.exponent) · [iOS](https://apps.apple.com/app/expo-go/id982107779)) **ou** Android Studio com um AVD configurado
+- **API da Fase 2** rodando e acessível ([Repositório](https://github.com/natanjunior/8FSDT-tech-challenge-2))
+
+### 1. Clonar o Repositório
+
+```bash
+git clone https://github.com/natanjunior/8FSDT-tech-challenge-4.git
+cd 8FSDT-tech-challenge-4
 ```
-e mapear `nativewind/dist/style-sheet/native` para um stub vazio no `moduleNameMapper`. Componentes de teste passaram a usar `className` como prop simples sem processar o Tailwind.
 
-**Aprendizado:** NativeWind v4 exige configuração extra de mock em Jest porque o seu babel plugin não é executado fora do Metro. O padrão é sempre ter um `__mocks__/nativewind.js` ou a entrada equivalente no `moduleNameMapper`.
+### 2. Instalar Dependências
 
----
+```bash
+npm install
+```
 
-### 4. Re-render infinito no `TeachersListScreen` causado por dependência de objeto em `useEffect`
+### 3. Configurar Variáveis de Ambiente
 
-**Problema:** a tela de listagem de professores entrava em loop de re-fetch logo após montar: o `useEffect` de busca declarava `[filters]` como dependência, mas `filters` era um objeto recriado a cada render pelo `useState` com valor inicial inline (`{ page: 1, limit: 20 }`). Como objetos são comparados por referência no JavaScript, o React detectava mudança a cada ciclo e re-disparava o efeito.
+```bash
+cp .env.example .env
+```
 
-**Tentativas:** memoizar `filters` com `useMemo` resolveu o loop mas introduziu dependências circulares com o `setFilters` do state. Usar `useRef` para guardar o valor anterior foi descartado por aumentar a complexidade.
+Edite `.env` ajustando `EXPO_PUBLIC_API_URL` para o endereço onde a API da Fase 2 está rodando. O valor correto **depende de como você está executando o app**:
 
-**Solução final:** separar os filtros em primitivos individuais (`page`, `query`, `limit`) no `useState`, e compor o objeto de query apenas dentro do `useEffect`, sem incluí-lo como dependência. Assim as dependências do efeito são apenas primitivos (`page`, `query`, `limit`), cuja comparação por valor é estável.
+| Cenário | Valor de `EXPO_PUBLIC_API_URL` |
+|---------|-------------------------------|
+| **Expo Go no dispositivo físico** (Android ou iOS) na mesma rede Wi-Fi | `http://<IP-LAN-DO-SEU-COMPUTADOR>:3030` |
+| **Android Emulator** (Android Studio AVD) | `http://10.0.2.2:3030` |
+| **iOS Simulator** (macOS) | `http://localhost:3030` |
 
-**Aprendizado:** nunca declarar objetos ou arrays como dependências de `useEffect` quando eles são recriados a cada render. Preferir primitivos como dependências e construir objetos compostos dentro do próprio efeito.
+> **Como descobrir o IP LAN do seu computador:**
+> - **Windows:** abra o terminal e rode `ipconfig`. Procure "Endereço IPv4" na rede ativa (Wi-Fi). Exemplo: `192.168.0.173`
+> - **macOS/Linux:** `ifconfig | grep "inet "` ou `ip addr`. Procure o IP da interface `en0` / `wlan0`.
+>
+> O IP deve ser o da mesma rede Wi-Fi em que o celular está conectado. Exemplo de `.env` final:
+> ```env
+> EXPO_PUBLIC_API_URL=http://192.168.0.173:3030
+> ```
 
----
+> **Importante — variáveis `EXPO_PUBLIC_*`:** essas variáveis são embutidas no bundle JavaScript pelo Metro bundler no momento da inicialização. Sempre que alterar o `.env`, reinicie o servidor com `npm start -- --clear` (ou `npx expo start --clear`) para o novo valor ser aplicado.
 
-### 5. Endpoint `POST /students` retorna 403 para STUDENT logado (axios interceptor injetava Bearer)
+### 4. Subir o Backend da Fase 2
 
-**Problema:** ao testar o fluxo de auto-cadastro (`SignupScreen`) com um STUDENT já logado na sessão (cenário de regressão), a chamada `POST /students` retornava 403. O interceptor de request do `apiClient` injeta `Authorization: Bearer <token>` automaticamente sempre que há sessão no `AuthContext`. O backend Fase 2 interpreta o Bearer de um STUDENT como uma tentativa de "se recadastrar" e nega com 403 por regra de negócio.
+Em outro terminal, siga o [README da Fase 2](https://github.com/natanjunior/8FSDT-tech-challenge-2) para subir a API localmente. Ela precisa estar acessível na porta `3030` (ou na porta que você configurou em `EXPO_PUBLIC_API_URL`).
 
-**Solução:** usar `axios.post(\`${API_BASE_URL}/students\`, payload)` diretamente (sem o `apiClient`), de forma que nenhum header de autorização seja anexado. A `SignupScreen` também bloqueia STUDENTs já logados via `useEffect` (redireciona para Home), mas o uso de axios cru garante que a chamada seja genuinamente pública independentemente do estado da sessão. Registrado como ADR 21.
+> **Nota — cold start da Render (free tier):** se o backend estiver hospedado na Render.com, o serviço hiberna após ~15 min de inatividade e leva 20–40s para acordar no primeiro request. O cliente Axios está configurado com `timeout: 30000ms` para cobrir esse cenário. Se o primeiro login demorar, aguarde e tente novamente — é o backend acordando.
 
-**Aprendizado:** interceptors de request são convenientes, mas têm efeito colateral em endpoints públicos que são sensíveis à presença do Bearer. Nesses casos, usar a instância base do axios (sem interceptor) é mais correto do que tentar remover o header dentro do interceptor por rota.
+### 5. Iniciar o App
 
----
+```bash
+npm start
+```
 
-### 6. Node 14 vs Expo SDK 56 no runner de testes
+O terminal exibe um QR Code. Escolha como rodar:
 
-**Problema:** rodar `npm test` com o Node default da máquina (v14.19.0) quebrava o `jest-expo` com `SyntaxError: Unexpected token '??='` (operador de logical-assignment) vindo do *winter runtime* do Expo — o erro acontecia **antes** de qualquer teste rodar, na fase de setup do preset.
+| Método | O que fazer |
+|--------|------------|
+| **Expo Go no celular** | Abra o app Expo Go, toque em "Scan QR code" e aponte para o QR do terminal |
+| **Android Emulator** | Com o AVD aberto no Android Studio, pressione `a` no terminal |
+| **iOS Simulator** (macOS) | Pressione `i` no terminal |
 
-**Causa:** o Expo SDK 56 exige Node ≥ 20. O runtime do Expo usa sintaxe de logical-assignment (`??=`, `||=`) que só é suportada a partir do Node 15, então o Node 14 falha ao parsear o próprio preset.
+### 📖 Guia de Uso
 
-**Solução:** padronizar o uso do **Node 20.19.4** (versão que o Expo 56 mira), instalado via `nvm`, para todos os comandos `node`/`npm`/`npx`. A linha de **Pré-requisitos** foi atualizada para deixar explícito **Node ≥ 20**, e a seção de Testes registra o mesmo requisito.
+Depois do app aberto (abre direto na **lista pública de posts**):
 
-**Aprendizado:** a versão do Node não é só uma recomendação no Expo SDK 56 — é um pré-requisito rígido do tooling. Fixar a versão via `nvm` evita falhas que não têm relação com o código de teste em si.
+**Como visitante (anônimo):** navegue pela `Home`, use a barra de busca (busca por palavra-chave com debounce), filtre por disciplina pelo menu lateral (ícone hamburger) e toque num post para ler. Comentar e marcar como lido exigem login.
 
----
+**Como aluno (STUDENT):** na tela de Login toque em **"Cadastre-se como aluno"** para criar sua conta (auto-cadastro público) ou entre com uma conta existente. Logado, você pode comentar, marcar posts como lidos e editar seu perfil / trocar de senha.
 
-### 7. Tornar `refreshProfile` obrigatório na interface `AuthContextValue` quebrou ~15 arquivos de teste
+**Como professor (TEACHER):** entre pelo botão **"Entrar"** com uma credencial TEACHER. O menu lateral passa a exibir a seção **Administração** (Painel de posts, Professores, Alunos), e o post ganha o botão **"Editar post"**. A partir do painel você cria/edita/exclui posts e gerencia usuários.
 
-**Problema:** depois de adicionar `refreshProfile` como propriedade **obrigatória** de `AuthContextValue` (necessário para o padrão da ADR 22), o `tsc` passou a acusar `Property 'refreshProfile' is missing in type ...` em todos os mocks inline do contexto espalhados pelos testes (Header, várias screens, etc.).
+**Credenciais de teste** _(preencher com as credenciais reais do seed da Fase 2):_
 
-**Causa:** o TypeScript em modo strict exige que **todo** consumidor/produtor do tipo seja atualizado. Cada teste que montava um literal de `AuthContextValue` à mão tornou-se inválido ao adicionar o novo membro obrigatório.
+| Papel | Login | Senha |
+|-------|-------|-------|
+| **TEACHER** | `<preencher>` | `<preencher>` |
+| **STUDENT** | crie a sua via **auto-cadastro** (Login → "Cadastre-se como aluno") | — |
 
-**Solução:** adicionar `refreshProfile: jest.fn()` a cada literal de mock do contexto nos ~15 arquivos afetados.
+### Variáveis de Ambiente
 
-**Aprendizado:** estender um tipo de contexto amplamente consumido é uma mudança transversal — o custo não está em implementar a função, e sim em propagar o novo membro por todos os mocks. Vale considerar um helper `makeAuthValue(overrides)` para centralizar a forma do mock e evitar essa cascata no futuro.
+| Variável | Descrição | Padrão | Obrigatória |
+|----------|-----------|--------|-------------|
+| `EXPO_PUBLIC_API_URL` | URL base da API da Fase 2 (sem barra final) | `http://localhost:3030` | Sim |
 
----
+### Scripts Disponíveis
 
-### 8. `useFocusEffect` (re-fetch ao focar) causando loop de render no teste da ProfileScreen
+| Script | Descrição |
+|--------|-----------|
+| `npm start` | Inicia o Metro bundler (Expo Dev Server, com `--clear`) |
+| `npm run android` | Inicia diretamente no Android Emulator |
+| `npm run ios` | Inicia diretamente no iOS Simulator |
+| `npm run web` | Roda no navegador (React Native Web — auxiliar de desenvolvimento) |
+| `npm test` | Roda testes com Jest (execução única) |
+| `npm run test:watch` | Testes em watch mode |
+| `npm run lint` | ESLint via Expo |
 
-**Contexto:** a `ProfileScreen` usa `useFocusEffect` para re-buscar os dados sempre que a tela ganha foco — assim, ao voltar da edição (`goBack`), ela mostra os dados atualizados (ADR 24).
+### Build e distribuição
 
-**Problema:** o mock ingênuo `useFocusEffect: (cb) => cb()` disparava o callback **durante** o render. Como o callback chama `setState`, isso re-renderizava o componente, que chamava o `cb` de novo → `Error: Too many re-renders`.
+O projeto usa o **workflow gerenciado do Expo**, então **não há Dockerfile nem pipeline de CI/CD** como nas Fases 2 e 3 (backend/web) — a distribuição de um app mobile segue outro caminho:
 
-**Causa:** o `useFocusEffect` real roda o callback **depois** do render (dentro de um efeito), não durante. O mock síncrono violava essa garantia e criava o loop.
-
-**Solução:** o mock passou a rodar o callback uma única vez **após a montagem**, via `useEffect`. O componente de produção permaneceu fiel ao comportamento real (re-fetch ao focar). (Relacionado à Dificuldade #4, sobre dependência de objeto em `useEffect`.)
-
-**Aprendizado:** ao mockar hooks de ciclo de vida (`useFocusEffect`, `useEffect`), o mock precisa respeitar **quando** o callback roda, não só **se** ele roda. Disparar um efeito durante o render é o caminho mais rápido para um loop infinito.
-
----
-
-### 9. Refines cruzados do Zod precisam de `path` explícito para ancorar a mensagem no campo certo
-
-**Contexto:** o `changePasswordSchema` valida que a confirmação bate com a nova senha e que a nova senha é diferente da atual — duas regras que envolvem mais de um campo (cross-field).
-
-**Problema:** sem `path`, um `.refine()` do Zod associa a mensagem ao objeto raiz; o `react-hook-form` então entrega o erro em `errors.root`, e o usuário não vê **embaixo de qual campo** está o problema.
-
-**Causa:** `.refine()` por padrão não sabe a qual campo a falha pertence — para regras de objeto, o erro nasce no nível do objeto.
-
-**Solução:** declarar `path: ['new_password_confirm']` no refine de confirmação e `path: ['new_password']` no refine de "senha diferente da atual". Assim o RHF expõe `errors.new_password_confirm` / `errors.new_password` e a mensagem aparece ancorada no `Input` correto. Registrado como ADR 23.
-
-**Aprendizado:** todo refine cruzado em RHF + Zod deve declarar `path` apontando para o campo onde o usuário precisa agir; do contrário a UX de validação fica "cega".
-
----
-
-### 10. Ponte entre o singleton do Axios e o React Context para tratar 401 global
-
-**Contexto:** o `apiClient` é um singleton de módulo criado no import, mas o estado de sessão vive no `AuthContext` (React state). Para deslogar automaticamente numa 401 de sessão expirada, o response interceptor (módulo) precisava acionar o `AuthContext` (React).
-
-**Problema:** o interceptor não pode importar o Context — não há instância React no escopo do módulo, e o import criaria acoplamento/ciclo (Context → api → Context). Antes desta correção o comportamento de auto-logout nem existia: cada tela autenticada tratava 401 de forma ad-hoc (`logout()` + `replace('Login')`), e o README afirmava um tratamento global que não estava no código.
-
-**Solução:** **registro de callback**. A camada de api expõe `setUnauthorizedHandler(fn)`; o `AuthProvider` registra o handler num `useEffect` (e o limpa no cleanup); o interceptor chama esse handler numa 401 qualificada e **sempre** re-rejeita o erro (os catches dos services/telas seguem funcionando). O handler limpa a sessão **localmente** (`clearSession()` — sem `POST /auth/logout`, que só geraria outra 401) e zera o estado; sem navegação, as telas protegidas caem para Home pelos guards (`useRequireRole`). Os 10 handlers 401 ad-hoc das telas foram removidos para o handler global virar fonte única.
-
-**Cuidado central:** **não deslogar 401 anônima.** O gatilho checa `error.config.headers.Authorization` — só dispara quando a request realmente carregava um Bearer. Assim, `POST /comments` de visitante (401 proposital, ADR 09) e o próprio login (que não envia Bearer) não derrubam sessão nenhuma. Detalhe descoberto na implementação: o `POST /auth/login` com credencial inválida retorna **401**, não 400/404 — mas como a request de login não carrega Bearer, o handler corretamente a ignora; a robustez vem de checar o header, não o status.
-
-**Aprendizado:** para conectar um singleton de módulo a estado de React sem acoplamento, exponha um setter de callback registrado via `useEffect` em vez de importar o Context. E ao centralizar tratamento de erro num interceptor, distinga a 401 "de sessão" (request autenticada) da 401 "de autorização anônima" pela presença do token enviado — não pelo status code.
-
----
-
-### 11. Títulos do Markdown renderizavam sem negrito (peso normal)
-
-**Problema:** ao renderizar Markdown no `MarkdownContent` (leitura do post e prévia do editor), os headings (`h1`-`h6`) apareciam com o mesmo peso visual do corpo do texto — sem negrito —, apesar do estilo de cada heading definir `fontWeight: '700'`/`'800'`.
-
-**Causa:** o renderer da lib de Markdown propaga o `fontFamily` do estilo `body` (`Inter_400Regular`) para os elementos filhos, incluindo os headings. As fontes carregadas via `@expo-google-fonts/inter` são de **peso fixo** — cada peso é uma família separada (`Inter_400Regular`, `Inter_700Bold`, `Inter_800ExtraBold` etc.), não uma família variável com múltiplos pesos. Nesse cenário, `fontWeight` isolado é um no-op no React Native: a fonte efetivamente carregada (`Inter_400Regular`) não tem uma variante 700/800 para o motor de texto escolher.
-
-**Solução:** trocar `fontWeight` por `fontFamily` explícito nos estilos dos headings — `Inter_800ExtraBold` para `heading1`/`heading2`, `Inter_700Bold` para `heading3`-`heading6` — seguindo a mesma convenção já usada no resto do app, que usa classes NativeWind como `font-sans-bold`/`font-sans-extrabold` e nunca a prop `fontWeight` isolada, justamente por essa limitação de fontes de peso fixo.
-
-**Aprendizado:** com fontes de peso fixo (cada peso = uma família distinta), `fontWeight` sozinho não produz negrito no React Native — é preciso apontar a família correta via `fontFamily`. Vale como regra geral para qualquer estilo do app que precise de peso de fonte, dentro ou fora do NativeWind.
+- **Avaliação rápida:** `npm start` + **Expo Go** (escanear o QR) é o modo mais rápido de ver o app rodando num dispositivo real, sem build nativo.
+- **Build instalável (APK/IPA):** gerável via **EAS Build** (`npx eas build -p android`), que produz um binário instalável sem exigir Android Studio/Xcode localmente.
 
 ---
 
-## Equipe
+## ♿ Acessibilidade
 
-Grupo 6 — turma 8FSDT (FIAP).
+O app aplica práticas de acessibilidade mobile de forma transversal (não como afterthought):
 
-Projeto desenvolvido pelo Grupo 6 ao longo das 6 fases: fundação e login, refactors de navegação e autenticação, leitura e escrita de posts, painel administrativo, CRUD de usuários e auto-cadastro, e o fechamento com perfil próprio + troca de senha + documentação.
+- **Labels e papéis semânticos** — `accessibilityLabel`, `accessibilityRole` e `accessibilityState` nos componentes interativos do Design System (`Button`, `Input`, `Spinner`), no `Header`, no menu lateral e nas telas de listagem, para leitores de tela (TalkBack/VoiceOver).
+- **Área de toque** — `hitSlop` em ícones/botões pequenos (ex.: toggles de visibilidade de senha, ações de lista) para garantir alvos confortáveis ao dedo.
+- **Contraste** — a paleta M3 evita preto puro (texto em `#111C2D` / `#43474E`) e mantém contraste adequado sobre os fundos claros.
+- **Feedback de estado** — inputs com erro comunicam a falha por cor de fundo **e** texto (não só cor), e ações assíncronas expõem estado de `loading`.
+
+---
+
+## 👥 Equipe
+
+**Grupo 6 — turma 8FSDT (FIAP)**
+
+- **Dario Lacerda** — rm369195
+- **Larissa Kramer** — rm370062
+- **Mirian Storino** — rm369489
+- **Natanael Dias** — rm369334
+- **Tiago Victor** — rm370117
+
+---
+
+## 📄 Licença
+
+MIT License — Projeto Educacional. Ver [LICENSE](LICENSE).
