@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
-import { Modal, Pressable, Text, TouchableOpacity, View } from 'react-native';
+import { Modal, Platform, Pressable, Text, TouchableOpacity, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
 import { Icon, IconName } from '@/components/ui/Icon';
 import { AuthorId } from '@/components/ui/AuthorId';
 import { colors } from '@/theme/colors';
 import type { RootStackNavigationProp } from '@/navigation/types';
 
-// `top-14` do NativeWind = 3.5rem × inlineRem 14 = 49px. Offset fixo que ancora o
-// dropdown logo abaixo do header nativo (altura conhecida do React Navigation).
-// Extraído como constante nomeada (F-H2). NÃO trocar por 56 — moveria o menu ~7px.
-const HEADER_DROPDOWN_TOP = 49;
+// Altura de conteúdo padrão do header do native-stack (sem headerStyle.height custom):
+// iOS ~44pt, Android ~56dp. Somada ao inset de topo (notch/status bar) posiciona o
+// dropdown logo abaixo do header (F-H2) — acompanha o notch, ao contrário do offset
+// fixo anterior. Caveat: no Android a Modal transparente já abre abaixo da status bar,
+// então somar insets.top desloca ~status-bar a mais; aceitável para um menu de canto.
+const HEADER_BAR_HEIGHT = Platform.select({ ios: 44, default: 56 }) as number;
 
 interface HeaderItemProps {
   icon: IconName;
@@ -39,6 +42,7 @@ export function HeaderRight() {
   const navigation = useNavigation<RootStackNavigationProp>();
   const { isAuthenticated, user, profile, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  const insets = useSafeAreaInsets();
 
   if (!isAuthenticated) {
     return (
@@ -89,7 +93,7 @@ export function HeaderRight() {
             onPress={(e) => e.stopPropagation()}
             className="absolute right-3 w-48 overflow-hidden rounded-xl bg-surface-container-lowest"
             style={{
-              top: HEADER_DROPDOWN_TOP,
+              top: insets.top + HEADER_BAR_HEIGHT,
               shadowColor: colors.primary,
               shadowOffset: { width: 0, height: 8 },
               shadowOpacity: 0.12,
