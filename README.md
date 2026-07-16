@@ -8,12 +8,10 @@
 [![React Native](https://img.shields.io/badge/React_Native-0.85-61DAFB?logo=react&logoColor=black)](https://reactnative.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![NativeWind](https://img.shields.io/badge/NativeWind-v4-38BDF8?logo=tailwindcss&logoColor=white)](https://www.nativewind.dev/)
-[![Jest](https://img.shields.io/badge/Jest-355_testes-C21325?logo=jest&logoColor=white)](https://jestjs.io/)
+[![Jest](https://img.shields.io/badge/Jest-393_testes-C21325?logo=jest&logoColor=white)](https://jestjs.io/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 </div>
-
-> **Status:** ✅ Entrega completa — **10/10 requisitos do enunciado** atendidos + extras (auto-cadastro de aluno, meu perfil, troca de senha).
 
 ---
 
