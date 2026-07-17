@@ -6,11 +6,15 @@ import { markAsRead } from '@/services/reads.service';
 interface MarkAsReadButtonProps {
   postId: string;
   initialHasRead?: boolean;
+  /** Chamado uma única vez após a marcação ser confirmada pelo backend.
+   *  Permite à tela dona incrementar o contador de leituras na hora. */
+  onMarked?: () => void;
 }
 
 export function MarkAsReadButton({
   postId,
   initialHasRead = false,
+  onMarked,
 }: MarkAsReadButtonProps) {
   const { isAuthenticated } = useAuth();
   const [hasRead, setHasRead] = useState(initialHasRead);
@@ -24,6 +28,7 @@ export function MarkAsReadButton({
     setIsPending(true);
     try {
       await markAsRead(postId);
+      onMarked?.();
     } catch {
       setHasRead(false);
     } finally {

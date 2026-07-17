@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, waitFor } from '@testing-library/react-native';
+import { render, waitFor, fireEvent, act } from '@testing-library/react-native';
 import { PostDetailScreen } from '@/screens/PostDetailScreen';
 import * as AuthContextModule from '@/contexts/AuthContext';
 import * as postsService from '@/services/posts.service';
@@ -26,10 +26,18 @@ const mockReplace = jest.fn();
 const mockNavigate = jest.fn();
 const mockNavigation = { replace: mockReplace, navigate: mockNavigate };
 
-jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => mockNavigation,
-  useRoute: () => ({ params: { postId: 'p1', title: 'Post' } }),
-}));
+jest.mock('@react-navigation/native', () => {
+  const ReactActual = require('react');
+  return {
+    useNavigation: () => mockNavigation,
+    useRoute: () => ({ params: { postId: 'p1', title: 'Post' } }),
+    // Espelha o useFocusEffect real: roda o callback (e seu cleanup) quando a
+    // identidade dele muda — na montagem e a cada re-foco/mudança de deps.
+    useFocusEffect: (cb: () => void | (() => void)) => {
+      ReactActual.useEffect(cb, [cb]);
+    },
+  };
+});
 
 const useAuthSpy = jest.spyOn(AuthContextModule, 'useAuth');
 const mockGetById = postsService.getPostById as jest.Mock;
@@ -152,5 +160,29 @@ describe('PostDetailScreen', () => {
     // The OLD header used a combined "X comentários · X leituras" Text node — assert it is gone
     expect(queryByText(/comentários · \d+ leituras/i)).toBeNull();
     expect(queryByText(/\d+ leituras/i)).toBeNull();
+  });
+
+  it('incrementa a contagem de leituras na hora ao marcar como lido', async () => {
+    useAuthSpy.mockReturnValue(teacher);
+    mockGetById.mockResolvedValueOnce({ ...publishedPost, reads_count: 7 });
+    mockHasRead.mockResolvedValueOnce(false);
+    (readsService.markAsRead as jest.Mock).mockResolvedValueOnce({
+      id: 'r1',
+      post_id: 'p1',
+      reader: 'Teacher/550e8400-e29b-41d4-a716-446655440001',
+      read_at: '2026-01-01',
+    });
+
+    const { findByText, getByText, queryByText } = render(<PostDetailScreen />);
+    // contador inicial vindo do backend
+    expect(await findByText('7')).toBeTruthy();
+
+    await act(async () => {
+      fireEvent.press(getByText('Marcar como lido'));
+    });
+
+    // sobe imediatamente, sem depender de refetch/remontagem
+    expect(getByText('8')).toBeTruthy();
+    expect(queryByText('7')).toBeNull();
   });
 });

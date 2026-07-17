@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -39,31 +39,35 @@ export function PostDetailScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const [fetched, readState] = await Promise.all([
-          getPostById(postId),
-          isAuthenticated ? hasReadPost(postId) : Promise.resolve(false),
-        ]);
-        if (cancelled) return;
-        if (fetched.status !== 'PUBLISHED' && !isTeacher) {
-          navigation.replace('Home');
-          return;
+  // Recarrega ao focar a tela (não só na montagem): ao voltar de PostEdit o
+  // conteúdo e os contadores refletem o estado atual, sem precisar remontar.
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      (async () => {
+        try {
+          const [fetched, readState] = await Promise.all([
+            getPostById(postId),
+            isAuthenticated ? hasReadPost(postId) : Promise.resolve(false),
+          ]);
+          if (cancelled) return;
+          if (fetched.status !== 'PUBLISHED' && !isTeacher) {
+            navigation.replace('Home');
+            return;
+          }
+          setPost(fetched);
+          setHasRead(readState);
+        } catch {
+          if (!cancelled) setNotFound(true);
+        } finally {
+          if (!cancelled) setIsLoading(false);
         }
-        setPost(fetched);
-        setHasRead(readState);
-      } catch {
-        if (!cancelled) setNotFound(true);
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [postId, isAuthenticated, isTeacher, navigation]);
+      })();
+      return () => {
+        cancelled = true;
+      };
+    }, [postId, isAuthenticated, isTeacher, navigation])
+  );
 
   if (isLoading) return <Loader />;
 
@@ -106,7 +110,15 @@ export function PostDetailScreen() {
         </View>
 
         <View className="mt-2 gap-3">
-          <MarkAsReadButton postId={post.id} initialHasRead={hasRead} />
+          <MarkAsReadButton
+            postId={post.id}
+            initialHasRead={hasRead}
+            onMarked={() =>
+              setPost((prev) =>
+                prev ? { ...prev, reads_count: prev.reads_count + 1 } : prev
+              )
+            }
+          />
           {isTeacher ? (
             <Button
               title="Editar post"

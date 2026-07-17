@@ -97,4 +97,38 @@ describe('MarkAsReadButton', () => {
     expect(getByText('Marcar como lido')).toBeTruthy();
     expect(queryByText('Marcado como lido')).toBeNull();
   });
+
+  it('calls onMarked once after a successful mark', async () => {
+    useAuthSpy.mockReturnValue(teacher);
+    mockMark.mockResolvedValueOnce({
+      id: 'r1', post_id: 'p1', reader: 'Teacher/550e8400-e29b-41d4-a716-446655440001', read_at: '2026-01-01',
+    });
+    const onMarked = jest.fn();
+
+    const { getByText } = render(
+      <MarkAsReadButton postId="p1" initialHasRead={false} onMarked={onMarked} />
+    );
+
+    await act(async () => {
+      fireEvent.press(getByText('Marcar como lido'));
+    });
+
+    expect(onMarked).toHaveBeenCalledTimes(1);
+  });
+
+  it('does NOT call onMarked when the mark fails', async () => {
+    useAuthSpy.mockReturnValue(teacher);
+    mockMark.mockRejectedValueOnce(new Error('500'));
+    const onMarked = jest.fn();
+
+    const { getByText } = render(
+      <MarkAsReadButton postId="p1" initialHasRead={false} onMarked={onMarked} />
+    );
+
+    await act(async () => {
+      fireEvent.press(getByText('Marcar como lido'));
+    });
+
+    expect(onMarked).not.toHaveBeenCalled();
+  });
 });
