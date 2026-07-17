@@ -49,7 +49,11 @@ export function ConfirmModal({
   return (
     <Modal
       transparent
-      animationType="fade"
+      // animationType="none": na arquitetura nova do RN, desmontar/dispensar um
+      // Modal nativo enquanto uma animação de fade está em curso pode deixar uma
+      // camada transparente presa engolindo toques (mesma classe do popover).
+      // Sem animação, a dispensa é instantânea e limpa.
+      animationType="none"
       visible={isOpen}
       onRequestClose={onCancel}
     >
