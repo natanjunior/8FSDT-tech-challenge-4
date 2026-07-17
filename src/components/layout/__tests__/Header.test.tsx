@@ -1,6 +1,6 @@
 import React from 'react';
 import { Platform, StyleSheet } from 'react-native';
-import { fireEvent, render } from '@testing-library/react-native';
+import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { HeaderRight } from '@/components/layout/Header';
@@ -114,29 +114,30 @@ describe('HeaderRight', () => {
     expect(queryByText('Painel')).toBeNull();
   });
 
-  it('navega para Profile ao tocar "Meu perfil"', () => {
+  it('navega para Profile ao tocar "Meu perfil"', async () => {
     useAuthSpy.mockReturnValue(teacher);
     const { getByTestId, getByText } = renderHeader();
     fireEvent.press(getByTestId('header-user-trigger'));
     fireEvent.press(getByText('Meu perfil'));
-    expect(mockNavigate).toHaveBeenCalledWith('Profile');
+    // navegação é adiada até a Modal fechar (runAfterInteractions)
+    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('Profile'));
   });
 
-  it('navega para ChangePassword ao tocar "Trocar senha"', () => {
+  it('navega para ChangePassword ao tocar "Trocar senha"', async () => {
     useAuthSpy.mockReturnValue(teacher);
     const { getByTestId, getByText } = renderHeader();
     fireEvent.press(getByTestId('header-user-trigger'));
     fireEvent.press(getByText('Trocar senha'));
-    expect(mockNavigate).toHaveBeenCalledWith('ChangePassword');
+    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('ChangePassword'));
   });
 
-  it('chama logout ao tocar "Sair"', () => {
+  it('chama logout ao tocar "Sair"', async () => {
     const logoutMock = jest.fn();
     useAuthSpy.mockReturnValue({ ...teacher, logout: logoutMock });
     const { getByTestId, getByText } = renderHeader();
     fireEvent.press(getByTestId('header-user-trigger'));
     fireEvent.press(getByText('Sair'));
-    expect(logoutMock).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(logoutMock).toHaveBeenCalledTimes(1));
   });
 
   it('dropdown: os 3 itens expõem accessibilityRole "button" com label acessível', () => {
@@ -148,12 +149,12 @@ describe('HeaderRight', () => {
     expect(getByRole('button', { name: 'Sair' })).toBeTruthy();
   });
 
-  it('dropdown: pressionar pelo role "button" dispara a ação (Meu perfil → Profile)', () => {
+  it('dropdown: pressionar pelo role "button" dispara a ação (Meu perfil → Profile)', async () => {
     useAuthSpy.mockReturnValue(teacher);
     const { getByTestId, getByRole } = renderHeader();
     fireEvent.press(getByTestId('header-user-trigger'));
     fireEvent.press(getByRole('button', { name: 'Meu perfil' }));
-    expect(mockNavigate).toHaveBeenCalledWith('Profile');
+    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('Profile'));
   });
 
   it('dropdown: card do menu marca accessibilityViewIsModal', () => {
