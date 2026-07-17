@@ -1,0 +1,39 @@
+diff --git a/node_modules/react-native-drawer-layout/lib/module/views/Overlay.native.js b/node_modules/react-native-drawer-layout/lib/module/views/Overlay.native.js
+index 347d806..85fd9f6 100644
+--- a/node_modules/react-native-drawer-layout/lib/module/views/Overlay.native.js
++++ b/node_modules/react-native-drawer-layout/lib/module/views/Overlay.native.js
+@@ -1,7 +1,7 @@
+ "use strict";
+ 
+ import { Pressable, StyleSheet } from 'react-native';
+-import Animated, { useAnimatedProps, useAnimatedStyle } from 'react-native-reanimated';
++import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+ import { jsx as _jsx } from "react/jsx-runtime";
+ const PROGRESS_EPSILON = 0.05;
+ export function Overlay({
+@@ -16,17 +16,17 @@ export function Overlay({
+       opacity: progress.value
+     };
+   }, [progress]);
+-  const animatedProps = useAnimatedProps(() => {
+-    const active = progress.value > PROGRESS_EPSILON;
+-    return {
+-      'pointerEvents': active ? 'auto' : 'none',
+-      'aria-hidden': !active
+-    };
+-  }, [progress]);
++  // PATCH (arquitetura nova / Fabric): pointerEvents controlado via reanimated
++  // animatedProps não aplica de forma confiável aqui, deixando este overlay de
++  // tela cheia (invisível quando fechado, opacity 0) com o padrão 'auto' e
++  // capturando TODOS os toques -> a tela "trava" (clique morre, tela parece
++  // normal). Forçamos pointerEvents="none": o scrim passa a ser só visual.
++  // Trade-off aceito: tocar no fundo escuro não fecha mais o drawer (o botão
++  // hambúrguer e o swipe continuam fechando/abrindo normalmente).
+   return /*#__PURE__*/_jsx(Animated.View, {
+     ...rest,
++    pointerEvents: "none",
+     style: [StyleSheet.absoluteFill, styles.overlay, animatedStyle, style],
+-    animatedProps: animatedProps,
+     children: /*#__PURE__*/_jsx(Pressable, {
+       onPress: onPress,
+       style: styles.pressable,

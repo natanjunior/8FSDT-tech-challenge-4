@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Modal, Platform, Pressable, Text, TouchableOpacity, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -44,6 +44,18 @@ export function HeaderRight() {
   const [menuOpen, setMenuOpen] = useState(false);
   const insets = useSafeAreaInsets();
 
+  // Fecha o menu e só então executa a ação. Navegar (ou fazer logout) enquanto a
+  // Modal ainda está montada faz o react-native-screens detachar a tela com a
+  // Modal "no ar", deixando uma camada transparente presa que engole os toques
+  // (header/telas ficam "clico e nada acontece"). Adiar um frame garante que o
+  // fechamento da Modal (animationType="none" = instantâneo) já foi commitado
+  // antes de a navegação começar. Precisa ficar ANTES do early return abaixo —
+  // hooks não podem ser condicionais.
+  const closeMenuThen = useCallback((action: () => void) => {
+    setMenuOpen(false);
+    requestAnimationFrame(action);
+  }, []);
+
   if (!isAuthenticated) {
     return (
       <View className="flex-row items-center gap-1 pr-2">
@@ -83,7 +95,7 @@ export function HeaderRight() {
       <Modal
         transparent
         visible={menuOpen}
-        animationType="fade"
+        animationType="none"
         onRequestClose={() => setMenuOpen(false)}
       >
         <Pressable onPress={() => setMenuOpen(false)} className="flex-1 bg-foreground/20">
@@ -104,10 +116,7 @@ export function HeaderRight() {
             <TouchableOpacity
               accessibilityRole="button"
               accessibilityLabel="Meu perfil"
-              onPress={() => {
-                setMenuOpen(false);
-                navigation.navigate('Profile');
-              }}
+              onPress={() => closeMenuThen(() => navigation.navigate('Profile'))}
               className="flex-row items-center gap-3 px-4 py-3"
             >
               <Icon name="account-circle-outline" size={18} color={colors.outline} />
@@ -116,10 +125,7 @@ export function HeaderRight() {
             <TouchableOpacity
               accessibilityRole="button"
               accessibilityLabel="Trocar senha"
-              onPress={() => {
-                setMenuOpen(false);
-                navigation.navigate('ChangePassword');
-              }}
+              onPress={() => closeMenuThen(() => navigation.navigate('ChangePassword'))}
               className="flex-row items-center gap-3 px-4 py-3"
             >
               <Icon name="lock-outline" size={18} color={colors.outline} />
@@ -130,10 +136,7 @@ export function HeaderRight() {
             <TouchableOpacity
               accessibilityRole="button"
               accessibilityLabel="Sair"
-              onPress={() => {
-                setMenuOpen(false);
-                logout();
-              }}
+              onPress={() => closeMenuThen(() => logout())}
               className="flex-row items-center gap-3 px-4 py-3"
             >
               <Icon name="logout" size={18} color={colors.error} />

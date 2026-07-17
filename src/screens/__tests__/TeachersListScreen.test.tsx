@@ -9,9 +9,15 @@ jest.mock('react-native-toast-message', () => ({ show: jest.fn() }));
 
 const mockReplace = jest.fn();
 const mockNavigate = jest.fn();
-jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ replace: mockReplace, navigate: mockNavigate }),
-}));
+jest.mock('@react-navigation/native', () => {
+  const ReactActual = require('react');
+  return {
+    useNavigation: () => ({ replace: mockReplace, navigate: mockNavigate }),
+    useFocusEffect: (cb: () => void | (() => void)) => {
+      ReactActual.useEffect(cb, [cb]);
+    },
+  };
+});
 
 const useAuthSpy = jest.spyOn(AuthContextModule, 'useAuth');
 const mockList = teachersService.listTeachers as jest.Mock;

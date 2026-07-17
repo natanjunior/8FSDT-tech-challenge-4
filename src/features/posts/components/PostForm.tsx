@@ -100,6 +100,7 @@ export function PostForm({
               disciplines={disciplines}
               selectedId={value ?? null}
               onSelect={(id) => onChange(id ?? undefined)}
+              showAllOption={false}
             />
           )}
         />

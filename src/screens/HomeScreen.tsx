@@ -6,13 +6,13 @@ import {
   Text,
   View,
 } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { SearchBar } from '@/components/posts/SearchBar';
 import { ActiveFilterPill } from '@/components/posts/ActiveFilterPill';
 import { PostCard } from '@/components/posts/PostCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { listPosts, searchPosts } from '@/services/posts.service';
+import { searchPosts } from '@/services/posts.service';
 import { colors } from '@/theme/colors';
 import type { PaginatedResponse, Post } from '@/types/api';
 import type { HomeRouteProp, RootStackNavigationProp } from '@/navigation/types';
@@ -44,14 +44,17 @@ export function HomeScreen() {
 
   const fetchPosts = useCallback(
     async (nextPage: number): Promise<PaginatedResponse<Post>> => {
-      const hasFilters = !!query || !!disciplineId;
-      return hasFilters
-        ? searchPosts({
-            query: query || undefined,
-            discipline: disciplineId ?? undefined,
-            page: nextPage,
-          })
-        : listPosts({ page: nextPage });
+      // Home / busca / filtro de disciplina exibem SOMENTE posts PUBLICADOS —
+      // rascunho e arquivado ficam restritos ao painel admin. O backend, para
+      // TEACHER, retorna todos os status quando o filtro não é enviado; por
+      // isso mandamos status: 'PUBLISHED' sempre (student/anônimo já é só
+      // publicado, e o filtro é ignorado com segurança para eles).
+      return searchPosts({
+        status: 'PUBLISHED',
+        query: query || undefined,
+        discipline: disciplineId ?? undefined,
+        page: nextPage,
+      });
     },
     [query, disciplineId]
   );
@@ -79,9 +82,14 @@ export function HomeScreen() {
     [fetchPosts]
   );
 
-  useEffect(() => {
-    loadPage(1, 'replace');
-  }, [loadPage]);
+  // Recarrega ao focar a tela e quando a busca/disciplina muda (loadPage muda de
+  // identidade). Ao voltar de PostDetail a lista reflete o estado atual sem
+  // precisar remontar a Home.
+  useFocusEffect(
+    useCallback(() => {
+      loadPage(1, 'replace');
+    }, [loadPage])
+  );
 
   const handleEndReached = () => {
     if (!isLoadingMore && page < totalPages) {
