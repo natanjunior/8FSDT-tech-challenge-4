@@ -1,0 +1,19 @@
+diff --git a/node_modules/react-native-toast-message/lib/src/components/AnimatedContainer.js b/node_modules/react-native-toast-message/lib/src/components/AnimatedContainer.js
+index f9f2a10..798551e 100644
+--- a/node_modules/react-native-toast-message/lib/src/components/AnimatedContainer.js
++++ b/node_modules/react-native-toast-message/lib/src/components/AnimatedContainer.js
+@@ -87,9 +87,11 @@ export function AnimatedContainer({ children, isVisible, position, topOffset, bo
+         animate(newAnimationValue);
+     }, [animate, isVisible]);
+     return (<Animated.View testID={getTestId('AnimatedContainer')} onLayout={computeViewDimensions} style={[styles.base, styles[position], animationStyles]}
+-    // This container View is never the target of touch events but its subviews can be.
+-    // By doing this, tapping buttons behind the Toast is allowed
+-    pointerEvents='box-none' {...panResponder.panHandlers}>
++    // PATCH (RN new arch): 'box-none' + panHandlers fazia o container reivindicar
++    // o toque (onStartShouldSetPanResponder=true) e travar cliques atrás do toast
++    // (header/filtros). 'none' garante que nada atrás é bloqueado. Perde swipe-to-
++    // dismiss; auto-hide segue funcionando. Sem panHandlers para não registrar responder.
++    pointerEvents='none'>
+       {children}
+     </Animated.View>);
+ }
