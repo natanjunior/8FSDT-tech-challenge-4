@@ -6,7 +6,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { SearchBar } from '@/components/posts/SearchBar';
 import { ActiveFilterPill } from '@/components/posts/ActiveFilterPill';
 import { PostCard } from '@/components/posts/PostCard';
@@ -79,9 +79,14 @@ export function HomeScreen() {
     [fetchPosts]
   );
 
-  useEffect(() => {
-    loadPage(1, 'replace');
-  }, [loadPage]);
+  // Recarrega ao focar a tela e quando a busca/disciplina muda (loadPage muda de
+  // identidade). Ao voltar de PostDetail a lista reflete o estado atual sem
+  // precisar remontar a Home.
+  useFocusEffect(
+    useCallback(() => {
+      loadPage(1, 'replace');
+    }, [loadPage])
+  );
 
   const handleEndReached = () => {
     if (!isLoadingMore && page < totalPages) {

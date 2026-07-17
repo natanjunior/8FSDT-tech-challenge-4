@@ -13,9 +13,17 @@ jest.mock('react-native-toast-message', () => ({ show: jest.fn() }));
 
 const mockReplace = jest.fn();
 const mockNavigate = jest.fn();
-jest.mock('@react-navigation/native', () => ({
-  useNavigation: jest.fn(),
-}));
+jest.mock('@react-navigation/native', () => {
+  const ReactActual = require('react');
+  return {
+    useNavigation: jest.fn(),
+    // Espelha o useFocusEffect real: roda o callback (e seu cleanup) na montagem
+    // e sempre que a identidade dele muda (troca de filtro / re-foco).
+    useFocusEffect: (cb: () => void | (() => void)) => {
+      ReactActual.useEffect(cb, [cb]);
+    },
+  };
+});
 
 const useAuthSpy = jest.spyOn(AuthContextModule, 'useAuth');
 const mockSearch = postsService.searchPosts as jest.Mock;

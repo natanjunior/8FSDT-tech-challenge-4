@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   FlatList,
   RefreshControl,
@@ -8,7 +8,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
 import { useRequireRole } from '@/hooks/useRequireRole';
 import { Button } from '@/components/ui/Button';
@@ -187,11 +187,16 @@ export function StudentsListScreen() {
     [nameQuery, statusFilter]
   );
 
-  useEffect(() => {
-    if (!allowed) return;
-    setIsLoading(true);
-    fetchPage(1, false).finally(() => setIsLoading(false));
-  }, [allowed, fetchPage]);
+  // Recarrega ao focar a tela e quando busca/filtro mudam (fetchPage muda de
+  // identidade). Ao voltar de StudentCreate/StudentEdit a lista reflete o
+  // estado atual sem precisar remontar.
+  useFocusEffect(
+    useCallback(() => {
+      if (!allowed) return;
+      setIsLoading(true);
+      fetchPage(1, false).finally(() => setIsLoading(false));
+    }, [allowed, fetchPage])
+  );
 
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);

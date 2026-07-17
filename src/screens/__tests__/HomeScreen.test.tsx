@@ -1,6 +1,6 @@
 // src/screens/__tests__/HomeScreen.test.tsx
 import React from 'react';
-import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { fireEvent, render, waitFor, act } from '@testing-library/react-native';
 import { HomeScreen } from '@/screens/HomeScreen';
 import * as postsService from '@/services/posts.service';
 
@@ -8,12 +8,22 @@ import * as postsService from '@/services/posts.service';
 let mockParams: { disciplineId?: string; disciplineLabel?: string } = {};
 const mockSetParams = jest.fn();
 const mockNavigate = jest.fn();
+// guarda o callback de foco atual para permitir simular um re-foco no teste
+const mockFocus: { cb: (() => void | (() => void)) | null } = { cb: null };
 
 jest.mock('@/services/posts.service');
-jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ navigate: mockNavigate, setParams: mockSetParams }),
-  useRoute: () => ({ params: mockParams }),
-}));
+jest.mock('@react-navigation/native', () => {
+  const ReactActual = require('react');
+  return {
+    useNavigation: () => ({ navigate: mockNavigate, setParams: mockSetParams }),
+    useRoute: () => ({ params: mockParams }),
+    // Espelha o useFocusEffect real e expõe a última cb para simular re-foco.
+    useFocusEffect: (cb: () => void | (() => void)) => {
+      mockFocus.cb = cb;
+      ReactActual.useEffect(cb, [cb]);
+    },
+  };
+});
 
 const mockList = postsService.listPosts as jest.Mock;
 const mockSearch = postsService.searchPosts as jest.Mock;
@@ -101,5 +111,19 @@ describe('HomeScreen', () => {
     const { queryByText } = render(<HomeScreen />);
     // o chip "Todas" era o marcador da fileira de chips
     expect(queryByText('Todas')).toBeNull();
+  });
+
+  it('recarrega a lista ao voltar/focar a tela de novo (sem remontar)', async () => {
+    mockList.mockResolvedValue(onePost);
+    const { findByText } = render(<HomeScreen />);
+    await findByText('Post Um');
+    await waitFor(() => expect(mockList).toHaveBeenCalledTimes(1));
+
+    // simula "ir pra outra tela e voltar": o mesmo callback de foco dispara de novo
+    await act(async () => {
+      mockFocus.cb?.();
+    });
+
+    await waitFor(() => expect(mockList).toHaveBeenCalledTimes(2));
   });
 });

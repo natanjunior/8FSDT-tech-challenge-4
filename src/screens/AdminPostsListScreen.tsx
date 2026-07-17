@@ -8,7 +8,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
 import { useRequireRole } from '@/hooks/useRequireRole';
 import { Button } from '@/components/ui/Button';
@@ -150,15 +150,25 @@ export function AdminPostsListScreen() {
     }
   }, []);
 
-  useEffect(() => {
-    if (!allowed) return;
-    loadPage(1, 'replace');
-  }, [allowed, loadPage]);
+  // A lista recarrega ao focar a tela e quando os filtros mudam (loadPage muda
+  // de identidade). Ao voltar de PostCreate/PostEdit/PostDetail os dados
+  // refletem a mudança sem precisar remontar (ir pra Home e voltar).
+  useFocusEffect(
+    useCallback(() => {
+      if (!allowed) return;
+      loadPage(1, 'replace');
+    }, [allowed, loadPage])
+  );
 
-  useEffect(() => {
-    if (!allowed) return;
-    fetchStats();
-  }, [allowed, fetchStats]);
+  // Stats são totais globais (não dependem do filtro ativo): recarregam ao
+  // focar, mas fetchStats tem identidade estável, então não refazem a cada
+  // troca de filtro.
+  useFocusEffect(
+    useCallback(() => {
+      if (!allowed) return;
+      fetchStats();
+    }, [allowed, fetchStats])
+  );
 
   useEffect(() => {
     if (!allowed) return;
